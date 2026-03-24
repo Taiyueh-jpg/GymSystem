@@ -15,13 +15,13 @@ public class MemberUI {
     // 導向登入頁面 -> 會去尋找 src/main/resources/templates/auth/login.html
     @GetMapping("/login")
     public String showLoginPage() {
-        return "auth/login"; 
+        return "member/login"; 
     }
 
     // 導向註冊頁面 -> 會去尋找 src/main/resources/templates/auth/register.html
     @GetMapping("/register")
     public String showRegisterPage() {
-        return "auth/register";
+        return "member/register";
     }
     
     // 導向會員中心頁面
