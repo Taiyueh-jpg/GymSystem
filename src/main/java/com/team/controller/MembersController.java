@@ -1,64 +1,59 @@
 package com.team.controller;
 
-import com.team.model.Member;
-import com.team.service.MemberService;
-import jakarta.servlet.http.HttpSession;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-/**
- * 👑 同學 A 負責區域：會員 RESTful API
- * 規範：網址使用「複數名詞 (加 s)」 -> /api/members
- */
+import com.team.model.Member;
+import com.team.model.MemberRegisterDTO;
+import com.team.service.MemberService;
+
 @RestController
-@RequestMapping("/api/members")
+@RequestMapping("/api/members") // 這個路徑對應到 login.html 表單的 action="/api/members/..."
 public class MembersController {
 
-    private final MemberService memberService;
+    // 🌟 把 Service 注入進來 (聘請經理幫我們處理資料庫邏輯)
+    @Autowired
+    private MemberService memberService;
 
-    public MembersController(MemberService memberService) {
-        this.memberService = memberService;
+    // ==========================================
+    // 1. 處理「註冊」的 POST 請求
+    // ==========================================
+    @PostMapping("/register")
+    public String handleRegister(MemberRegisterDTO registerData) {
+        
+        System.out.println("=====================================");
+        System.out.println("🎉 收到新會員註冊請求！");
+        System.out.println("姓名：" + registerData.getName());
+        System.out.println("信箱：" + registerData.getEmail());
+        System.out.println("=====================================");
+        
+        // 呼叫 Service 執行儲存動作
+        memberService.registerNewMember(registerData);
+        
+        return "註冊成功！資料已經存入資料庫，歡迎加入 GymSystem：" + registerData.getName();
     }
 
-    // JDK 21 Feature: 使用 Record 作為接收登入資訊的 DTO
-    public record LoginRequest(String email, String password) {}
-
-    /**
-     * 處理會員登入請求 (POST /api/members/login)
-     */
+    // ==========================================
+    // 2. 處理「登入」的 POST 請求
+    // ==========================================
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpSession session) {
-        try {
-            Member member = memberService.login(request.email(), request.password());
-            // 登入成功，將會員資訊存入 Session
-            session.setAttribute("loginMember", member);
-            return ResponseEntity.ok(member);
-        } catch (RuntimeException e) {
-            // 登入失敗，回傳 400 Bad Request 與錯誤訊息
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    public String handleLogin(@RequestParam String email, @RequestParam String password) {
+        
+        System.out.println("=====================================");
+        System.out.println("🔑 收到登入請求，嘗試登入信箱：" + email);
+        System.out.println("=====================================");
+        
+        // 呼叫 Service 幫我們核對帳密
+        Member loginMember = memberService.login(email, password);
+        
+        // 判斷回傳的會員資料是不是空的 (null 代表找不到人或密碼錯)
+        if (loginMember != null) {
+            return "登入成功！歡迎回來，" + loginMember.getName();
+        } else {
+            return "登入失敗！請檢查您的電子信箱或密碼是否正確。";
         }
-    }
-
-    /**
-     * 處理會員註冊請求 (POST /api/members)
-     */
-    @PostMapping
-    public ResponseEntity<?> register(@RequestBody Member member) {
-        try {
-            Member newMember = memberService.register(member);
-            return ResponseEntity.ok(newMember);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
-    }
-    
-    /**
-     * 處理會員登出 (POST /api/members/logout)
-     */
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpSession session) {
-        session.invalidate(); // 清除 Session
-        return ResponseEntity.ok("登出成功");
     }
 }
