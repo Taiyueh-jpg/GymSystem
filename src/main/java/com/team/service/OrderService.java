@@ -4,85 +4,95 @@ import com.team.dao.OrderDetailDao;
 import com.team.dao.PorderDao;
 import com.team.model.OrderDetail;
 import com.team.model.Porder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * 📦 同學 E 負責區域：訂單結帳與物流業務邏輯
- */
 @Service
 public class OrderService {
 
-    private final PorderDao porderDao;
-    private final OrderDetailDao orderDetailDao;
+    @Autowired
+    private PorderDao porderDao;
 
-    public OrderService(PorderDao porderDao, OrderDetailDao orderDetailDao) {
-        this.porderDao = porderDao;
-        this.orderDetailDao = orderDetailDao;
-    }
-
-    // 接收前端傳來的購物車明細 DTO (資料傳輸物件)
-    public record CartItemDTO(Long productId, Integer quantity, BigDecimal unitPrice) {}
+    @Autowired
+    private OrderDetailDao orderDetailDao;
 
     /**
-     * 核心結帳邏輯
-     * ⚠️ @Transactional 保證交易一致性：主檔與明細必須「同生共死」
+     * 執行結帳邏輯
+     * @param porder 訂單主檔物件 (包含會員ID、配送方式、付款方式、總金額)
+     * @param details 訂單明細列表 (包含多筆商品ID、數量、單價)
+     * @return 儲存成功的訂單主檔
      */
-    @Transactional
-    public Porder createOrder(Long memberId, List<CartItemDTO> cartItems, String deliveryMethod, String paymentType) {
+    @Transactional // 重要：確保交易完整性，若發生錯誤會自動 Rollback
+    public Porder processCheckout(Porder porder, List<OrderDetail> details) {
         
-        // 1. 計算商品總額
-        BigDecimal itemsTotal = BigDecimal.ZERO;
-        for (CartItemDTO item : cartItems) {
-            BigDecimal subTotal = item.unitPrice().multiply(new BigDecimal(item.quantity()));
-            itemsTotal = itemsTotal.add(subTotal);
+        // 1. 補齊訂單主檔的系統欄位
+        porder.setOrderDate(LocalDateTime.now()); // 設定當下下單時間
+        
+        // 如果前端沒傳狀態，預設為 "paid" (配合資料庫設計)
+        if (porder.getStatus() == null) {
+            porder.setStatus("paid");
         }
 
-        // 2. 處理物流與運費加總邏輯
-        BigDecimal shippingFee = BigDecimal.ZERO;
-        switch (deliveryMethod) {
-            case "HOME_DELIVERY": // 宅配
-                shippingFee = new BigDecimal("100");
-                break;
-            case "CVS": // 超商
-                shippingFee = new BigDecimal("60");
-                break;
-            case "STORE_PICKUP": // 店取
-                shippingFee = BigDecimal.ZERO;
-                break;
-            default:
-                throw new RuntimeException("不支援的物流方式");
-        }
-        
-        // 最終總金額 = 商品總額 + 運費
-        BigDecimal finalTotalAmount = itemsTotal.add(shippingFee);
+        // 2. 先儲存訂單主檔 (Porder)
+        // 儲存後 JPA 會自動將資料庫生成的 order_id 填回 porder 物件中
+        Porder savedPorder = porderDao.save(porder);
 
-        // 3. 寫入訂單主檔 (Porder)
-        Porder porder = new Porder();
-        porder.setMemberId(memberId);
-        porder.setOrderDate(LocalDateTime.now());
-        porder.setStatus("PENDING"); // 預設狀態：處理中
-        porder.setPaymentType(paymentType);
-        porder.setDeliveryMethod(deliveryMethod);
-        porder.setTotalAmount(finalTotalAmount);
-        
-        // 儲存主檔並取得系統自動產生的 OrderId
-        Porder savedOrder = porderDao.save(porder);
+        // 3. 處理每一筆訂單明細 (OrderDetail)
+        for (OrderDetail detail : details) {
+            // 👇 加入這行監視器：印出 Java 實際收到的商品 ID
+            System.out.println("👉 準備存入明細，收到的商品 ID 為：" + detail.getProductId());
 
-        // 4. 寫入訂單明細表 (OrderDetail)
-        for (CartItemDTO item : cartItems) {
-            OrderDetail detail = new OrderDetail();
-            detail.setOrderId(savedOrder.getOrderId()); // 綁定剛剛的主檔 ID
-            detail.setProductId(item.productId());
-            detail.setQuantity(item.quantity());
-            detail.setUnitPrice(item.unitPrice());
+            // 將明細與剛產生的訂單主檔 ID 進行關聯
+            detail.setOrderId(savedPorder.getOrderId());
+            
+            // 儲存明細
             orderDetailDao.save(detail);
         }
 
-        return savedOrder;
+        // 4. 返回儲存成功的結果
+        return savedPorder;
     }
+
+    /**
+     * 查詢特定會員的所有訂單 (供會員中心使用)
+     */
+    public List<Porder> getMemberOrderHistory(Long memberId) {
+        // 這部分可以之後在 PorderDao 增加查詢方法
+        //return porderDao.findAll(); 
+        return porderDao.findByMemberIdOrderByOrderDateDesc(memberId);
+    }
+
+    public List<OrderDetail> getOrderDetails(Long orderId) {
+        return orderDetailDao.findByOrderId(orderId);
+    }
+
+    /**
+     * 修改訂單狀態 (後台管理員使用)
+     */
+    @Transactional
+    public Porder updateOrderStatus(Long orderId, String newStatus) {
+        // 1. 先使用內建的 findById 從資料庫把這筆訂單找出來
+        // 如果找不到這筆訂單，就拋出一個錯誤
+        Porder porder = porderDao.findById(orderId)
+            .orElseThrow(() -> new RuntimeException("找不到訂單編號：" + orderId));
+
+        // 2. 更新狀態
+        porder.setStatus(newStatus);
+
+        // 3. 再次呼叫 save()。
+        // JPA 非常聰明，它發現這筆訂單已經有 ID 了，就會自動執行 UPDATE 語法，而不是 INSERT！
+        return porderDao.save(porder);
+    }
+
+    /**
+     * 查詢全公司所有訂單 (後台管理員專用)
+     */
+    public List<Porder> getAllOrders() {
+        return porderDao.findAllByOrderByOrderDateDesc();
+    }
+
 }

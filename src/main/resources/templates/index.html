@@ -1,96 +1,108 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GymSystem | 全球頂級健身房與商城</title>
-    <!-- 引入 Bootstrap 5 CSS (由同學 A 統籌全站共用版型) -->
+    <title>GymSystem | 全球頂級健身系統</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* 簡單的首頁主視覺背景設定 */
+        /* 1. 拯救大白板：將整個網頁的底色改成深邃的碳灰色 */
+        body {
+            background-color: #121212; 
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* 2. 滿版英雄大圖區 (Hero Section) */
         .hero-section {
-            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop') center/cover;
-            color: white;
-            padding: 100px 0;
-            border-radius: 15px;
-            margin-top: 20px;
+            /* 加入黑色半透明漸層，讓白色文字更清楚。請把 url 換成您原本那張圖的相對路徑！ */
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), 
+                              url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            /* 高度設定為視窗的 80%，展現大氣勢 */
+            min-height: 80vh; 
+            display: flex;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* 3. 下方的次要區塊背景 */
+        .feature-section {
+            background-color: #1e1e1e; /* 比底色稍微亮一點的深灰色，做出層次感 */
+            padding: 80px 0;
+            border-top: 1px solid #333;
+        }
+
+        /* 讓 footer 貼緊底部 */
+        .footer {
+            background-color: #0a0a0a;
+            padding: 20px 0;
+            border-top: 1px solid #222;
         }
     </style>
 </head>
 <body>
 
-    <!-- ================= 共用導覽列 (Navbar) ================= -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
         <div class="container">
             <a class="navbar-brand fw-bold" href="/">🏋️ GymSystem</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <!-- 預留給同學 B 的課程總覽連結 -->
-                    <li class="nav-item"><a class="nav-link" href="/course/list">課程預約</a></li>
-                    <!-- 預留給同學 D 的商城總覽連結 -->
-                    <li class="nav-item"><a class="nav-link" href="/product/mall">周邊商城</a></li>
-                </ul>
-                <ul class="navbar-nav">
-                    <!-- Thymeleaf 邏輯：如果 Session 中沒有 loginMember (未登入)，顯示登入註冊按鈕 -->
-                    <li class="nav-item" th:if="${session.loginMember == null}">
-                        <a class="nav-link btn btn-outline-light btn-sm px-3" href="/member/login">登入 / 註冊</a>
-                    </li>
-                    
-                    <!-- Thymeleaf 邏輯：如果 Session 中有 loginMember (已登入)，顯示會員姓名與下拉選單 -->
-                    <li class="nav-item dropdown" th:if="${session.loginMember != null}">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <span th:text="${session.loginMember.name} + '，您好'">會員您好</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="/member/profile">會員中心</a></li>
-                            <!-- 預留給同學 C 與 E 的歷史紀錄連結 -->
-                            <li><a class="dropdown-item" href="/order/history">歷史訂單與預約</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><button class="dropdown-item text-danger" onclick="logout()">登出系統</button></li>
-                        </ul>
-                    </li>
-                </ul>
+            <div class="d-flex">
+                <a href="/product/mall" class="nav-link text-light me-3">周邊商城</a>
+                <a href="/member/login" class="btn btn-outline-light btn-sm">登入 / 註冊</a>
             </div>
         </div>
     </nav>
 
-    <!-- ================= 首頁主視覺內容 ================= -->
-    <div class="container">
-        <div class="hero-section text-center shadow">
-            <h1 class="display-4 fw-bold mb-4">突破極限，成就更好的自己</h1>
-            <p class="fs-4 col-md-8 mx-auto mb-5">
+    <header class="hero-section">
+        <div class="container">
+            <h1 class="display-3 fw-bolder mb-4" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">突破極限，成就更好的自己</h1>
+            <p class="lead mb-5 text-light" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">
                 歡迎體驗我們為您打造的專屬健身生態圈。<br>
                 立即預約專業 1對1 教練、揮灑汗水的有氧團課，或選購最高品質的健身補劑。
             </p>
-            <a href="/course/list" class="btn btn-primary btn-lg px-5 me-md-3">立即預約</a>
-            <a href="/product/mall" class="btn btn-outline-light btn-lg px-5">逛逛商城</a>
+            <div>
+                <a href="/course" class="btn btn-primary btn-lg px-5 me-3 fw-bold shadow">立即預約</a>
+                <a href="/product/mall" class="btn btn-outline-light btn-lg px-5 fw-bold">逛逛商城</a>
+            </div>
         </div>
-    </div>
+    </header>
 
-    <div class="container mt-5 text-center text-muted">
-        <p>&copy; 2026 GymSystem 健身房系統開發團隊</p>
-    </div>
+    <section class="feature-section">
+        <div class="container text-center">
+            <h2 class="fw-bold mb-5">探索 GymSystem</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="p-4 rounded" style="background-color: #252525;">
+                        <h1 class="mb-3">💪</h1>
+                        <h4 class="fw-bold">專業課程預約</h4>
+                        <p class="text-muted small">隨時查看並預約頂級教練的私人課程或團體有氧，不漏接任何訓練機會。</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-4 rounded" style="background-color: #252525;">
+                        <h1 class="mb-3">🛒</h1>
+                        <h4 class="fw-bold">精選周邊商城</h4>
+                        <p class="text-muted small">從高蛋白乳清到專業護具，一鍵下單，直接宅配到家或場館自取。</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-4 rounded" style="background-color: #252525;">
+                        <h1 class="mb-3">📊</h1>
+                        <h4 class="fw-bold">會員專屬中心</h4>
+                        <p class="text-muted small">追蹤您的訂單紀錄、課程進度以及身體數據，全方位管理您的健康。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    <!-- ================= Bootstrap 5 JS ================= -->
+    <footer class="footer text-center text-muted small">
+        <div class="container">
+            © 2026 GymSystem 健身房系統開發團隊. All Rights Reserved.
+        </div>
+    </footer>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- ================= 登出功能的 AJAX 腳本 ================= -->
-    <script>
-        function logout() {
-            if(confirm('確定要登出嗎？')) {
-                // 呼叫我們剛剛在 MembersController 寫好的登出 API
-                fetch('/api/members/logout', { method: 'POST' })
-                .then(response => {
-                    if(response.ok) {
-                        alert('登出成功！');
-                        window.location.href = '/'; // 重新整理首頁
-                    }
-                });
-            }
-        }
-    </script>
 </body>
 </html>

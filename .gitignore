@@ -1,1 +1,42 @@
-/target/
+# ════════════════════════════════════════════
+# GymSystem - .gitignore
+# ════════════════════════════════════════════
+
+# ── 🔐 機密設定（絕對不能 push）──
+src/main/resources/application-secret.properties
+
+# ── Maven ──
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# ── Eclipse ──
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# ── IntelliJ IDEA ──
+.idea
+*.iws
+*.iml
+*.ipr
+
+# ── VS Code ──
+.vscode/
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+
+# ── Log ──
+*.log
+logs/
+
+# ── Spring Boot jar ──
+*.jar
+*.war

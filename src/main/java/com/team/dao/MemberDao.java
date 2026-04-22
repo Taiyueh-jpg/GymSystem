@@ -1,20 +1,17 @@
 package com.team.dao;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import com.team.model.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import java.util.Optional;
 
-// ==========================================
-// 👑 同學 A 負責區域：會員與管理員 DAO
-// ==========================================
-
+@Repository
 public interface MemberDao extends JpaRepository<Member, Long> {
     
-    // 🌟 架構師魔法：只要寫 findBy + 欄位名稱，Spring 就會自動幫你寫好 SQL 語法！
-    // 這等同於 SQL: SELECT * FROM member WHERE email = ?
-    Member findByEmail(String email);
+    // 透過 Email 尋找會員 (登入時使用)
+    Optional<Member> findByEmail(String email);
     
+    // 檢查 Email 是否已經被註冊過 (註冊時防呆用)
+    boolean existsByEmail(String email);
 }
