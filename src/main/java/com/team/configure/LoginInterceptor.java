@@ -6,38 +6,38 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-// ==========================================
-// 🛡️ 系統保全：檢查登入狀態的攔截器
-// ==========================================
+/**
+ * 🛡️ 系統安全守衛：登入攔截器
+ * 負責檢查每個受到保護的 API 請求，是否帶有合法的登入狀態 (Session)。
+ */
 @Component
 public class LoginInterceptor implements HandlerInterceptor {
 
-    // preHandle 代表在請求抵達 Controller "之前" 會先執行這裡
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         
-        // 1. 取得當前的 Session
-        HttpSession session = request.getSession();
-        Object member = session.getAttribute("loggedInMember");
-
-        // 2. 判斷是否有通行證
-        if (member == null) {
-            // 🚨 沒登入的壞人被抓到了！
-            
-            // 判斷他是呼叫 API 還是看網頁
-            if (request.getRequestURI().startsWith("/api/")) {
-                // 如果是呼叫 API，回傳 401 未授權錯誤
-                response.setStatus(401);
-                response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().write("{\"error\": \"請先登入會員！\"}");
-            } else {
-                // 如果是看網頁，就強制把他踢回首頁或登入頁
-                response.sendRedirect("/product/mall"); // 暫時先踢回商城，等芳羽寫好 login.html 再改
-            }
-            
-            return false; // 🛑 false 代表「擋下」，請求不會走到 Controller
+        // 💡 [非常重要] 放行 OPTIONS 請求：前端 VS Code 跨域 (CORS) 存取時，瀏覽器會先發送 OPTIONS 預檢請求，這個必須放行。
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return true;
         }
 
-        return true; // ✅ true 代表「放行」，請進！
+        // 取得當前的 Session
+        HttpSession session = request.getSession();
+        
+        // 檢查 Session 中是否有存放我們在 Controller 發放的「會員」或「管理員/教練」資料
+        Object loggedInMember = session.getAttribute("loggedInMember");
+        Object loggedInAdmin = session.getAttribute("loggedInAdmin");
+
+        // 如果有任何一種身分登入，就開門放行
+        if (loggedInMember != null || loggedInAdmin != null) {
+            return true; 
+        }
+
+        // 🛑 如果都沒有登入，將他擋下並回傳 401 Unauthorized 錯誤
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"message\": \"安管系統攔截：請先登入後再進行操作！\"}");
+        
+        return false; // false 代表中止請求，不會進入你的 Controller
     }
 }
