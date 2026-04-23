@@ -1,9 +1,8 @@
 package com.team.service;
 
-import com.team.dao.EmailLogRepository;
-import com.team.model.ContactMsg;
-import com.team.model.EmailLog;
-import jakarta.mail.internet.MimeMessage;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -11,8 +10,11 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import com.team.dao.EmailLogRepository;
+import com.team.model.ContactMsg;
+import com.team.model.EmailLog;
+
+import jakarta.mail.internet.MimeMessage;
 
 @Service
 public class EmailService {

@@ -41,6 +41,12 @@ public class ContactMsg {
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+    
+    @Column(name = "reply_content")
+    private String replyContent;
+
+    @Column(name = "replied_at")
+    private java.time.LocalDateTime repliedAt;
 
     // =====================================
     // 請使用 IDE 自動產生 Getter 和 Setter

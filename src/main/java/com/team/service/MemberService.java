@@ -1,16 +1,11 @@
 package com.team.service;
 
-import com.team.dao.MemberRepository;
-import com.team.model.Member;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
+import com.team.dao.MemberDao;
+import com.team.model.Member;
+import com.team.model.MemberRegisterDTO;
 
 /**
  * 🛠️ 會員業務邏輯層 (Member Service)

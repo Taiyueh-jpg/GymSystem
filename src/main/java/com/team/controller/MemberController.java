@@ -1,15 +1,15 @@
 package com.team.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller; 
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping; // 🌟 新增
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.team.model.Member;
 import com.team.model.MemberRegisterDTO;
 import com.team.service.MemberService;
+
 import jakarta.servlet.http.HttpSession;
 
 @Controller  
