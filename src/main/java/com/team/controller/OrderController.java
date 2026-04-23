@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/orders")
-@CrossOrigin // 允許跨域請求，這對前端同學 (VS Code 派) 開發非常重要！
+@CrossOrigin(origins = {"http://localhost:5500", "http://127.0.0.1:5500"}, allowCredentials = "true")
 public class OrderController {
 
     @Autowired

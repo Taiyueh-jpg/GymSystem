@@ -23,7 +23,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/member")
-@CrossOrigin(origins = "*") // 允許所有來源跨域調用，開發階段非常方便
+@CrossOrigin(origins = {"http://localhost:5500", "http://127.0.0.1:5500"}, allowCredentials = "true")
 public class MemberController {
 
     @Autowired

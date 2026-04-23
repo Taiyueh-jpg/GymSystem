@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>常見問題 | GymSystem</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #1a1a1a; --nav-bg: #2d2d2d; --card: #2a2a2a;
+      --border: #3a3a3a; --accent: #2979ff; --accent-h: #5393ff;
+      --text: #ffffff; --muted: #aaaaaa; --radius: 8px;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'Noto Sans TC', sans-serif; min-height: 100vh; }
+
+    nav {
+      background: var(--nav-bg); height: 60px; display: flex;
+      align-items: center; justify-content: space-between;
+      padding: 0 2rem; position: sticky; top: 0; z-index: 100;
+    }
+    .nav-logo { display:flex; align-items:center; gap:.5rem; text-decoration:none; color:var(--text); font-size:1.1rem; font-weight:700; }
+    .nav-logo span { font-size:1.3rem; }
+    .nav-right { display:flex; align-items:center; gap:1.5rem; }
+    .nav-right a { color:var(--muted); text-decoration:none; font-size:.9rem; transition:color .2s; }
+    .nav-right a:hover { color:var(--text); }
+    .nav-right a.active { color:var(--text); }
+    .btn-login { border:1px solid var(--text); border-radius:6px; padding:.4rem 1rem; color:var(--text) !important; font-size:.85rem; }
+    .btn-login:hover { background:rgba(255,255,255,.1) !important; }
+
+    .hero {
+      background: linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,.7)),
+        url('https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1400&q=80') center/cover no-repeat;
+      padding: 5rem 2rem 4rem; text-align: center;
+    }
+    .hero h1 { font-size: clamp(1.8rem,4vw,2.6rem); font-weight:700; margin-bottom:.8rem; }
+    .hero p { color:var(--muted); font-size:.95rem; margin-bottom:2rem; }
+
+    .search-wrap { max-width:500px; margin:0 auto; position:relative; }
+    .search-wrap input {
+      width:100%; padding:.8rem 3rem .8rem 1.2rem;
+      background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2);
+      border-radius:6px; color:var(--text); font-family:inherit; font-size:.9rem;
+      outline:none; backdrop-filter:blur(8px); transition:border-color .2s,background .2s;
+    }
+    .search-wrap input:focus { border-color:var(--accent); background:rgba(255,255,255,.12); }
+    .search-wrap input::placeholder { color:rgba(255,255,255,.4); }
+    .search-icon { position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:rgba(255,255,255,.4); pointer-events:none; }
+    #searchClear { display:none; position:absolute; right:2.5rem; top:50%; transform:translateY(-50%); background:none; border:none; color:rgba(255,255,255,.4); cursor:pointer; font-size:.9rem; padding:2px 4px; }
+    #searchClear:hover { color:var(--text); }
+
+    .container { max-width:860px; margin:0 auto; padding:3rem 1.5rem 5rem; }
+
+    .tabs { display:flex; flex-wrap:wrap; gap:.5rem; margin-bottom:2rem; }
+    .tab-btn { padding:.45rem 1.2rem; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--muted); font-family:inherit; font-size:.85rem; cursor:pointer; transition:all .2s; }
+    .tab-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .tab-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+    #searchMsg { font-size:.85rem; color:var(--muted); margin-bottom:1.2rem; min-height:1.2em; }
+
+    .faq-section { margin-bottom:2rem; }
+    .faq-section-header { display:flex; align-items:center; gap:.7rem; margin-bottom:.8rem; padding-bottom:.6rem; border-bottom:1px solid var(--border); }
+    .faq-section-header h2 { font-size:.78rem; font-weight:700; letter-spacing:.12em; color:var(--accent); text-transform:uppercase; }
+    .faq-count { font-size:.72rem; background:rgba(41,121,255,.15); color:var(--accent); border-radius:10px; padding:.1rem .5rem; font-weight:600; }
+
+    .accordion { display:flex; flex-direction:column; gap:.4rem; }
+    .faq-item { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; transition:border-color .2s; }
+    .faq-item.open { border-color:rgba(41,121,255,.5); }
+    .faq-q { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1rem 1.2rem; cursor:pointer; user-select:none; transition:background .2s; }
+    .faq-q:hover { background:rgba(255,255,255,.03); }
+    .faq-item.open .faq-q { background:rgba(41,121,255,.07); }
+    .faq-question { font-size:.92rem; font-weight:500; line-height:1.5; }
+    .faq-chevron { flex-shrink:0; width:28px; height:28px; border-radius:50%; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--muted); transition:transform .3s,background .2s,border-color .2s,color .2s; }
+    .faq-item.open .faq-chevron { transform:rotate(180deg); background:var(--accent); border-color:var(--accent); color:#fff; }
+    .faq-a-wrap { max-height:0; overflow:hidden; transition:max-height .35s cubic-bezier(.4,0,.2,1); }
+    .faq-a { padding:1rem 1.2rem 1.1rem; font-size:.88rem; color:var(--muted); line-height:1.8; border-top:1px solid var(--border); }
+    mark { background:rgba(41,121,255,.25); color:var(--accent-h); border-radius:2px; padding:0 2px; }
+
+    .loader { text-align:center; padding:4rem 1rem; color:var(--muted); }
+    .spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; margin:0 auto 1rem; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    .empty { text-align:center; padding:4rem 1rem; display:none; }
+    .empty.show { display:block; }
+    .empty-icon { font-size:2.5rem; margin-bottom:1rem; opacity:.5; }
+    .empty h3 { font-size:1rem; margin-bottom:.5rem; }
+    .empty p { color:var(--muted); font-size:.85rem; margin-bottom:1.5rem; }
+
+    .cta-section { margin-top:3rem; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:2.5rem; text-align:center; }
+    .cta-section h3 { font-size:1.2rem; font-weight:700; margin-bottom:.5rem; }
+    .cta-section p { color:var(--muted); font-size:.88rem; margin-bottom:1.5rem; }
+    .btn-primary { display:inline-block; background:var(--accent); color:#fff; border:none; border-radius:6px; padding:.7rem 2rem; font-family:inherit; font-size:.9rem; font-weight:700; cursor:pointer; text-decoration:none; transition:background .2s,transform .15s; }
+    .btn-primary:hover { background:var(--accent-h); transform:translateY(-1px); }
+
+    footer { background:var(--nav-bg); text-align:center; padding:1.2rem; font-size:.8rem; color:var(--muted); border-top:1px solid var(--border); }
+    .fade-in { animation:fadeIn .35s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+    @media(max-width:600px) { nav{padding:0 1rem;} .hero{padding:3rem 1rem 2.5rem;} .container{padding:2rem 1rem 4rem;} .cta-section{padding:1.5rem;} }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html"><span>🏋️</span> GymSystem</a>
+  <div class="nav-right">
+    <a href="index.html">首頁</a>
+    <a href="article-list.html">文章</a>
+    <a href="faq.html" class="active">常見問題</a>
+    <a href="contact.html">聯絡我們</a>
+    <a href="login.html" class="btn-login">登入 / 註冊</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <h1>常見問題</h1>
+  <p>整理了最常見的問題，快速為你解惑</p>
+  <div class="search-wrap">
+    <input type="text" id="searchInput" placeholder="搜尋問題關鍵字…" autocomplete="off" />
+    <button id="searchClear">✕</button>
+    <span class="search-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    </span>
+  </div>
+</section>
+
+<div class="container">
+  <div class="tabs" id="categoryTabs">
+    <button class="tab-btn active" data-cat="all">全部</button>
+  </div>
+  <div id="searchMsg"></div>
+  <div id="loader" class="loader"><div class="spinner"></div><div>載入中…</div></div>
+  <div id="faqContainer"></div>
+  <div id="emptyState" class="empty">
+    <div class="empty-icon">🔍</div>
+    <h3>找不到相關問題</h3>
+    <p>試試其他關鍵字，或直接聯繫我們。</p>
+    <a href="contact.html" class="btn-primary">前往留言</a>
+  </div>
+  <div class="cta-section" id="ctaSection" style="display:none;">
+    <h3>還有其他疑問？</h3>
+    <p>找不到答案？我們的客服團隊隨時為你服務。</p>
+    <a href="contact.html" class="btn-primary">聯絡我們留言</a>
+  </div>
+</div>
+
+<footer>© 2026 GymSystem 健身房管理系統. All Rights Reserved.</footer>
+
+<script>
+  const API = 'http://localhost:8080/api/faq';
+  let allFaqs = [], currentCat = 'all', searchTimer = null;
+
+  async function loadFaqs() {
+    try {
+      const res = await fetch(`${API}/grouped`);
+      if (!res.ok) throw new Error();
+      const grouped = await res.json();
+      allFaqs = [];
+      Object.entries(grouped).forEach(([cat, items]) =>
+        items.forEach(f => allFaqs.push({ ...f, category: cat }))
+      );
+      buildTabs(Object.keys(grouped));
+      renderGrouped(grouped);
+      document.getElementById('ctaSection').style.display = 'block';
+    } catch {
+      document.getElementById('loader').innerHTML = '<p style="color:var(--muted)">⚠ 無法載入資料，請稍後再試。</p>';
+    }
+  }
+
+  function buildTabs(categories) {
+    const wrap = document.getElementById('categoryTabs');
+    categories.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.className = 'tab-btn'; btn.dataset.cat = cat; btn.textContent = cat;
+      btn.addEventListener('click', () => {
+        currentCat = cat;
+        wrap.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const kw = document.getElementById('searchInput').value.trim();
+        kw ? renderSearch(kw) : renderFiltered();
+      });
+      wrap.appendChild(btn);
+    });
+    document.getElementById('loader').style.display = 'none';
+  }
+
+  document.querySelector('.tab-btn[data-cat="all"]').addEventListener('click', function () {
+    currentCat = 'all';
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    const kw = document.getElementById('searchInput').value.trim();
+    kw ? renderSearch(kw) : renderFiltered();
+  });
+
+  function renderGrouped(grouped) {
+    const c = document.getElementById('faqContainer');
+    c.innerHTML = ''; document.getElementById('emptyState').classList.remove('show');
+    if (!Object.keys(grouped).length) { document.getElementById('emptyState').classList.add('show'); return; }
+    Object.entries(grouped).forEach(([cat, items]) => c.appendChild(buildSection(cat, items)));
+  }
+
+  function renderFiltered() {
+    document.getElementById('searchMsg').textContent = '';
+    const c = document.getElementById('faqContainer');
+    c.innerHTML = ''; document.getElementById('emptyState').classList.remove('show');
+    const items = currentCat === 'all' ? allFaqs : allFaqs.filter(f => f.category === currentCat);
+    if (!items.length) { document.getElementById('emptyState').classList.add('show'); return; }
+    const grouped = {};
+    items.forEach(f => { (grouped[f.category] = grouped[f.category] || []).push(f); });
+    Object.entries(grouped).forEach(([cat, arr]) => c.appendChild(buildSection(cat, arr)));
+  }
+
+  function renderSearch(kw) {
+    const c = document.getElementById('faqContainer');
+    c.innerHTML = ''; document.getElementById('emptyState').classList.remove('show');
+    let items = allFaqs.filter(f =>
+      f.question.toLowerCase().includes(kw.toLowerCase()) ||
+      f.answer.toLowerCase().includes(kw.toLowerCase())
+    );
+    if (currentCat !== 'all') items = items.filter(f => f.category === currentCat);
+    document.getElementById('searchMsg').textContent = `搜尋「${kw}」：找到 ${items.length} 筆結果`;
+    if (!items.length) { document.getElementById('emptyState').classList.add('show'); return; }
+    const grouped = {};
+    items.forEach(f => { (grouped[f.category] = grouped[f.category] || []).push(f); });
+    Object.entries(grouped).forEach(([cat, arr]) => c.appendChild(buildSection(cat, arr, kw)));
+  }
+
+  function buildSection(cat, items, kw = '') {
+    const sec = document.createElement('div');
+    sec.className = 'faq-section fade-in';
+    sec.innerHTML = `<div class="faq-section-header"><h2>${esc(cat)}</h2><span class="faq-count">${items.length}</span></div><div class="accordion"></div>`;
+    const acc = sec.querySelector('.accordion');
+    items.forEach(f => acc.appendChild(buildItem(f, kw)));
+    return sec;
+  }
+
+  function buildItem(faq, kw = '') {
+    const item = document.createElement('div');
+    item.className = 'faq-item';
+    const q = kw ? hl(esc(faq.question), kw) : esc(faq.question);
+    const a = kw ? hl(esc(faq.answer), kw) : esc(faq.answer);
+    item.innerHTML = `
+      <div class="faq-q">
+        <span class="faq-question">${q}</span>
+        <span class="faq-chevron">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </span>
+      </div>
+      <div class="faq-a-wrap"><div class="faq-a">${a.replace(/\n/g,'<br>')}</div></div>`;
+    item.querySelector('.faq-q').addEventListener('click', () => {
+      const open = item.classList.contains('open');
+      item.parentElement.querySelectorAll('.faq-item.open').forEach(el => {
+        el.classList.remove('open'); el.querySelector('.faq-a-wrap').style.maxHeight = '0';
+      });
+      if (!open) {
+        item.classList.add('open');
+        const wrap = item.querySelector('.faq-a-wrap');
+        wrap.style.maxHeight = wrap.scrollHeight + 'px';
+      }
+    });
+    return item;
+  }
+
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function hl(html, kw) { return html.replace(new RegExp(`(${kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'), '<mark>$1</mark>'); }
+
+  const inp = document.getElementById('searchInput');
+  const clr = document.getElementById('searchClear');
+  inp.addEventListener('input', () => {
+    const kw = inp.value.trim();
+    clr.style.display = kw ? 'block' : 'none';
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      kw ? renderSearch(kw) : (document.getElementById('searchMsg').textContent = '', renderFiltered());
+    }, 300);
+  });
+  clr.addEventListener('click', () => {
+    inp.value = ''; clr.style.display = 'none';
+    document.getElementById('searchMsg').textContent = '';
+    renderFiltered(); inp.focus();
+  });
+
+  loadFaqs();
+</script>
+</body>
+</html>

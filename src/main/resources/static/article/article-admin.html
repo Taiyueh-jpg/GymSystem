@@ -43,7 +43,17 @@
       border-radius: 6px; font-size: 14px; transition: all .2s;
     }
     .nav-links a:hover, .nav-links a.active { background: var(--border); color: var(--text); }
-    .nav-right { color: var(--muted); font-size: .88rem; }
+    .nav-right {
+      display: flex; align-items: center; gap: 12px;
+      color: var(--muted); font-size: .88rem;
+    }
+    .btn-logout {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted); padding: 5px 14px; border-radius: 6px;
+      font-size: .82rem; cursor: pointer; font-family: inherit;
+      transition: all .2s;
+    }
+    .btn-logout:hover { border-color: var(--error); color: var(--error); }
 
     /* ── Layout ── */
     .container { max-width: 1100px; margin: 36px auto; padding: 0 24px; flex: 1; }
@@ -230,7 +240,15 @@
     <a href="keyword-filter-admin.html">關鍵字過濾</a>
     <a href="article-admin.html" class="active">文章管理</a>
   </div>
-  <div class="nav-right">Admin #<span id="adminIdDisplay">1</span></div>
+  <!--
+    ✅ [修改] 移除寫死的 "Admin #1"，改為：
+       - 顯示從 /api/admin/me 取得的管理員姓名與 ID
+       - 加入登出按鈕，點擊後呼叫 /api/admin/logout 並跳轉登入頁
+  -->
+  <div class="nav-right">
+    <span id="adminDisplay">載入中...</span>
+    <button class="btn-logout" onclick="logout()">登出</button>
+  </div>
 </nav>
 
 <div class="container">
@@ -313,7 +331,6 @@
     <div class="form-group">
       <label>封面圖片（選填，最大 5MB）</label>
 
-      <!-- 尚未有圖：顯示拖放區 -->
       <div class="upload-zone" id="uploadZone">
         <input type="file" id="fImageFile" accept="image/*" onchange="handleFileSelect(event)" />
         <div class="upload-zone-text">
@@ -322,16 +339,13 @@
         </div>
       </div>
 
-      <!-- 上傳中提示 -->
       <div class="upload-progress" id="uploadProgress">⏳ 上傳至 Cloudinary 中...</div>
 
-      <!-- 預覽圖（上傳成功後顯示） -->
       <div class="img-preview-wrap" id="imgPreviewWrap">
         <img class="img-preview" id="imgPreview" src="" alt="封面預覽" />
         <button class="img-remove" onclick="removeImage()" title="移除圖片">✕</button>
       </div>
 
-      <!-- 儲存 Cloudinary 回傳的網址 -->
       <input type="hidden" id="fImageUrl" />
     </div>
 
@@ -352,14 +366,80 @@
 <div id="toast"></div>
 
 <script>
-  const API      = 'http://localhost:8080/api/articles';
-  const ADMIN_ID = 1; // 待 admin 登入模組完成後從 sessionStorage 取
+  const API = 'http://localhost:8080/api/articles';
+
+  /**
+   * ✅ [修改] ADMIN_ID 不再寫死。
+   * 改為在頁面載入時，透過 checkLoginAndInit() 呼叫 GET /api/admin/me，
+   * 從後端 Session 取得目前登入者的 adminId，再存到這個變數中。
+   * 若未登入，checkLoginAndInit() 會直接跳轉到登入頁，不會執行後續流程。
+   */
+  let ADMIN_ID = null;
 
   let allArticles   = [];
   let currentFilter = 'all';
   let isEditMode    = false;
 
-  window.addEventListener('DOMContentLoaded', loadArticles);
+  // ── 頁面入口：先驗證登入，再載入資料 ──────────────────────
+  window.addEventListener('DOMContentLoaded', checkLoginAndInit);
+
+  /**
+   * ✅ [新增] 登入驗證 + 初始化
+   *
+   * 1. 呼叫 GET /api/admin/me（需登入才能存取，WebConfig 已加入攔截名單）
+   * 2. 若後端回傳 401 → 表示 Session 中沒有登入資訊 → 跳轉登入頁
+   * 3. 若成功取得 Admin 物件 → 記錄 ADMIN_ID，更新 Navbar 顯示，再載入文章
+   *
+   * 對應後端：AdminController.getMe()
+   */
+  async function checkLoginAndInit() {
+    try {
+      const res = await fetch('http://localhost:8080/api/admin/me', { credentials: 'include' });
+
+      if (res.status === 401) {
+        // ❌ 未登入：跳轉到登入頁
+        // 💡 請將下方路徑改成你的實際登入頁路徑
+        window.location.href = '../login.html';
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      // ✅ 已登入：取得 Admin 物件
+      const admin = await res.json();
+
+      // 將 adminId 存入模組層級變數，後續新增/編輯文章時使用
+      ADMIN_ID = admin.adminId;
+
+      // 更新 Navbar 右上角顯示（姓名 + ID）
+      document.getElementById('adminDisplay').textContent =
+        `${admin.name}（${admin.role === 'admin' ? '管理者' : '教練'}）`;
+
+      // 登入驗證通過，載入文章列表
+      await loadArticles();
+
+    } catch (e) {
+      showToast('驗證登入狀態失敗，請重新整理', 'error');
+    }
+  }
+
+  /**
+   * ✅ [新增] 登出功能
+   *
+   * 呼叫 POST /api/admin/logout 銷毀後端 Session，
+   * 完成後跳轉到登入頁，確保前後端狀態同步清除。
+   */
+  async function logout() {
+    try {
+      await fetch('http://localhost:8080/api/admin/logout', { method: 'POST', credentials: 'include' });
+    } catch (e) {
+      // 即使請求失敗，仍強制跳轉登入頁（例如後端已重啟導致 Session 消失）
+    } finally {
+      window.location.href = '../login.html';
+    }
+  }
 
   // ── 載入文章列表 ────────────────────────────────────────
   async function loadArticles() {
@@ -430,14 +510,12 @@
     const file = event.target.files[0];
     if (!file) return;
 
-    // 前端先檢查大小
     if (file.size > 3 * 1024 * 1024) {
       showToast('圖片不可超過 3MB', 'error');
       event.target.value = '';
       return;
     }
 
-    // 顯示上傳中
     document.getElementById('uploadZone').style.display = 'none';
     document.getElementById('uploadProgress').classList.add('show');
 
@@ -449,7 +527,6 @@
         method: 'POST',
         credentials: 'include',
         body: formData
-        // 注意：FormData 不要手動設 Content-Type，瀏覽器會自動帶 boundary
       });
 
       if (!res.ok) {
@@ -460,21 +537,17 @@
       const data = await res.json();
       const imageUrl = data.imageUrl;
 
-      // 儲存網址到隱藏欄位
       document.getElementById('fImageUrl').value = imageUrl;
-
-      // 顯示預覽
       document.getElementById('imgPreview').src = imageUrl;
       document.getElementById('imgPreviewWrap').classList.add('show');
       showToast('✅ 圖片上傳成功', 'success');
 
     } catch (e) {
       showToast('圖片上傳失敗：' + e.message, 'error');
-      // 還原拖放區
       document.getElementById('uploadZone').style.display = 'block';
     } finally {
       document.getElementById('uploadProgress').classList.remove('show');
-      event.target.value = ''; // 重設 input，讓同一張圖可以重新選
+      event.target.value = '';
     }
   }
 
@@ -496,7 +569,7 @@
     document.getElementById('fCategory').value = '';
     document.getElementById('fStatus').value = 'draft';
     document.getElementById('fIsPinned').checked = false;
-    removeImage(); // 清空圖片區
+    removeImage();
     document.getElementById('formModal').classList.add('show');
   }
 
@@ -514,7 +587,6 @@
     document.getElementById('fStatus').value = a.status;
     document.getElementById('fIsPinned').checked = !!a.isPinned;
 
-    // 如果已有圖片，顯示預覽
     if (a.imageUrl) {
       document.getElementById('fImageUrl').value = a.imageUrl;
       document.getElementById('imgPreview').src = a.imageUrl;
@@ -546,6 +618,10 @@
     btn.disabled = true;
     btn.textContent = '處理中…';
 
+    /**
+     * ✅ [修改] admin.adminId 不再寫死為 1，
+     * 改用 checkLoginAndInit() 從後端取得並存入的 ADMIN_ID 變數。
+     */
     const payload = {
       title,
       content,
@@ -553,7 +629,7 @@
       status:   document.getElementById('fStatus').value,
       imageUrl: document.getElementById('fImageUrl').value || null,
       isPinned: document.getElementById('fIsPinned').checked,
-      admin: { adminId: ADMIN_ID }
+      admin: { adminId: ADMIN_ID } // ✅ 動態取得，不再寫死
     };
 
     try {
@@ -593,10 +669,10 @@
 
   // ── 快速發布 ─────────────────────────────────────────────
   async function publishArticle(id) {
-    if (!confirm('確定要發布此文章？')) return;
+    if (!confirm('確定要發布此文章？發布後將自動寄信通知所有有效會員。')) return;
     try {
       const res = await fetch(`${API}/publish/${id}`, { method: 'PATCH', credentials: 'include' });
-      if (res.ok) { showToast('✅ 已發布', 'success'); await loadArticles(); }
+      if (res.ok) { showToast('✅ 已發布，通知信件寄送中', 'success'); await loadArticles(); }
       else showToast('發布失敗', 'error');
     } catch (e) { showToast('網路錯誤', 'error'); }
   }
@@ -613,7 +689,7 @@
         body: JSON.stringify({
           title: a.title, content: a.content, category: a.category,
           status: a.status, imageUrl: a.imageUrl, isPinned: pin,
-          admin: { adminId: ADMIN_ID }
+          admin: { adminId: ADMIN_ID } // ✅ 動態取得
         })
       });
       if (res.ok) {
