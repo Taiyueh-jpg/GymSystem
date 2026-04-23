@@ -13,9 +13,7 @@ app.controller('MainCtrl', function($scope, $http, $window) {
 
     // 登出邏輯
     $scope.logout = function() {
-		var logoutUrl = $scope.isMember() 
-		    ? 'http://localhost:8080/api/member/logout' 
-		    : 'http://localhost:8080/api/admin/logout';
+        var logoutUrl = $scope.isMember() ? '/api/member/logout' : '/api/admin/logout';
         
         $http.post(logoutUrl).then(function(res) {
             localStorage.removeItem('gymUser');
@@ -38,21 +36,15 @@ app.controller('AuthCtrl', function($scope, $http, $window) {
     };
 
     $scope.doLogin = function() {
-		var apiUrl = $scope.loginType === 'member' 
-		    ? 'http://localhost:8080/api/member/login' 
-		    : 'http://localhost:8080/api/admin/login';
+        var apiUrl = $scope.loginType === 'member' ? '/api/member/login' : '/api/admin/login';
 
-        $http.post(apiUrl, $scope.loginData, { withCredentials: true })
-		.then(function(response) {
-		    localStorage.setItem('gymUser', JSON.stringify(response.data));
-		    //alert('登入成功，歡迎回來！');
-		    
-		    // ✅ 依登入類型跳轉不同頁面
-		    if ($scope.loginType === 'admin') {
-		        $window.location.href = 'http://127.0.0.1:5500/article/article-admin.html'; // admin 去後台
-		    } else {
-		        $window.location.href = 'http://127.0.0.1:5500/index.html'; // 會員去首頁
-		    }
-		});
+        $http.post(apiUrl, $scope.loginData)
+            .then(function(response) {
+                localStorage.setItem('gymUser', JSON.stringify(response.data));
+                alert('登入成功，歡迎回來！');
+                $window.location.href = 'index.html'; 
+            }, function(error) {
+                alert(error.data.message || '帳號或密碼錯誤');
+            });
     };
 });
