@@ -1,17 +1,15 @@
 package com.team.dao;
 
-import com.team.model.*; // 匯入剛剛寫好的實體類別
+import com.team.model.Porder;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
 import java.util.List;
-
-//==========================================
-//📦 同學 E 負責區域：訂單與明細 DAO
-//==========================================
 
 @Repository
 public interface PorderDao extends JpaRepository<Porder, Long> {
- // 查詢某位會員所有的歷史訂單
- List<Porder> findByMemberIdOrderByOrderDateDesc(Long memberId);
+    // 透過會員 ID 查詢所有訂單，並依下單時間降序排列 (最新在前面)
+    List<Porder> findByMemberIdOrderByOrderDateDesc(Long memberId);
+
+    // 🌟 查詢全公司所有訂單，並依照時間由新到舊排序 (後台用)
+    List<Porder> findAllByOrderByOrderDateDesc();
 }

@@ -13,37 +13,42 @@ public class MemberService {
     @Autowired
     private MemberDao memberDao;
     
- // 處理登入邏輯的方法
+    // ==========================================
+    // 1. 處理登入邏輯的方法
+    // ==========================================
     public Member login(String email, String password) {
         
-        // 1. 去資料庫尋找這個信箱的會員
-        Member member = memberDao.findByEmail(email);
+        // 🌟 關鍵修復：加上 .orElse(null) 把 Optional 盒子打開
+        Member member = memberDao.findByEmail(email).orElse(null);
         
-        // 2. 判斷有沒有這個人？密碼對不對？
+        // 判斷有沒有這個人？密碼對不對？
         if (member != null && member.getPassword().equals(password)) {
             System.out.println("🔓 登入成功：放行 " + member.getName());
-            return member; // 密碼正確，把會員資料回傳交給櫃台
+            return member; 
         } else {
             System.out.println("❌ 登入失敗：帳號或密碼錯誤");
-            return null;   // 密碼錯誤或找不到人，回傳空值
+            return null;   
         }
-    }	
+    }
     
-    // 處理註冊邏輯的方法
+    // ==========================================
+    // 2. 處理註冊邏輯的方法 (🌟 更新版：加入信箱重複檢查)
+    // ==========================================
     public void registerNewMember(MemberRegisterDTO dto) {
-        // 1. 建立一個全新的實體物件 (準備存進資料庫的格式)
+        // 1. 檢查信箱是否重複
+        if (memberDao.existsByEmail(dto.getEmail())) {
+            throw new RuntimeException("這個 Email 已經被註冊過囉！");
+        }
+
+        // 2. 把 DTO 包裹裡的資料，倒進真正的 Member 實體中
         Member newMember = new Member();
-        
-        // 2. 把 DTO 裡面的資料，倒進這個實體物件裡
         newMember.setName(dto.getName());
         newMember.setEmail(dto.getEmail());
-        newMember.setPassword(dto.getPassword()); // 實務上這裡還要幫密碼加密，我們後續再加
-        newMember.setMobile(dto.getPhone());
-        
-        // 3. 呼叫 DAO，正式存入 MySQL！
+        newMember.setPassword(dto.getPassword()); 
+        newMember.setMobile(dto.getPhone()); // 把表單的 phone 對應到資料庫的 mobile
+
+        // 3. 儲存進資料庫
         memberDao.save(newMember);
-        
-        
         
         System.out.println("✅ 會員資料已成功存入 SQL 資料庫！");
     }
