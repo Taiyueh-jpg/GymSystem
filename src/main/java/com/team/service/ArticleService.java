@@ -45,4 +45,10 @@ public class ArticleService {
     public void deleteArticle(Long id) {
         articleRepository.deleteById(id);
     }
+    
+ // 新增 getArticleById 方法
+    public Article getArticleById(Long id) {
+        return articleRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("找不到文章 id=" + id));
+    }
 }

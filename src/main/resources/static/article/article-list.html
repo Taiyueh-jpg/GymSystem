@@ -255,9 +255,16 @@
     return map[cat] || '📝';
   }
 
+  // Cloudinary 網址直接用，舊本機路徑才補 API_BASE
+  function resolveImageUrl(url) {
+    if (!url) return null;
+    return url.startsWith('http') ? url : `${API_BASE}/${url}`;
+  }
+
   function renderPinned(a) {
-    const imgHtml = a.imageUrl
-      ? `<img src="${API_BASE}/${a.imageUrl}" alt="${a.title}" onerror="this.parentElement.innerHTML='${categoryIcon(a.category)}'">`
+    const imgSrc = resolveImageUrl(a.imageUrl);
+    const imgHtml = imgSrc
+      ? `<img src="${imgSrc}" alt="${a.title}" onerror="this.parentElement.innerHTML='${categoryIcon(a.category)}'">`
       : categoryIcon(a.category);
     return `
       <div class="pinned-card" onclick="goDetail(${a.articleId})">
@@ -276,8 +283,9 @@
   }
 
   function renderCard(a) {
-    const imgHtml = a.imageUrl
-      ? `<img src="${API_BASE}/${a.imageUrl}" alt="${a.title}" onerror="this.style.display='none'">`
+    const imgSrc = resolveImageUrl(a.imageUrl);
+    const imgHtml = imgSrc
+      ? `<img src="${imgSrc}" alt="${a.title}" onerror="this.style.display='none'">`
       : categoryIcon(a.category);
     return `
       <div class="article-card" onclick="goDetail(${a.articleId})">
