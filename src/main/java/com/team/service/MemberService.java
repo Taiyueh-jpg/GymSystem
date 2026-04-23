@@ -1,12 +1,24 @@
 package com.team.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import com.team.dao.MemberDao;
+import com.team.dao.MemberRepository;
 import com.team.model.Member;
-import com.team.model.MemberRegisterDTO;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * 🛠️ 會員業務邏輯層 (Member Service)
+ * * 技術細節：
+ * 1. 使用 @Transactional 確保資料異動的原子性。
+ * 2. 結合 DAO 層的分頁與模糊搜尋功能。
+ * 3. 處理登入狀態過濾與重複註冊防呆。
+ */
 @Service
 public class MemberService {
 
