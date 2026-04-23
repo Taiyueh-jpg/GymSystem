@@ -196,8 +196,12 @@
       document.title = `${article.title} — GymSystem`;
       document.getElementById('bc-title').textContent = article.title;
 
-      const coverHtml = article.imageUrl
-        ? `<img class="article-cover" src="${API_BASE}/${article.imageUrl}" alt="${article.title}" onerror="this.style.display='none'">`
+      // Cloudinary 網址直接用，舊本機路徑才補 API_BASE
+      const imgSrc = article.imageUrl
+        ? (article.imageUrl.startsWith('http') ? article.imageUrl : `${API_BASE}/${article.imageUrl}`)
+        : null;
+      const coverHtml = imgSrc
+        ? `<img class="article-cover" src="${imgSrc}" alt="${article.title}" onerror="this.style.display='none'">`
         : '';
 
       const pinnedBadge = article.isPinned

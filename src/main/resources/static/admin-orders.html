@@ -1,18 +1,25 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-TW" ng-app="GymApp">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GymSystem 後台管理 - 訂單戰情室</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="js/app.js"></script>
+    <style>
+        [ng\:cloak], [ng-cloak], .ng-cloak { display: none !important; }
+    </style>
 </head>
-<body class="bg-dark text-light">
+<body class="bg-dark text-light" ng-controller="MainCtrl" ng-cloak>
 
     <nav class="navbar navbar-dark bg-secondary mb-4">
         <span class="navbar-brand mb-0 h1">🛠️ GymSystem 後台管理系統</span>
-        <div>
-            <span id="admin-name" class="mr-3 text-warning">未登入</span>
-            <button class="btn btn-sm btn-outline-light" onclick="quickLogin()">模擬管理員登入</button>
+        <div class="d-flex align-items-center">
+            <span class="mr-3 text-warning">管理員：{{ currentUser.name }}</span>
+            <button class="btn btn-sm btn-danger" ng-click="logout()">登出系統</button>
+            <a href="admin-dashboard.html" class="btn btn-sm btn-outline-light ml-2">回管理大廳</a>
         </div>
     </nav>
 
@@ -33,10 +40,11 @@
                             <th>操作</th>
                         </tr>
                     </thead>
-                    <tbody id="admin-order-list">
+                    <tbody id="order-list">
                         <tr>
                             <td colspan="7" class="text-center py-4">
-                                <span class="text-muted">請先點擊右上角「模擬管理員登入」取得通行證！</span>
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-2 mb-0">載入中...</p>
                             </td>
                         </tr>
                     </tbody>
@@ -46,61 +54,49 @@
     </div>
 
     <script>
-        // --- 1. 模擬登入功能 (幫助我們在瀏覽器拿到 Session 通行證) ---
-        function quickLogin() {
-            // 使用您剛剛在 Postman 註冊的測試帳號
-            const loginData = {
-                email: "test@gmail.com",
-                password: "123456"
-            };
+        // 👉 權限檢查：確保只有員工能進入 (否則踢回首頁)
+        window.onload = function() {
+            const user = JSON.parse(localStorage.getItem('gymUser'));
+            if (!user || !user.role) {
+                alert('權限不足，請使用員工帳號登入！');
+                window.location.href = 'index.html';
+                return;
+            }
+            fetchAllOrders();
+        };
 
-            fetch('/api/members/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(loginData)
-            })
-            .then(res => {
-                if(res.ok) {
-                    document.getElementById('admin-name').innerText = "管理員：滷蛋大總管";
-                    alert("登入成功！已取得通行證，開始載入全站訂單！");
-                    fetchAllOrders(); // 登入成功後，立刻去抓訂單
-                } else {
-                    alert("登入失敗，請確認資料庫是否有 test@gmail.com 這個帳號！");
-                }
-            });
-        }
-
-        // --- 2. 抓取全公司訂單 (呼叫您的 /api/orders/all) ---
         function fetchAllOrders() {
-            fetch('/api/orders/all')
-                .then(res => {
-                    if(res.status === 401) throw new Error("401 未授權，被保全擋下了！");
-                    return res.json();
+            const orderList = document.getElementById('order-list');
+            orderList.innerHTML = '<tr><td colspan="7" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 mb-0">載入中...</p></td></tr>';
+
+            fetch('/api/orders')
+                .then(response => {
+                    if (!response.ok) throw new Error('無法取得訂單資料');
+                    return response.json();
                 })
                 .then(orders => {
-                    const orderList = document.getElementById('admin-order-list');
                     orderList.innerHTML = ''; 
-
                     if(orders.length === 0) {
-                        orderList.innerHTML = '<tr><td colspan="7" class="text-center">目前沒有任何訂單</td></tr>';
+                        orderList.innerHTML = '<tr><td colspan="7" class="text-center py-4">目前尚無任何訂單</td></tr>';
                         return;
                     }
 
                     orders.forEach(order => {
-                        let statusHtml = order.status;
+                        const date = new Date(order.orderDate);
+                        const formattedDate = date.toLocaleString('zh-TW', { hour12: false });
+                        
+                        let statusHtml = '';
                         let actionBtn = '';
-
-                        // 狀態徽章與操作按鈕邏輯
-                        if (order.status === 'paid') {
-                            statusHtml = '<span class="badge badge-success">已付款 (待出貨)</span>';
-                            // 呼叫出貨的 API
-                            actionBtn = `<button class="btn btn-sm btn-primary" onclick="shipOrder(${order.orderId})">🚀 執行出貨</button>`;
+                        
+                        if (order.status === 'processing') {
+                            statusHtml = '<span class="badge badge-warning px-2 py-1">處理中</span>';
+                            actionBtn = `<button class="btn btn-sm btn-primary shadow-sm" onclick="shipOrder(${order.orderId})">🚀 執行出貨</button>`;
                         } else if (order.status === 'shipped') {
-                            statusHtml = '<span class="badge badge-info">已出貨</span>';
-                            actionBtn = `<button class="btn btn-sm btn-secondary" disabled>已出貨</button>`;
+                            statusHtml = '<span class="badge badge-success px-2 py-1">已出貨</span>';
+                            actionBtn = '<button class="btn btn-sm btn-secondary" disabled>已完成</button>';
+                        } else {
+                            statusHtml = `<span class="badge badge-secondary">${order.status}</span>`;
                         }
-
-                        let formattedDate = order.orderDate ? order.orderDate.substring(0, 19).replace('T', ' ') : '';
 
                         const rowHtml = `
                             <tr>
@@ -117,11 +113,10 @@
                     });
                 })
                 .catch(err => {
-                    alert(err.message + " 請先點擊右上角登入！");
+                    alert(err.message);
                 });
         }
 
-        // --- 3. 執行出貨功能 (呼叫您的 PUT API) ---
         function shipOrder(orderId) {
             if(!confirm(`確定要將訂單 # ${orderId} 設為已出貨嗎？`)) return;
 
@@ -133,7 +128,7 @@
             .then(res => {
                 if(res.ok) {
                     alert(`訂單 # ${orderId} 已成功出貨！`);
-                    fetchAllOrders(); // 出貨成功後，重新整理表格
+                    fetchAllOrders(); 
                 } else {
                     alert("出貨失敗！");
                 }
