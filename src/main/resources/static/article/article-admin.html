@@ -1,12 +1,18 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
-<head>
+<html lang="zh-TW" ng-app="GymApp"> <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>文章管理 | GymSystem Admin</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+  <script src="../js/app.js"></script>
+  
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    /* 👉 防止 Angular 閃爍 */
+    [ng\:cloak], [ng-cloak], .ng-cloak { display: none !important; }
 
     :root {
       --bg:       #1a1a1a;
@@ -43,7 +49,7 @@
       border-radius: 6px; font-size: 14px; transition: all .2s;
     }
     .nav-links a:hover, .nav-links a.active { background: var(--border); color: var(--text); }
-    .nav-right { color: var(--muted); font-size: .88rem; }
+    .nav-right { color: var(--muted); font-size: .88rem; display: flex; align-items: center; }
 
     /* ── Layout ── */
     .container { max-width: 1100px; margin: 36px auto; padding: 0 24px; flex: 1; }
@@ -221,16 +227,17 @@
     }
   </style>
 </head>
-<body>
-
-<nav>
-  <a href="index.html" class="nav-logo">🏋️ GymSystem Admin</a>
-  <div class="nav-links">
-    <a href="contact-admin.html">客服留言</a>
-    <a href="keyword-filter-admin.html">關鍵字過濾</a>
+<body ng-controller="MainCtrl" ng-cloak> <nav>
+  <a href="../admin-dashboard.html" class="nav-logo">🏋️ GymSystem Admin</a> <div class="nav-links">
+    <a href="../contact/contact-admin.html">客服留言</a>
+    <a href="../contact/keyword-filter-admin.html">關鍵字過濾</a>
     <a href="article-admin.html" class="active">文章管理</a>
   </div>
-  <div class="nav-right">Admin #<span id="adminIdDisplay">1</span></div>
+  <div class="nav-right">
+    <a href="../admin-dashboard.html" style="color: #ccc; text-decoration: none; margin-right: 15px;">回管理大廳</a>
+    <span style="color: #ff9800; font-size: 14px; font-weight: bold; margin-right: 15px;">管理員：{{ currentUser.name }}</span>
+    <button class="btn btn-ghost btn-sm" style="border-color: #f44336; color: #f44336;" ng-click="logout()">登出系統</button>
+  </div>
 </nav>
 
 <div class="container">
@@ -271,7 +278,6 @@
 
 <footer>© 2026 GymSystem 健身房管理系統. All Rights Reserved.</footer>
 
-<!-- ── 新增 / 編輯 Modal ── -->
 <div class="modal-overlay" id="formModal" onclick="closeOnOverlay(event)">
   <div class="modal">
     <button class="modal-close" onclick="closeFormModal()">✕</button>
@@ -309,11 +315,9 @@
       <textarea id="fContent" placeholder="請輸入文章內容"></textarea>
     </div>
 
-    <!-- ── 封面圖上傳區 ── -->
     <div class="form-group">
       <label>封面圖片（選填，最大 5MB）</label>
 
-      <!-- 尚未有圖：顯示拖放區 -->
       <div class="upload-zone" id="uploadZone">
         <input type="file" id="fImageFile" accept="image/*" onchange="handleFileSelect(event)" />
         <div class="upload-zone-text">
@@ -322,16 +326,13 @@
         </div>
       </div>
 
-      <!-- 上傳中提示 -->
       <div class="upload-progress" id="uploadProgress">⏳ 上傳至 Cloudinary 中...</div>
 
-      <!-- 預覽圖（上傳成功後顯示） -->
       <div class="img-preview-wrap" id="imgPreviewWrap">
         <img class="img-preview" id="imgPreview" src="" alt="封面預覽" />
         <button class="img-remove" onclick="removeImage()" title="移除圖片">✕</button>
       </div>
 
-      <!-- 儲存 Cloudinary 回傳的網址 -->
       <input type="hidden" id="fImageUrl" />
     </div>
 
@@ -352,8 +353,14 @@
 <div id="toast"></div>
 
 <script>
+  // 👉 5. 權限防呆：未登入或非員工直接踢回首頁
+  const user = JSON.parse(localStorage.getItem('gymUser'));
+  if (!user || !user.role) {
+    alert('權限不足，請使用員工帳號登入！');
+    window.location.href = '../index.html';
+  }
+  const ADMIN_ID = user.adminId; // 取得真實的管理員 ID
   const API      = 'http://localhost:8080/api/articles';
-  const ADMIN_ID = 1; // 待 admin 登入模組完成後從 sessionStorage 取
 
   let allArticles   = [];
   let currentFilter = 'all';
@@ -449,7 +456,6 @@
         method: 'POST',
         credentials: 'include',
         body: formData
-        // 注意：FormData 不要手動設 Content-Type，瀏覽器會自動帶 boundary
       });
 
       if (!res.ok) {
@@ -460,21 +466,17 @@
       const data = await res.json();
       const imageUrl = data.imageUrl;
 
-      // 儲存網址到隱藏欄位
       document.getElementById('fImageUrl').value = imageUrl;
-
-      // 顯示預覽
       document.getElementById('imgPreview').src = imageUrl;
       document.getElementById('imgPreviewWrap').classList.add('show');
       showToast('✅ 圖片上傳成功', 'success');
 
     } catch (e) {
       showToast('圖片上傳失敗：' + e.message, 'error');
-      // 還原拖放區
       document.getElementById('uploadZone').style.display = 'block';
     } finally {
       document.getElementById('uploadProgress').classList.remove('show');
-      event.target.value = ''; // 重設 input，讓同一張圖可以重新選
+      event.target.value = '';
     }
   }
 
@@ -496,7 +498,7 @@
     document.getElementById('fCategory').value = '';
     document.getElementById('fStatus').value = 'draft';
     document.getElementById('fIsPinned').checked = false;
-    removeImage(); // 清空圖片區
+    removeImage();
     document.getElementById('formModal').classList.add('show');
   }
 
@@ -514,7 +516,6 @@
     document.getElementById('fStatus').value = a.status;
     document.getElementById('fIsPinned').checked = !!a.isPinned;
 
-    // 如果已有圖片，顯示預覽
     if (a.imageUrl) {
       document.getElementById('fImageUrl').value = a.imageUrl;
       document.getElementById('imgPreview').src = a.imageUrl;
@@ -553,7 +554,7 @@
       status:   document.getElementById('fStatus').value,
       imageUrl: document.getElementById('fImageUrl').value || null,
       isPinned: document.getElementById('fIsPinned').checked,
-      admin: { adminId: ADMIN_ID }
+      admin: { adminId: ADMIN_ID } // 👉 確保帶入真實的管理員 ID
     };
 
     try {
