@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" ng-app="GymApp">
+<head>
+    <meta charset="UTF-8">
+    <title>教練列表</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="../js/app.js"></script>
+    <script src="../js/coach-list.js"></script>
+</head>
+
+<body ng-controller="CoachListController">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <a class="navbar-brand" href="../member-course-index.html">健身房管理系統</a>
+
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="navbar-text text-light small">
+                目前測試身分：會員 {{ memberId || 1 }}
+            </span>
+
+            <a class="btn btn-outline-light btn-sm" href="./course-list.html">團體課總覽</a>
+            <a class="btn btn-outline-light btn-sm" href="./course-intro.html">團課介紹</a>
+            <a class="btn btn-outline-light btn-sm" href="./reservation-list.html">我的預約</a>
+            <a class="btn btn-warning btn-sm" href="./pt-package.html">購買私教方案</a>
+            <a class="btn btn-outline-light btn-sm" href="../member-course-index.html">回首頁</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-4">
+
+    <div class="mb-4">
+        <h2 class="fw-bold">教練列表</h2>
+        <p class="text-muted mb-1">
+            查看啟用中的教練，並依教練查看團體課與私人教練可預約時段。
+        </p>
+        <p class="text-muted mb-0">
+            從課程介紹或我的預約點教練進來時，會先定位到教練卡片；想看課表再按「查看此教練課表」。
+        </p>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <label class="form-label fw-bold">開發測試用會員 ID</label>
+
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                <input type="number"
+                       class="form-control member-input"
+                       ng-model="memberId">
+
+                <button class="btn btn-outline-primary"
+                        ng-click="refreshPage()">
+                    查詢此會員預約狀態
+                </button>
+
+                <span class="badge bg-info text-dark fs-6" ng-if="!loadingPtSessions">
+                    剩餘私教堂數：{{ remainingPtSessions }} 堂
+                </span>
+
+                <span class="badge bg-secondary fs-6" ng-if="loadingPtSessions">
+                    私教堂數查詢中...
+                </span>
+            </div>
+
+            <div class="form-text">
+                正式登入後會由系統自動取得會員身分；目前僅供測試不同會員預約狀態。
+            </div>
+
+            <div class="alert alert-warning mt-3 mb-0" ng-if="remainingPtSessions <= 0 && !loadingPtSessions">
+                此會員目前沒有可用私教堂數。若要預約私人教練課，請先
+                <a href="./pt-package.html" class="alert-link">購買或加值私教方案</a>。
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-success" ng-if="message">
+        {{ message }}
+    </div>
+
+    <div class="alert alert-danger" ng-if="errorMessage">
+        {{ errorMessage }}
+    </div>
+
+    <div class="text-center my-5" ng-if="loadingCoaches">
+        <div class="spinner-border" role="status"></div>
+        <p class="mt-2">教練資料載入中...</p>
+    </div>
+
+    <!-- 教練卡片 -->
+    <div class="mb-5" ng-if="!loadingCoaches">
+        <h4 class="fw-bold mb-3">啟用中教練</h4>
+
+        <div class="alert alert-warning" ng-if="coaches.length === 0">
+            目前沒有啟用中的教練。
+        </div>
+
+        <div class="row" ng-if="coaches.length > 0">
+            <div class="col-lg-6 col-xl-4 mb-4"
+                 ng-repeat="coach in coaches"
+                 id="coachCard-{{ getCoachId(coach) }}">
+
+                <div class="coach-card coach-profile-card"
+                     ng-class="{ 'selected-coach-card': isHighlightedCoach(coach) }">
+
+                    <div class="coach-card-image-block">
+                        <img ng-src="{{ getCoachProfile(coach).image }}"
+                             alt="{{ getCoachProfile(coach).displayName }}"
+                             class="coach-profile-image"
+                             onerror="this.style.display='none'">
+                    </div>
+
+                    <div class="coach-card-body-block">
+                        <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                            <div>
+                                <h3 class="coach-profile-title">
+                                    {{ getCoachProfile(coach).displayName }}
+                                </h3>
+
+                                <p class="coach-profile-subtitle mb-1">
+                                    {{ getCoachProfile(coach).tagline }}
+                                </p>
+
+                                <p class="coach-small-meta mb-0">
+                                    教練 ID：{{ getCoachId(coach) }}
+                                </p>
+                            </div>
+
+                            <span class="badge bg-success">active</span>
+                        </div>
+
+                        <p class="coach-profile-intro">
+                            {{ getCoachProfile(coach).intro }}
+                        </p>
+
+                        <div class="coach-tag-list">
+                            <span class="coach-tag"
+                                  ng-repeat="tag in getCoachProfile(coach).tags track by $index">
+                                {{ tag }}
+                            </span>
+                        </div>
+
+                        <div class="coach-info-panel mt-3">
+                            <h5 class="fw-bold mb-3">主要證照</h5>
+                            <ul class="coach-bullet-list mb-0">
+                                <li ng-repeat="cert in getCoachProfile(coach).certs track by $index">
+                                    {{ cert }}
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="coach-info-panel mt-3">
+                            <h5 class="fw-bold mb-3">適合對象</h5>
+                            <ul class="coach-bullet-list mb-0">
+                                <li ng-repeat="item in getCoachProfile(coach).suitableFor track by $index">
+                                    {{ item }}
+                                </li>
+                            </ul>
+                        </div>
+
+                        <button class="btn btn-primary w-100 mt-4"
+                                ng-click="selectCoach(coach, true)">
+                            查看此教練課表
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 教練課表 -->
+    <div id="coachScheduleSection" ng-if="selectedCoach">
+
+        <hr class="my-4">
+
+        <div class="selected-schedule-header mb-4">
+            <div>
+                <h3 class="fw-bold mb-1">
+                    {{ getCoachProfile(selectedCoach).displayName }} 的課表
+                </h3>
+                <p class="text-muted mb-0">
+                    教練 ID：{{ selectedCoachId }}
+                </p>
+            </div>
+
+            <button class="btn btn-outline-secondary"
+                    ng-click="clearSelectedCoach()">
+                收起課表
+            </button>
+        </div>
+
+        <div class="text-center my-4" ng-if="loadingCourses">
+            <div class="spinner-border" role="status"></div>
+            <p class="mt-2">課表載入中...</p>
+        </div>
+
+        <div ng-if="!loadingCourses">
+
+            <div class="mb-3">
+                <button class="btn me-2 mb-2"
+                        ng-class="selectedCourseType === 'personal' ? 'btn-primary' : 'btn-outline-primary'"
+                        ng-click="changeCourseType('personal')">
+                    私人教練可預約時段
+                </button>
+
+                <button class="btn mb-2"
+                        ng-class="selectedCourseType === 'group' ? 'btn-primary' : 'btn-outline-primary'"
+                        ng-click="changeCourseType('group')">
+                    此教練團體課
+                </button>
+            </div>
+
+            <div class="alert alert-info" ng-if="selectedCourseType === 'personal'">
+                目前會員剩餘私教堂數：
+                <strong>{{ remainingPtSessions }}</strong> 堂。
+                <span ng-if="remainingPtSessions <= 0">
+                    私教堂數不足，請先
+                    <a href="./pt-package.html" class="alert-link">購買或加值私教方案</a>後再預約。
+                </span>
+            </div>
+
+            <div class="alert alert-info" ng-if="selectedCourseType === 'group'">
+                此區顯示該教練負責的團體課。會員可直接在此頁預約或取消，也可以查看課程介紹。
+            </div>
+
+            <div class="mb-4">
+                <button class="btn me-2 mb-2"
+                        ng-class="coachViewMode === 'calendar' ? 'btn-success' : 'btn-outline-success'"
+                        ng-click="setCoachViewMode('calendar')">
+                    行事曆模式
+                </button>
+
+                <button class="btn mb-2"
+                        ng-class="coachViewMode === 'list' ? 'btn-success' : 'btn-outline-success'"
+                        ng-click="setCoachViewMode('list')">
+                    最近課程
+                </button>
+            </div>
+
+            <div class="alert alert-warning" ng-if="currentCoachCourses.length === 0">
+                目前沒有符合條件的課程。
+            </div>
+
+            <!-- 行事曆模式 -->
+            <div ng-if="coachViewMode === 'calendar' && currentCoachCourses.length > 0">
+
+                <div class="calendar-header mb-3">
+                    <button class="btn btn-outline-secondary"
+                            ng-click="previousCoachMonth()">
+                        上一個月
+                    </button>
+
+                    <div class="calendar-title">
+                        {{ coachCalendarYear }} 年 {{ coachCalendarMonth + 1 }} 月
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary"
+                                ng-click="goCurrentCoachMonth()">
+                            回到本月
+                        </button>
+
+                        <button class="btn btn-outline-secondary"
+                                ng-click="nextCoachMonth()">
+                            下一個月
+                        </button>
+                    </div>
+                </div>
+
+                <div class="calendar-grid course-calendar-grid">
+                    <div class="calendar-weekday">日</div>
+                    <div class="calendar-weekday">一</div>
+                    <div class="calendar-weekday">二</div>
+                    <div class="calendar-weekday">三</div>
+                    <div class="calendar-weekday">四</div>
+                    <div class="calendar-weekday">五</div>
+                    <div class="calendar-weekday">六</div>
+
+                    <div class="calendar-day course-calendar-day"
+                         ng-repeat="day in coachCalendarDays"
+                         ng-class="{
+                            'calendar-day-muted': !day.isCurrentMonth,
+                            'calendar-day-active': selectedCoachDateKey === day.dateKey,
+                            'calendar-day-today': day.isToday
+                         }"
+                         ng-click="selectCoachDate(day)">
+
+                        <div class="calendar-day-number">
+                            {{ day.dayNumber }}
+                        </div>
+
+                        <div class="calendar-course-list" ng-if="day.items.length > 0">
+                            <div class="calendar-course-item"
+                                 ng-repeat="course in day.items"
+                                 ng-click="selectCoachCalendarCourse(course, $event)"
+                                 ng-class="{
+                                    'calendar-course-reserved': course.isReserved,
+                                    'calendar-course-selected': selectedCoachCourse && selectedCoachCourse.courseId === course.courseId,
+                                    'calendar-course-full': !course.isReserved && course.remainingSeats <= 0
+                                 }">
+
+                                <div class="calendar-course-time">
+                                    {{ course.startTimeText }}
+                                </div>
+
+                                <div class="calendar-course-name">
+                                    {{ course.courseName }}
+                                </div>
+
+                                <div class="calendar-course-coach">
+                                    {{ getShortCourseType(course.courseType) }}
+                                </div>
+
+                                <div class="calendar-course-status">
+                                    <span ng-if="course.isReserved">已預約</span>
+
+                                    <span ng-if="!course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && isGroupCourse(course)">
+                                        可預約
+                                    </span>
+
+                                    <span ng-if="!course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && isPersonalCourse(course) && remainingPtSessions > 0">
+                                        可預約
+                                    </span>
+
+                                    <span ng-if="!course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && isPersonalCourse(course) && remainingPtSessions <= 0">
+                                        堂數不足
+                                    </span>
+
+                                    <span ng-if="!course.isReserved && course.remainingSeats <= 0">已額滿</span>
+                                    <span ng-if="!course.isReserved && isPastCourse(course)">已過期</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="selected-course-panel mt-4" id="selectedCoachCoursePanel" ng-if="selectedCoachCourse">
+
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                        <div>
+                            <h4 class="fw-bold mb-1">
+                                已選課程：{{ selectedCoachCourse.courseName }}
+                            </h4>
+
+                            <p class="text-muted mb-1">
+                                {{ selectedCoachCourse.courseDateText }}
+                                {{ selectedCoachCourse.startTimeText }} - {{ selectedCoachCourse.endTimeText }}
+                            </p>
+
+                            <p class="text-muted mb-0">
+                                教練：{{ getCoachProfile(selectedCoach).displayName }}｜類型：{{ getShortCourseType(selectedCoachCourse.courseType) }}
+                            </p>
+                        </div>
+
+                        <div class="text-end">
+                            <span class="badge me-1"
+                                  ng-class="selectedCoachCourse.courseType === 'personal' ? 'bg-info text-dark' : 'bg-success'">
+                                {{ getShortCourseType(selectedCoachCourse.courseType) }}
+                            </span>
+
+                            <span class="badge bg-warning text-dark" ng-if="selectedCoachCourse.isReserved">
+                                已預約
+                            </span>
+
+                            <span class="badge bg-danger" ng-if="!selectedCoachCourse.isReserved && selectedCoachCourse.remainingSeats <= 0">
+                                已額滿
+                            </span>
+
+                            <span class="badge bg-secondary" ng-if="!selectedCoachCourse.isReserved && isPastCourse(selectedCoachCourse)">
+                                已過期
+                            </span>
+
+                            <span class="badge bg-primary"
+                                  ng-if="!selectedCoachCourse.isReserved && selectedCoachCourse.remainingSeats > 0 && !isPastCourse(selectedCoachCourse) && isGroupCourse(selectedCoachCourse)">
+                                可預約
+                            </span>
+
+                            <span class="badge bg-primary"
+                                  ng-if="!selectedCoachCourse.isReserved && selectedCoachCourse.remainingSeats > 0 && !isPastCourse(selectedCoachCourse) && isPersonalCourse(selectedCoachCourse) && remainingPtSessions > 0">
+                                可預約
+                            </span>
+
+                            <span class="badge bg-dark"
+                                  ng-if="!selectedCoachCourse.isReserved && selectedCoachCourse.remainingSeats > 0 && !isPastCourse(selectedCoachCourse) && isPersonalCourse(selectedCoachCourse) && remainingPtSessions <= 0">
+                                堂數不足
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="row course-row-info mt-3">
+                        <div class="col-md-2 col-6 mb-2">
+                            <span class="info-label">課程 ID</span>
+                            <span class="info-value">{{ selectedCoachCourse.courseId }}</span>
+                        </div>
+
+                        <div class="col-md-2 col-6 mb-2">
+                            <span class="info-label">名額</span>
+                            <span class="info-value">
+                                {{ selectedCoachCourse.enrolledCount }} / {{ selectedCoachCourse.capacity }}
+                            </span>
+                        </div>
+
+                        <div class="col-md-2 col-6 mb-2">
+                            <span class="info-label">剩餘</span>
+                            <span class="info-value" ng-class="selectedCoachCourse.remainingSeats > 0 ? 'text-success' : 'text-danger'">
+                                {{ selectedCoachCourse.remainingSeats > 0 ? selectedCoachCourse.remainingSeats : '已額滿' }}
+                            </span>
+                        </div>
+
+                        <div class="col-md-3 col-6 mb-2" ng-if="selectedCoachCourse.isReserved">
+                            <span class="info-label">預約編號</span>
+                            <span class="info-value">{{ selectedCoachCourse.reservationId }}</span>
+                        </div>
+
+                        <div class="col-md-3 col-6 mb-2" ng-if="isPersonalCourse(selectedCoachCourse)">
+                            <span class="info-label">會員剩餘私教</span>
+                            <span class="info-value" ng-class="remainingPtSessions > 0 ? 'text-success' : 'text-danger'">
+                                {{ remainingPtSessions }} 堂
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning mt-3 mb-0"
+                         ng-if="isPersonalCourse(selectedCoachCourse) && !selectedCoachCourse.isReserved && selectedCoachCourse.remainingSeats > 0 && !isPastCourse(selectedCoachCourse) && remainingPtSessions <= 0">
+                        私教堂數不足，請先購買或加值私教方案後再預約。
+                    </div>
+
+                    <div class="mt-3 d-flex gap-2 flex-wrap">
+
+                        <a class="btn btn-outline-primary"
+                           ng-if="isGroupCourse(selectedCoachCourse)"
+                           ng-href="./course-intro.html?courseName={{ encodeCourseName(selectedCoachCourse.courseName) }}">
+                            查看課程介紹
+                        </a>
+
+                        <button class="btn btn-danger"
+                                ng-if="canCancelOnCoachPage(selectedCoachCourse)"
+                                ng-click="cancelReservation(selectedCoachCourse)"
+                                ng-disabled="processing">
+                            取消{{ getShortCourseType(selectedCoachCourse.courseType) }}預約
+                        </button>
+
+                        <button class="btn btn-primary"
+                                ng-if="canReserveOnCoachPage(selectedCoachCourse)"
+                                ng-click="reserveCoachCourse(selectedCoachCourse)"
+                                ng-disabled="processing">
+                            預約{{ getShortCourseType(selectedCoachCourse.courseType) }}
+                        </button>
+
+                        <button class="btn btn-secondary"
+                                ng-if="!selectedCoachCourse.isReserved && selectedCoachCourse.remainingSeats <= 0"
+                                disabled>
+                            已額滿
+                        </button>
+
+                        <button class="btn btn-secondary"
+                                ng-if="!selectedCoachCourse.isReserved && isPastCourse(selectedCoachCourse)"
+                                disabled>
+                            已過期
+                        </button>
+
+                        <button class="btn btn-secondary"
+                                ng-if="isPersonalCourse(selectedCoachCourse) && !selectedCoachCourse.isReserved && selectedCoachCourse.remainingSeats > 0 && !isPastCourse(selectedCoachCourse) && remainingPtSessions <= 0"
+                                disabled>
+                            堂數不足
+                        </button>
+
+                        <button class="btn btn-outline-secondary"
+                                ng-click="clearSelectedCoachCourse()">
+                            取消選取
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h4 class="fw-bold mb-3">
+                        {{ selectedCoachDateKey || '請選擇日期' }} 課程明細
+                    </h4>
+
+                    <div class="alert alert-warning" ng-if="selectedCoachDateKey && selectedCoachDateItems.length === 0">
+                        此日期沒有符合條件的課程。
+                    </div>
+
+                    <div class="timeline-list" ng-if="selectedCoachDateItems.length > 0">
+                        <div class="timeline-item"
+                             ng-repeat="course in selectedCoachDateItems"
+                             ng-class="course.isReserved ? 'reserved-row' : ''">
+
+                            <div class="timeline-date">
+                                <div class="date-main">{{ course.courseDateText }}</div>
+                                <div class="time-main">{{ course.startTimeText }} - {{ course.endTimeText }}</div>
+                            </div>
+
+                            <div class="timeline-content">
+                                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+                                    <div>
+                                        <h4 class="fw-bold mb-1">{{ course.courseName }}</h4>
+                                        <p class="text-muted mb-0">
+                                            {{ course.description || '尚無課程描述' }}
+                                        </p>
+                                    </div>
+
+                                    <div class="text-end">
+                                        <span class="badge me-1"
+                                              ng-class="course.courseType === 'personal' ? 'bg-info text-dark' : 'bg-success'">
+                                            {{ getShortCourseType(course.courseType) }}
+                                        </span>
+
+                                        <span class="badge bg-warning text-dark" ng-if="course.isReserved">
+                                            已預約
+                                        </span>
+
+                                        <span class="badge bg-primary" ng-if="!course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && isGroupCourse(course)">
+                                            可預約
+                                        </span>
+
+                                        <span class="badge bg-primary" ng-if="!course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && isPersonalCourse(course) && remainingPtSessions > 0">
+                                            可預約
+                                        </span>
+
+                                        <span class="badge bg-dark" ng-if="!course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && isPersonalCourse(course) && remainingPtSessions <= 0">
+                                            堂數不足
+                                        </span>
+
+                                        <span class="badge bg-danger" ng-if="!course.isReserved && course.remainingSeats <= 0">
+                                            已額滿
+                                        </span>
+
+                                        <span class="badge bg-secondary" ng-if="!course.isReserved && isPastCourse(course)">
+                                            已過期
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="row course-row-info mt-3">
+                                    <div class="col-md-2 col-6 mb-2">
+                                        <span class="info-label">課程 ID</span>
+                                        <span class="info-value">{{ course.courseId }}</span>
+                                    </div>
+
+                                    <div class="col-md-2 col-6 mb-2">
+                                        <span class="info-label">名額</span>
+                                        <span class="info-value">{{ course.enrolledCount }} / {{ course.capacity }}</span>
+                                    </div>
+
+                                    <div class="col-md-2 col-6 mb-2">
+                                        <span class="info-label">剩餘</span>
+                                        <span class="info-value" ng-class="course.remainingSeats > 0 ? 'text-success' : 'text-danger'">
+                                            {{ course.remainingSeats > 0 ? course.remainingSeats : '已額滿' }}
+                                        </span>
+                                    </div>
+
+                                    <div class="col-md-2 col-6 mb-2" ng-if="course.isReserved">
+                                        <span class="info-label">預約編號</span>
+                                        <span class="info-value">{{ course.reservationId }}</span>
+                                    </div>
+
+                                    <div class="col-md-3 col-6 mb-2" ng-if="isPersonalCourse(course)">
+                                        <span class="info-label">會員剩餘私教</span>
+                                        <span class="info-value" ng-class="remainingPtSessions > 0 ? 'text-success' : 'text-danger'">
+                                            {{ remainingPtSessions }} 堂
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-warning mt-3 mb-0"
+                                     ng-if="isPersonalCourse(course) && !course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && remainingPtSessions <= 0">
+                                    私教堂數不足，請先購買或加值私教方案後再預約。
+                                </div>
+                            </div>
+
+                            <div class="timeline-action">
+                                <button class="btn btn-outline-primary w-100 mb-2"
+                                        ng-click="selectCoachCalendarCourse(course, $event)">
+                                    查看 / 操作
+                                </button>
+
+                                <a class="btn btn-outline-primary w-100 mb-2"
+                                   ng-if="isGroupCourse(course)"
+                                   ng-href="./course-intro.html?courseName={{ encodeCourseName(course.courseName) }}">
+                                    查看課程介紹
+                                </a>
+
+                                <button class="btn btn-danger w-100 mb-2"
+                                        ng-if="canCancelOnCoachPage(course)"
+                                        ng-click="cancelReservation(course)"
+                                        ng-disabled="processing">
+                                    取消{{ getShortCourseType(course.courseType) }}預約
+                                </button>
+
+                                <button class="btn btn-primary w-100"
+                                        ng-if="canReserveOnCoachPage(course)"
+                                        ng-click="reserveCoachCourse(course)"
+                                        ng-disabled="processing">
+                                    預約{{ getShortCourseType(course.courseType) }}
+                                </button>
+
+                                <button class="btn btn-secondary w-100"
+                                        ng-if="!course.isReserved && course.remainingSeats <= 0"
+                                        disabled>
+                                    已額滿
+                                </button>
+
+                                <button class="btn btn-secondary w-100"
+                                        ng-if="!course.isReserved && isPastCourse(course)"
+                                        disabled>
+                                    已過期
+                                </button>
+
+                                <button class="btn btn-secondary w-100"
+                                        ng-if="isPersonalCourse(course) && !course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && remainingPtSessions <= 0"
+                                        disabled>
+                                    堂數不足
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 最近課程模式 -->
+            <div ng-if="coachViewMode === 'list' && currentCoachCourses.length > 0">
+
+                <h4 class="fw-bold mb-3">最近課程：由近到遠</h4>
+
+                <div class="timeline-list">
+                    <div class="timeline-item"
+                         ng-repeat="course in currentCoachCourses"
+                         ng-class="course.isReserved ? 'reserved-row' : ''">
+
+                        <div class="timeline-date">
+                            <div class="date-main">{{ course.courseDateText }}</div>
+                            <div class="time-main">{{ course.startTimeText }} - {{ course.endTimeText }}</div>
+                        </div>
+
+                        <div class="timeline-content">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+                                <div>
+                                    <h4 class="fw-bold mb-1">{{ course.courseName }}</h4>
+                                    <p class="text-muted mb-0">
+                                        {{ course.description || '尚無課程描述' }}
+                                    </p>
+                                </div>
+
+                                <div class="text-end">
+                                    <span class="badge me-1"
+                                          ng-class="course.courseType === 'personal' ? 'bg-info text-dark' : 'bg-success'">
+                                        {{ getShortCourseType(course.courseType) }}
+                                    </span>
+
+                                    <span class="badge bg-warning text-dark" ng-if="course.isReserved">
+                                        已預約
+                                    </span>
+
+                                    <span class="badge bg-primary" ng-if="!course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && isGroupCourse(course)">
+                                        可預約
+                                    </span>
+
+                                    <span class="badge bg-primary" ng-if="!course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && isPersonalCourse(course) && remainingPtSessions > 0">
+                                        可預約
+                                    </span>
+
+                                    <span class="badge bg-dark" ng-if="!course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && isPersonalCourse(course) && remainingPtSessions <= 0">
+                                        堂數不足
+                                    </span>
+
+                                    <span class="badge bg-danger" ng-if="!course.isReserved && course.remainingSeats <= 0">
+                                        已額滿
+                                    </span>
+
+                                    <span class="badge bg-secondary" ng-if="!course.isReserved && isPastCourse(course)">
+                                        已過期
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="row course-row-info mt-3">
+                                <div class="col-md-2 col-6 mb-2">
+                                    <span class="info-label">課程 ID</span>
+                                    <span class="info-value">{{ course.courseId }}</span>
+                                </div>
+
+                                <div class="col-md-2 col-6 mb-2">
+                                    <span class="info-label">名額</span>
+                                    <span class="info-value">{{ course.enrolledCount }} / {{ course.capacity }}</span>
+                                </div>
+
+                                <div class="col-md-2 col-6 mb-2">
+                                    <span class="info-label">剩餘</span>
+                                    <span class="info-value" ng-class="course.remainingSeats > 0 ? 'text-success' : 'text-danger'">
+                                        {{ course.remainingSeats > 0 ? course.remainingSeats : '已額滿' }}
+                                    </span>
+                                </div>
+
+                                <div class="col-md-2 col-6 mb-2" ng-if="course.isReserved">
+                                    <span class="info-label">預約編號</span>
+                                    <span class="info-value">{{ course.reservationId }}</span>
+                                </div>
+
+                                <div class="col-md-3 col-6 mb-2" ng-if="isPersonalCourse(course)">
+                                    <span class="info-label">會員剩餘私教</span>
+                                    <span class="info-value" ng-class="remainingPtSessions > 0 ? 'text-success' : 'text-danger'">
+                                        {{ remainingPtSessions }} 堂
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-warning mt-3 mb-0"
+                                 ng-if="isPersonalCourse(course) && !course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && remainingPtSessions <= 0">
+                                私教堂數不足，請先購買或加值私教方案後再預約。
+                            </div>
+                        </div>
+
+                        <div class="timeline-action">
+                            <button class="btn btn-outline-primary w-100 mb-2"
+                                    ng-click="selectCoachCalendarCourse(course, $event)">
+                                查看 / 操作
+                            </button>
+
+                            <a class="btn btn-outline-primary w-100 mb-2"
+                               ng-if="isGroupCourse(course)"
+                               ng-href="./course-intro.html?courseName={{ encodeCourseName(course.courseName) }}">
+                                查看課程介紹
+                            </a>
+
+                            <button class="btn btn-danger w-100 mb-2"
+                                    ng-if="canCancelOnCoachPage(course)"
+                                    ng-click="cancelReservation(course)"
+                                    ng-disabled="processing">
+                                取消{{ getShortCourseType(course.courseType) }}預約
+                            </button>
+
+                            <button class="btn btn-primary w-100"
+                                    ng-if="canReserveOnCoachPage(course)"
+                                    ng-click="reserveCoachCourse(course)"
+                                    ng-disabled="processing">
+                                預約{{ getShortCourseType(course.courseType) }}
+                            </button>
+
+                            <button class="btn btn-secondary w-100"
+                                    ng-if="!course.isReserved && course.remainingSeats <= 0"
+                                    disabled>
+                                已額滿
+                            </button>
+
+                            <button class="btn btn-secondary w-100"
+                                    ng-if="!course.isReserved && isPastCourse(course)"
+                                    disabled>
+                                已過期
+                            </button>
+
+                            <button class="btn btn-secondary w-100"
+                                    ng-if="isPersonalCourse(course) && !course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && remainingPtSessions <= 0"
+                                    disabled>
+                                堂數不足
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
