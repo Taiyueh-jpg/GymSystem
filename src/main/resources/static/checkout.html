@@ -98,7 +98,7 @@
             }
 
             // 2. 抓取購物車資料 (若 localStorage 為空，則塞入測試資料方便你測試)
-            let cartData = JSON.parse(localStorage.getItem('gymCart'));
+            let cartData = JSON.parse(sessionStorage.getItem('gymCart'));
             
             if (!cartData || cartData.length === 0) {
                 console.log("偵測到購物車為空，自動塞入測試資料...");
@@ -175,7 +175,7 @@
             .then(res => {
                 if (res.ok) {
                     alert("🎉 訂單下單成功！感謝您的購買。");
-                    localStorage.removeItem('gymCart'); // 清空購物車
+                    sessionStorage.removeItem('gymCart'); // 清空購物車
                     window.location.href = "history.html"; // 導向歷史訂單頁面
                 } else {
                     res.text().then(msg => alert("結帳失敗：" + msg));

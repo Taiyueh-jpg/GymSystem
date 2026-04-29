@@ -595,7 +595,7 @@ function goCheckout() {
     if (cart.length === 0) { showToast('❌ 購物車是空的！'); return; }
     // 將購物車存到 sessionStorage，同學 D 的結帳頁面從這裡讀取
     sessionStorage.setItem('gymCart', JSON.stringify(cart));
-    window.location.href = '/order/checkout';
+    window.location.href ='/checkout.html';
 }
 
 // ── Toast 通知 ──
