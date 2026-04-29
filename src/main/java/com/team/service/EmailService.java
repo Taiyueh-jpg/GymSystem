@@ -1,8 +1,11 @@
 package com.team.service;
 
+
+
 import com.team.dao.EmailLogRepository;
 import com.team.model.ContactMsg;
 import com.team.model.EmailLog;
+import com.team.dao.MemberRepository;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +25,9 @@ public class EmailService {
 
     @Autowired
     private EmailLogRepository emailLogRepository;
+    
+    @Autowired
+    private MemberRepository memberRepository;  // ✅ 新增
 
     @Value("${spring.mail.username}")
     private String fromEmail;
@@ -204,7 +210,7 @@ public class EmailService {
                               <div style="font-size:14px;color:#555;line-height:1.8;">%s</div>
                             </div>
                             <div style="text-align:center;">
-                              <a href="http://localhost:5500/article.html?id=%d"
+                              <a href="http://localhost:5500/article/article-detail.html?id=%d"
                                  style="background:#2979ff;color:#fff;text-decoration:none;
                                         padding:14px 36px;border-radius:8px;font-size:15px;
                                         font-weight:600;display:inline-block;">
@@ -239,15 +245,18 @@ public class EmailService {
     // ─────────────────────────────────────────────
     private String resolveRecipientEmail(ContactMsg msg) {
         if (msg.getMemberId() != null) {
-            // TODO: 之後透過 MemberRepository 查詢 member email
-            return null;
+            return memberRepository.findById(msg.getMemberId())
+                    .map(m -> m.getEmail())
+                    .orElse(null);
         }
         return msg.getGuestEmail();
     }
 
     private String resolveRecipientName(ContactMsg msg) {
         if (msg.getMemberId() != null) {
-            return "會員";
+            return memberRepository.findById(msg.getMemberId())
+                    .map(m -> m.getName())
+                    .orElse("會員");
         }
         return msg.getGuestName() != null ? msg.getGuestName() : "訪客";
     }

@@ -18,6 +18,7 @@
       --text:      #e0e0e0;
       --muted:     #888;
       --success:   #4caf50;
+      --warning:   #ff9800;
       --error:     #f44336;
     }
 
@@ -32,109 +33,83 @@
 
     /* ── Navbar ── */
     nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      position: sticky; top: 0; z-index: 100;
       background: var(--nav);
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 40px;
-      height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 40px; height: 64px;
     }
-    .nav-logo {
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: #fff;
-      text-decoration: none;
-      letter-spacing: 1px;
-    }
+    .nav-logo { font-size: 1.2rem; font-weight: 700; color: #fff; text-decoration: none; letter-spacing: 1px; }
     .nav-links { display: flex; align-items: center; gap: 8px; }
     .nav-links a {
-      text-decoration: none;
-      color: var(--muted);
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 0.92rem;
-      transition: color .2s;
+      text-decoration: none; color: var(--muted);
+      padding: 6px 14px; border-radius: 6px; font-size: .92rem; transition: color .2s;
     }
     .nav-links a:hover { color: #fff; }
     .nav-links a.active { color: #fff; font-weight: 500; }
-    .nav-links .btn-outline {
-      border: 1px solid var(--border);
-      color: var(--text);
-    }
+    .nav-links .btn-outline { border: 1px solid var(--border); color: var(--text); }
     .nav-links .btn-outline:hover { border-color: var(--blue); color: var(--blue); }
 
     /* ── Hero ── */
     .hero {
-      position: relative;
-      height: 320px;
-      background: url('https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1400&q=80')
-                  center/cover no-repeat;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: relative; height: 280px;
+      background: url('https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1400&q=80') center/cover no-repeat;
+      display: flex; align-items: center; justify-content: center;
     }
-    .hero::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,.58);
-    }
-    .hero-content {
-      position: relative;
-      z-index: 1;
-      text-align: center;
-    }
-    .hero-content h1 {
-      font-size: 2.4rem;
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: 2px;
-    }
-    .hero-content p {
-      margin-top: 10px;
-      color: rgba(255,255,255,.75);
-      font-size: 1rem;
-    }
+    .hero::after { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,.58); }
+    .hero-content { position: relative; z-index: 1; text-align: center; }
+    .hero-content h1 { font-size: 2.2rem; font-weight: 700; color: #fff; letter-spacing: 2px; }
+    .hero-content p { margin-top: 10px; color: rgba(255,255,255,.75); font-size: 1rem; }
 
-    /* ── Main layout ── */
-    main { flex: 1; max-width: 780px; margin: 56px auto; padding: 0 20px; width: 100%; }
+    /* ── Main ── */
+    main { flex: 1; max-width: 800px; margin: 48px auto; padding: 0 20px; width: 100%; }
+
+    /* ── Tab ── */
+    .tabs {
+      display: flex; gap: 4px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 6px; margin-bottom: 28px;
+    }
+    .tab-btn {
+      flex: 1; padding: 11px 16px; border: none; border-radius: 8px;
+      background: transparent; color: var(--muted);
+      font-family: inherit; font-size: .95rem; font-weight: 500;
+      cursor: pointer; transition: all .2s;
+    }
+    .tab-btn.active { background: var(--blue); color: #fff; }
+    .tab-btn:not(.active):hover { background: var(--border); color: var(--text); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
 
     /* ── Card ── */
     .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 40px 44px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 36px 40px;
     }
-    .card-title {
-      font-size: 1.25rem;
-      font-weight: 700;
-      margin-bottom: 28px;
-      color: #fff;
+    .card-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 24px; color: #fff; }
+
+    /* ── Member greeting ── */
+    .member-greeting {
+      display: none;
+      background: rgba(41,121,255,.08); border: 1px solid rgba(41,121,255,.25);
+      border-radius: 8px; padding: 10px 16px; margin-bottom: 20px;
+      font-size: .88rem; color: var(--blue);
     }
 
     /* ── Form ── */
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 24px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 22px; }
     .form-group { display: flex; flex-direction: column; gap: 6px; }
     .form-group.full { grid-column: 1 / -1; }
-    .form-group label { font-size: .85rem; color: var(--muted); }
+    .form-group label { font-size: .84rem; color: var(--muted); }
     .form-group label span.req { color: var(--blue); margin-left: 2px; }
     .form-group input,
     .form-group select,
     .form-group textarea {
-      background: #1e1e1e;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-family: inherit;
-      font-size: .95rem;
-      padding: 10px 14px;
-      transition: border-color .2s;
-      outline: none;
+      background: #1e1e1e; border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text);
+      font-family: inherit; font-size: .95rem;
+      padding: 10px 14px; transition: border-color .2s; outline: none;
     }
     .form-group input:focus,
     .form-group select:focus,
@@ -146,107 +121,237 @@
     .form-group select option { background: var(--card); }
     .err-msg { font-size: .78rem; color: var(--error); min-height: 16px; }
 
-    /* Guest fields (hidden when member) */
-    .guest-section { display: contents; }
-
-    /* ── 附件區（僅會員） ── */
+    /* ── Upload ── */
     .upload-area {
-      border: 2px dashed var(--border);
-      border-radius: 10px;
-      padding: 24px;
-      text-align: center;
-      cursor: pointer;
-      transition: border-color .2s;
-      position: relative;
+      border: 2px dashed var(--border); border-radius: 10px;
+      padding: 22px; text-align: center; cursor: pointer;
+      transition: border-color .2s; position: relative;
     }
     .upload-area:hover { border-color: var(--blue); }
-    .upload-area input[type="file"] {
-      position: absolute; inset: 0; opacity: 0; cursor: pointer;
-    }
-    .upload-area .upload-icon { font-size: 2rem; margin-bottom: 8px; }
-    .upload-area p { color: var(--muted); font-size: .88rem; }
+    .upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .upload-area .upload-icon { font-size: 1.8rem; margin-bottom: 6px; }
+    .upload-area p { color: var(--muted); font-size: .86rem; }
     .upload-area p strong { color: var(--text); }
-    .preview-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 14px;
-    }
+    .preview-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
     .preview-item {
-      position: relative;
-      width: 90px;
-      height: 90px;
-      border-radius: 8px;
-      overflow: hidden;
-      border: 1px solid var(--border);
+      position: relative; width: 88px; height: 88px;
+      border-radius: 8px; overflow: hidden; border: 1px solid var(--border);
     }
-    .preview-item img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+    .preview-item img { width: 100%; height: 100%; object-fit: cover; }
     .preview-item .remove-btn {
-      position: absolute;
-      top: 3px;
-      right: 3px;
-      background: rgba(0,0,0,.65);
-      color: #fff;
-      border: none;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      font-size: .75rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: absolute; top: 3px; right: 3px;
+      background: rgba(0,0,0,.65); color: #fff; border: none;
+      border-radius: 50%; width: 20px; height: 20px;
+      font-size: .72rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
     }
     .upload-hint { font-size: .78rem; color: var(--muted); margin-top: 8px; }
 
-    /* ── Submit ── */
-    .form-actions { display: flex; justify-content: flex-end; margin-top: 28px; }
+    /* ── Alert ── */
+    .alert {
+      display: none; padding: 13px 16px; border-radius: 8px;
+      font-size: .93rem; margin-bottom: 22px;
+    }
+    .alert.success { background: rgba(76,175,80,.13); border: 1px solid var(--success); color: var(--success); }
+    .alert.error   { background: rgba(244,67,54,.1);  border: 1px solid var(--error);   color: var(--error); }
+    .alert.show    { display: block; }
+
+    /* ── Form actions ── */
+    .form-actions { display: flex; justify-content: flex-end; margin-top: 26px; }
     .btn-submit {
-      background: var(--blue);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 12px 36px;
-      font-family: inherit;
-      font-size: 1rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background .2s, opacity .2s;
+      background: var(--blue); color: #fff; border: none;
+      border-radius: 8px; padding: 12px 36px;
+      font-family: inherit; font-size: 1rem; font-weight: 500;
+      cursor: pointer; transition: background .2s, opacity .2s;
     }
     .btn-submit:hover { background: var(--blue-hov); }
     .btn-submit:disabled { opacity: .6; cursor: not-allowed; }
 
-    /* ── Alert ── */
-    .alert {
-      display: none;
-      padding: 14px 18px;
-      border-radius: 8px;
-      font-size: .95rem;
-      margin-bottom: 24px;
+    /* ── Inquiry Tab ── */
+    .inquiry-desc {
+      color: var(--muted); font-size: .9rem; margin-bottom: 24px; line-height: 1.7;
     }
-    .alert.success { background: rgba(76,175,80,.15); border: 1px solid var(--success); color: var(--success); }
-    .alert.error   { background: rgba(244,67,54,.12);  border: 1px solid var(--error);   color: var(--error); }
-    .alert.show    { display: block; }
+
+    /* email search box (guest only) */
+    .search-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 28px; margin-bottom: 28px;
+    }
+    .search-card label { display: block; font-size: .88rem; color: var(--muted); margin-bottom: 8px; }
+    .search-row { display: flex; gap: 10px; }
+    .search-row input {
+      flex: 1; background: #1e1e1e; border: 1px solid var(--border);
+      color: var(--text); padding: 11px 14px; border-radius: 8px;
+      font-size: .95rem; font-family: inherit; transition: border-color .2s; outline: none;
+    }
+    .search-row input:focus { border-color: var(--blue); }
+    .btn-search {
+      padding: 11px 22px; border: none; border-radius: 8px;
+      background: var(--blue); color: #fff;
+      font-size: .9rem; font-weight: 600; cursor: pointer;
+      font-family: inherit; transition: background .2s; white-space: nowrap;
+    }
+    .btn-search:hover { background: var(--blue-hov); }
+    .btn-search:disabled { opacity: .6; cursor: not-allowed; }
+
+    /* member auto-load notice */
+    .member-auto-notice {
+      display: none;
+      background: rgba(41,121,255,.08); border: 1px solid rgba(41,121,255,.2);
+      border-radius: 10px; padding: 18px 22px; margin-bottom: 24px;
+      font-size: .9rem; color: #90b4ff;
+    }
+
+    /* result header */
+    .result-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .result-header h2 { font-size: 1rem; font-weight: 600; }
+    .result-count { color: var(--muted); font-size: .83rem; }
+
+    /* msg cards */
+    .msg-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 22px; margin-bottom: 14px;
+      cursor: pointer; transition: border-color .2s, background .2s;
+    }
+    .msg-card:hover { border-color: var(--blue); background: #2f2f2f; }
+    .msg-card.has-reply { border-left: 4px solid var(--success); }
+
+    .msg-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 8px; gap: 12px; flex-wrap: wrap;
+    }
+    .msg-subject {
+      font-size: .98rem; font-weight: 600; flex: 1;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .msg-badges { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .badge {
+      padding: 3px 10px; border-radius: 20px; font-size: .74rem; font-weight: 600;
+    }
+    .badge-new      { background: rgba(244,67,54,.13); color: var(--error); }
+    .badge-replied  { background: rgba(76,175,80,.13);  color: var(--success); }
+    .badge-category { background: rgba(41,121,255,.1);  color: var(--blue); }
+    .badge-unread   { background: rgba(255,152,0,.13);  color: var(--warning); }
+
+    .msg-meta {
+      color: var(--muted); font-size: .81rem;
+      display: flex; gap: 14px; margin-bottom: 8px; flex-wrap: wrap;
+    }
+    .msg-content-preview {
+      color: #bbb; font-size: .87rem; line-height: 1.6;
+      overflow: hidden; display: -webkit-box;
+      -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+    .reply-preview {
+      margin-top: 12px; background: #1f2a1f;
+      border-left: 3px solid var(--success);
+      border-radius: 0 8px 8px 0; padding: 10px 14px;
+    }
+    .reply-preview-label { font-size: .73rem; color: var(--success); margin-bottom: 4px; font-weight: 600; }
+    .reply-preview-text {
+      font-size: .87rem; color: #ccc; line-height: 1.6;
+      overflow: hidden; display: -webkit-box;
+      -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+    .reply-preview-time { font-size: .73rem; color: var(--muted); margin-top: 4px; }
+
+    /* state box */
+    .state-box { text-align: center; padding: 60px 0; color: var(--muted); }
+    .state-icon { font-size: 2.8rem; margin-bottom: 14px; }
+    .state-text { font-size: .93rem; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.65);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200; opacity: 0; pointer-events: none; transition: opacity .2s;
+      padding: 20px;
+    }
+    .modal-overlay.show { opacity: 1; pointer-events: auto; }
+    .modal {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 30px; width: 100%; max-width: 620px;
+      max-height: 88vh; overflow-y: auto;
+      transform: translateY(16px); transition: transform .2s; position: relative;
+    }
+    .modal-overlay.show .modal { transform: translateY(0); }
+    .modal-close {
+      position: absolute; top: 16px; right: 18px;
+      background: none; border: none; color: var(--muted);
+      font-size: 1.2rem; cursor: pointer; transition: color .2s;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 18px; padding-right: 24px; }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+    .section-label {
+      font-size: .73rem; text-transform: uppercase; letter-spacing: 1px;
+      color: var(--muted); margin-bottom: 8px;
+    }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 4px; }
+    .info-item label { display: block; font-size: .74rem; color: var(--muted); margin-bottom: 2px; }
+    .info-item span  { font-size: .9rem; }
+    .content-box {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 14px; font-size: .9rem;
+      line-height: 1.7; white-space: pre-wrap; color: #ccc;
+    }
+    .reply-box {
+      background: #1f2a1f; border-left: 3px solid var(--success);
+      border-radius: 0 8px 8px 0; padding: 14px;
+      font-size: .9rem; line-height: 1.7; white-space: pre-wrap; color: #ccc;
+    }
+    .reply-meta { font-size: .78rem; color: var(--muted); margin-top: 8px; }
+
+    /* attachments */
+    .attachment-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+    .attachment-img {
+      width: 88px; height: 88px; object-fit: cover;
+      border-radius: 8px; border: 1px solid var(--border);
+      cursor: pointer; transition: opacity .2s;
+    }
+    .attachment-img:hover { opacity: .8; }
+
+    /* ── Lightbox ── */
+    .lightbox {
+      position: fixed; inset: 0; background: rgba(0,0,0,.9);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 300; opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .lightbox.show { opacity: 1; pointer-events: auto; }
+    .lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 8px; }
+    .lightbox-close {
+      position: absolute; top: 20px; right: 24px;
+      background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 30px; right: 30px;
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--text); padding: 13px 20px; border-radius: 10px;
+      font-size: .9rem; box-shadow: 0 4px 20px rgba(0,0,0,.4);
+      opacity: 0; transform: translateY(10px);
+      transition: all .3s; pointer-events: none; z-index: 999;
+    }
+    .toast.show    { opacity: 1; transform: translateY(0); }
+    .toast.success { border-left: 4px solid var(--success); }
+    .toast.error   { border-left: 4px solid var(--error); }
 
     /* ── Footer ── */
     footer {
-      background: var(--nav);
-      border-top: 1px solid var(--border);
-      text-align: center;
-      padding: 20px;
-      font-size: .82rem;
-      color: var(--muted);
+      background: var(--nav); border-top: 1px solid var(--border);
+      text-align: center; padding: 20px; font-size: .82rem; color: var(--muted);
     }
 
     @media (max-width: 600px) {
       .form-grid { grid-template-columns: 1fr; }
-      .card { padding: 28px 20px; }
+      .card { padding: 24px 18px; }
       nav { padding: 0 16px; }
       .nav-links a { padding: 5px 8px; font-size: .82rem; }
+      .info-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -260,7 +365,7 @@
     <a href="../article/article-list.html">最新消息</a>
     <a href="../faq.html">常見問題</a>
     <a href="contact.html" class="active">聯絡我們</a>
-    <a href="../login.html" class="btn-outline">登入 / 註冊</a>
+    <a href="../login.html" class="btn-outline" id="navLoginBtn">登入 / 註冊</a>
   </div>
 </nav>
 
@@ -274,15 +379,27 @@
 
 <!-- Main -->
 <main>
-  <div class="card">
-    <div class="card-title">✉️ 留言表單</div>
 
-    <!-- Alert -->
-    <div class="alert" id="alert"></div>
+  <!-- Tab 切換 -->
+  <div class="tabs">
+    <button class="tab-btn active" id="tabFormBtn" onclick="switchTab('form')">✉️ 留言表單</button>
+    <button class="tab-btn"        id="tabInquiryBtn" onclick="switchTab('inquiry')">🔍 查詢留言紀錄</button>
+  </div>
 
-    <form id="contactForm" novalidate>
+  <!-- ══════════════════════════════════
+       Tab 1：留言表單
+  ══════════════════════════════════ -->
+  <div class="tab-panel active" id="panelForm">
+    <div class="card">
+      <div class="card-title">✉️ 留言表單</div>
 
-      <!-- 訪客欄位（登入後自動隱藏） -->
+      <!-- 會員歡迎提示 -->
+      <div class="member-greeting" id="memberGreeting"></div>
+
+      <!-- Alert -->
+      <div class="alert" id="alert"></div>
+
+      <!-- 訪客欄位 -->
       <div class="form-grid" id="guestFields">
         <div class="form-group">
           <label>姓名 <span class="req">*</span></label>
@@ -296,7 +413,7 @@
         </div>
       </div>
 
-      <div class="form-grid" style="margin-top:20px;">
+      <div class="form-grid" style="margin-top:18px;">
         <!-- 類別 -->
         <div class="form-group">
           <label>類別 <span class="req">*</span></label>
@@ -326,12 +443,11 @@
           <span class="err-msg" id="contentErr"></span>
         </div>
 
-        <!-- 圖片上傳（僅會員，預設隱藏） -->
+        <!-- 圖片上傳（僅會員） -->
         <div class="form-group full" id="uploadSection" style="display:none;">
           <label>附圖（選填，最多 3 張，每張不超過 5MB）</label>
           <div class="upload-area" id="uploadArea">
-            <input type="file" id="fileInput" accept="image/jpeg,image/png,image/gif,image/webp"
-                   multiple />
+            <input type="file" id="fileInput" accept="image/jpeg,image/png,image/gif,image/webp" multiple />
             <div class="upload-icon">🖼️</div>
             <p><strong>點擊或拖曳</strong>上傳圖片</p>
             <p>支援 JPG、PNG、GIF、WEBP</p>
@@ -342,53 +458,371 @@
       </div>
 
       <div class="form-actions">
-        <button type="submit" class="btn-submit" id="submitBtn">送出留言</button>
+        <button class="btn-submit" id="submitBtn" onclick="submitForm()">送出留言</button>
       </div>
-    </form>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       Tab 2：查詢留言紀錄
+  ══════════════════════════════════ -->
+  <div class="tab-panel" id="panelInquiry">
+
+    <!-- 訪客：顯示 Email 輸入框 -->
+    <div id="guestSearchBox" class="search-card">
+      <label for="emailInput">輸入您留言時填寫的 Email</label>
+      <div class="search-row">
+        <input type="email" id="emailInput"
+               placeholder="example@email.com"
+               onkeydown="if(event.key==='Enter') searchMsgs()" />
+        <button class="btn-search" id="searchBtn" onclick="searchMsgs()">查詢</button>
+      </div>
+    </div>
+
+    <!-- 會員：自動載入提示 -->
+    <div class="member-auto-notice" id="memberAutoNotice"></div>
+
+    <!-- 結果區 -->
+    <div id="resultsSection" style="display:none;">
+      <div class="result-header">
+        <h2>查詢結果</h2>
+        <span class="result-count" id="resultCount"></span>
+      </div>
+      <div id="msgList"></div>
+    </div>
+
+    <!-- 初始狀態 -->
+    <div id="initialState" class="state-box">
+      <div class="state-icon">✉️</div>
+      <div class="state-text">輸入 Email 查詢您的留言紀錄</div>
+    </div>
+
   </div>
 </main>
 
 <!-- Footer -->
-<footer>
-  © 2026 GymSystem 健身房管理系統. All Rights Reserved.
-</footer>
+<footer>© 2026 GymSystem 健身房管理系統. All Rights Reserved.</footer>
+
+<!-- 留言詳細 Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="info-grid" id="modalInfo"></div>
+    <hr class="divider" />
+    <div class="section-label">留言內容</div>
+    <div class="content-box" id="modalContent"></div>
+
+    <!-- 附件 -->
+    <div id="attachmentSection" style="display:none;">
+      <hr class="divider" />
+      <div class="section-label">附件圖片</div>
+      <div class="attachment-grid" id="attachmentGrid"></div>
+    </div>
+
+    <!-- 回覆 -->
+    <div id="replySection" style="display:none;">
+      <hr class="divider" />
+      <div class="section-label">客服回覆</div>
+      <div class="reply-box" id="replyBox"></div>
+      <div class="reply-meta" id="replyMeta"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 圖片燈箱 -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightboxImg" src="" alt="附件圖片" />
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
 <script>
-  const API = 'http://localhost:8080/api/contact/msg';
+  const API_CONTACT = 'http://localhost:8080/api/contact/msg';
+  const API_MEMBER  = 'http://localhost:8080/api/member/me';
+  const API_GUEST_QUERY = 'http://localhost:8080/api/contact/msg/guest';
 
-  // ── 模擬登入狀態（之後換成真實 session/token）──
-  // null = 訪客；有值 = 會員 memberId
-  const MEMBER_ID = null; // 例如改成 42 測試會員上傳功能
+  let MEMBER_ID    = null;
+  let MEMBER_EMAIL = null;
+  let MEMBER_NAME  = null;
+  let selectedFiles = [];
+  let currentMsgs   = [];
 
-  const isMember = MEMBER_ID !== null;
+  // ══════════════════════════════════
+  //  初始化：確認登入狀態
+  // ══════════════════════════════════
+  (async () => {
+    try {
+      const res = await fetch(API_MEMBER, { credentials: 'include' });
+      if (res.ok) {
+        const member = await res.json();
+        MEMBER_ID    = member.memberId;
+        MEMBER_EMAIL = member.email;
+        MEMBER_NAME  = member.name;
+        applyMemberUI();
+      }
+    } catch (e) { /* 網路錯誤維持訪客模式 */ }
+  })();
 
-  // 若已登入，隱藏訪客欄位、顯示上傳區
-  if (isMember) {
+  function applyMemberUI() {
+    // Navbar：登入後可改顯示名稱或隱藏登入按鈕（選用）
+    const navBtn = document.getElementById('navLoginBtn');
+    if (navBtn) navBtn.textContent = MEMBER_NAME || '我的帳號';
+
+    // Tab 1 留言表單：隱藏訪客欄位、顯示上傳區、顯示歡迎語
     document.getElementById('guestFields').style.display = 'none';
     document.getElementById('uploadSection').style.display = 'block';
+    const greeting = document.getElementById('memberGreeting');
+    greeting.textContent = `👋 歡迎，${MEMBER_NAME}！您已登入，留言將自動綁定您的帳號。`;
+    greeting.style.display = 'block';
+
+    // Tab 2 查詢：隱藏 Email 輸入框，顯示自動載入提示
+    document.getElementById('guestSearchBox').style.display = 'none';
+    const notice = document.getElementById('memberAutoNotice');
+    notice.textContent = `🔍 自動查詢 ${MEMBER_NAME} 的留言紀錄（${MEMBER_EMAIL}）`;
+    notice.style.display = 'block';
+
+    // 初始狀態文字也更新
+    document.getElementById('initialState').innerHTML = `
+      <div class="state-icon">⏳</div>
+      <div class="state-text">載入中…</div>`;
   }
 
-  // ── 圖片上傳邏輯 ──
-  let selectedFiles = [];
+  // ══════════════════════════════════
+  //  Tab 切換
+  // ══════════════════════════════════
+  function switchTab(tab) {
+    document.getElementById('tabFormBtn').classList.toggle('active', tab === 'form');
+    document.getElementById('tabInquiryBtn').classList.toggle('active', tab === 'inquiry');
+    document.getElementById('panelForm').classList.toggle('active', tab === 'form');
+    document.getElementById('panelInquiry').classList.toggle('active', tab === 'inquiry');
 
+    // 切到查詢 Tab 時：會員自動載入、訪客維持等待輸入
+    if (tab === 'inquiry') {
+      if (MEMBER_EMAIL) {
+        autoLoadMemberMsgs();
+      }
+    }
+  }
+
+  // ══════════════════════════════════
+  //  查詢（訪客手動 / 會員自動）
+  // ══════════════════════════════════
+  async function searchMsgs() {
+    const email = document.getElementById('emailInput').value.trim();
+    if (!email)              { showToast('請輸入 Email', 'error'); return; }
+    if (!isValidEmail(email)) { showToast('Email 格式不正確', 'error'); return; }
+
+    const btn = document.getElementById('searchBtn');
+    btn.disabled = true; btn.textContent = '查詢中…';
+    try {
+      await fetchAndRender(email);
+    } finally {
+      btn.disabled = false; btn.textContent = '查詢';
+    }
+  }
+
+  async function autoLoadMemberMsgs() {
+    document.getElementById('initialState').innerHTML = `
+      <div class="state-icon">⏳</div><div class="state-text">載入中…</div>`;
+    document.getElementById('initialState').style.display = 'block';
+    document.getElementById('resultsSection').style.display = 'none';
+    await fetchAndRender(MEMBER_EMAIL);
+  }
+
+  async function fetchAndRender(email) {
+    try {
+      const res = await fetch(`${API_GUEST_QUERY}?email=${encodeURIComponent(email)}`);
+      if (!res.ok) { showToast('查詢失敗，請稍後再試', 'error'); return; }
+      const msgs = await res.json();
+      currentMsgs = msgs;
+      renderResults(msgs, email);
+    } catch (e) {
+      showToast('網路錯誤，請確認後端服務是否啟動', 'error');
+    }
+  }
+
+  // ══════════════════════════════════
+  //  渲染結果列表
+  // ══════════════════════════════════
+  function renderResults(msgs, email) {
+    document.getElementById('initialState').style.display = 'none';
+    document.getElementById('resultsSection').style.display = 'block';
+    document.getElementById('resultCount').textContent = `共 ${msgs.length} 筆（${email}）`;
+
+    const list = document.getElementById('msgList');
+    if (!msgs.length) {
+      list.innerHTML = `
+        <div class="state-box">
+          <div class="state-icon">📭</div>
+          <div class="state-text">此 Email 尚無留言紀錄</div>
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = msgs.map(m => {
+      const hasReply    = !!m.replyContent;
+      const unreadReply = hasReply && !m.isReplyRead;
+      const cardClass   = 'msg-card' + (hasReply ? ' has-reply' : '');
+
+      return `
+        <div class="${cardClass}" onclick="openModal(${m.msgId})">
+          <div class="msg-card-header">
+            <div class="msg-subject">${escHtml(m.subject)}</div>
+            <div class="msg-badges">
+              <span class="badge badge-category">${escHtml(m.category)}</span>
+              <span class="badge ${hasReply ? 'badge-replied' : 'badge-new'}">
+                ${hasReply ? '✅ 已回覆' : '⏳ 待回覆'}
+              </span>
+              ${unreadReply ? '<span class="badge badge-unread">🔔 新回覆</span>' : ''}
+            </div>
+          </div>
+          <div class="msg-meta">
+            <span>#${m.msgId}</span>
+            <span>${escHtml(m.category)}</span>
+            <span>${formatDate(m.createdAt)}</span>
+            ${m.attachments && m.attachments.length
+              ? `<span>🖼️ ${m.attachments.length} 張附件</span>` : ''}
+          </div>
+          <div class="msg-content-preview">${escHtml(m.content)}</div>
+          ${hasReply ? `
+            <div class="reply-preview">
+              <div class="reply-preview-label">客服回覆</div>
+              <div class="reply-preview-text">${escHtml(m.replyContent)}</div>
+              <div class="reply-preview-time">回覆時間：${formatDate(m.repliedAt)}</div>
+            </div>` : ''}
+        </div>`;
+    }).join('');
+  }
+
+  // ══════════════════════════════════
+  //  Modal
+  // ══════════════════════════════════
+  function openModal(msgId) {
+    const msg = currentMsgs.find(m => m.msgId === msgId);
+    if (!msg) return;
+    renderModal(msg);
+    document.getElementById('modalOverlay').classList.add('show');
+  }
+
+  function renderModal(msg) {
+    document.getElementById('modalTitle').textContent = `【${msg.category}】${msg.subject}`;
+
+    // 依登入狀態顯示不同的識別欄位
+    const whoRow = MEMBER_ID
+      ? `<div class="info-item"><label>會員</label><span>${escHtml(MEMBER_NAME)}</span></div>
+         <div class="info-item"><label>Email</label><span>${escHtml(MEMBER_EMAIL)}</span></div>`
+      : `<div class="info-item"><label>姓名</label><span>${escHtml(msg.guestName)}</span></div>
+         <div class="info-item"><label>Email</label><span>${escHtml(msg.guestEmail)}</span></div>`;
+
+    document.getElementById('modalInfo').innerHTML = `
+      <div class="info-item"><label>留言編號</label><span>#${msg.msgId}</span></div>
+      <div class="info-item"><label>狀態</label>
+        <span>${msg.replyContent
+          ? '<span style="color:var(--success)">✅ 已回覆</span>'
+          : '<span style="color:var(--muted)">⏳ 待回覆</span>'}</span>
+      </div>
+      ${whoRow}
+      <div class="info-item"><label>類別</label><span>${escHtml(msg.category)}</span></div>
+      <div class="info-item"><label>留言時間</label><span>${formatDate(msg.createdAt)}</span></div>
+    `;
+
+    document.getElementById('modalContent').textContent = msg.content;
+
+    // 附件（只有會員留言才可能有）
+    const attSection = document.getElementById('attachmentSection');
+    const attGrid    = document.getElementById('attachmentGrid');
+    if (msg.attachments && msg.attachments.length) {
+      attGrid.innerHTML = msg.attachments.map(a =>
+        `<img class="attachment-img" src="${a.filePath}" alt="${escHtml(a.fileName)}"
+              onclick="event.stopPropagation();openLightbox('${a.filePath}')" />`
+      ).join('');
+      attSection.style.display = 'block';
+    } else {
+      attSection.style.display = 'none';
+    }
+
+    // 回覆
+    const replySection = document.getElementById('replySection');
+    if (msg.replyContent) {
+      document.getElementById('replyBox').textContent  = msg.replyContent;
+      document.getElementById('replyMeta').textContent = `回覆時間：${formatDate(msg.repliedAt)}`;
+      replySection.style.display = 'block';
+    } else {
+      replySection.style.display = 'none';
+    }
+  }
+
+  function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+  function closeModalOnOverlay(e) {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  }
+
+  // ══════════════════════════════════
+  //  留言表單送出
+  // ══════════════════════════════════
+  async function submitForm() {
+    if (!validateForm()) return;
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true; btn.textContent = '送出中…';
+
+    try {
+      const msgObj = buildMsgObj();
+      const formData = new FormData();
+      formData.append('msg', new Blob([JSON.stringify(msgObj)], { type: 'application/json' }));
+      if (MEMBER_ID !== null) {
+        selectedFiles.forEach(f => formData.append('files', f));
+      }
+
+      const res = await fetch(API_CONTACT, { method: 'POST', body: formData });
+      if (res.ok) {
+        showAlert('✅ 留言已送出！我們將盡快回覆您。', 'success');
+        resetForm();
+      } else {
+        const msg = await res.text();
+        showAlert('送出失敗：' + msg, 'error');
+      }
+    } catch (e) {
+      showAlert('網路錯誤，請稍後再試', 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = '送出留言';
+    }
+  }
+
+  function buildMsgObj() {
+    const obj = {
+      subject:  document.getElementById('subject').value.trim(),
+      category: document.getElementById('category').value,
+      content:  document.getElementById('content').value.trim(),
+    };
+    if (MEMBER_ID !== null) {
+      obj.memberId = MEMBER_ID;
+    } else {
+      obj.guestName  = document.getElementById('guestName').value.trim();
+      obj.guestEmail = document.getElementById('guestEmail').value.trim();
+    }
+    return obj;
+  }
+
+  // ══════════════════════════════════
+  //  圖片上傳邏輯
+  // ══════════════════════════════════
   document.getElementById('fileInput').addEventListener('change', function () {
     const newFiles = Array.from(this.files);
     const combined = [...selectedFiles, ...newFiles];
 
     if (combined.length > 3) {
-      showAlert('最多只能上傳 3 張圖片', 'error');
-      this.value = '';
-      return;
+      showToast('最多只能上傳 3 張圖片', 'error');
+      this.value = ''; return;
     }
-
     for (const f of newFiles) {
       if (f.size > 5 * 1024 * 1024) {
-        showAlert(`「${f.name}」超過 5MB，請重新選擇`, 'error');
-        this.value = '';
-        return;
+        showToast(`「${f.name}」超過 5MB`, 'error');
+        this.value = ''; return;
       }
     }
-
     selectedFiles = combined;
     renderPreviews();
     this.value = '';
@@ -409,93 +843,36 @@
       };
       reader.readAsDataURL(file);
     });
-    document.getElementById('uploadHint').textContent =
-      `已選 ${selectedFiles.length} / 3 張`;
+    document.getElementById('uploadHint').textContent = `已選 ${selectedFiles.length} / 3 張`;
   }
 
-  function removeFile(idx) {
-    selectedFiles.splice(idx, 1);
-    renderPreviews();
-  }
+  function removeFile(idx) { selectedFiles.splice(idx, 1); renderPreviews(); }
 
-  // ── 表單送出 ──
-  document.getElementById('contactForm').addEventListener('submit', async function (e) {
-    e.preventDefault();
-    if (!validate()) return;
-
-    const btn = document.getElementById('submitBtn');
-    btn.disabled = true;
-    btn.textContent = '送出中…';
-
-    try {
-      const msgObj = buildMsgObj();
-      const formData = new FormData();
-      formData.append('msg', new Blob([JSON.stringify(msgObj)], { type: 'application/json' }));
-      if (isMember) {
-        selectedFiles.forEach(f => formData.append('files', f));
-      }
-
-      const res = await fetch(API, { method: 'POST', body: formData });
-
-      if (res.ok) {
-        showAlert('✅ 留言已送出！我們將盡快回覆您。', 'success');
-        resetForm();
-      } else {
-        const msg = await res.text();
-        showAlert('送出失敗：' + msg, 'error');
-      }
-    } catch (err) {
-      showAlert('網路錯誤，請稍後再試', 'error');
-    } finally {
-      btn.disabled = false;
-      btn.textContent = '送出留言';
-    }
-  });
-
-  function buildMsgObj() {
-    const obj = {
-      subject:  document.getElementById('subject').value.trim(),
-      category: document.getElementById('category').value,
-      content:  document.getElementById('content').value.trim(),
-    };
-    if (isMember) {
-      obj.memberId = MEMBER_ID;
-    } else {
-      obj.guestName  = document.getElementById('guestName').value.trim();
-      obj.guestEmail = document.getElementById('guestEmail').value.trim();
-    }
-    return obj;
-  }
-
-  // ── 表單驗證 ──
-  function validate() {
+  // ══════════════════════════════════
+  //  表單驗證
+  // ══════════════════════════════════
+  function validateForm() {
     let ok = true;
-
-    if (!isMember) {
+    if (MEMBER_ID === null) {
       ok = checkField('guestName',  'guestNameErr',  '請輸入姓名') && ok;
       ok = checkEmail('guestEmail', 'guestEmailErr') && ok;
     }
     ok = checkSelect('category', 'categoryErr', '請選擇類別') && ok;
     ok = checkField('subject',   'subjectErr',   '請輸入主旨') && ok;
     ok = checkField('content',   'contentErr',   '請輸入留言內容') && ok;
-
     return ok;
   }
 
   function checkField(id, errId, msg) {
     const el = document.getElementById(id);
-    if (!el.value.trim()) {
-      setErr(el, errId, msg); return false;
-    }
+    if (!el.value.trim()) { setErr(el, errId, msg); return false; }
     clearErr(el, errId); return true;
   }
-
   function checkSelect(id, errId, msg) {
     const el = document.getElementById(id);
     if (!el.value) { setErr(el, errId, msg); return false; }
     clearErr(el, errId); return true;
   }
-
   function checkEmail(id, errId) {
     const el = document.getElementById(id);
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -503,7 +880,6 @@
     if (!re.test(el.value.trim())) { setErr(el, errId, 'Email 格式不正確'); return false; }
     clearErr(el, errId); return true;
   }
-
   function setErr(el, errId, msg) {
     el.classList.add('err');
     document.getElementById(errId).textContent = msg;
@@ -513,17 +889,14 @@
     document.getElementById(errId).textContent = '';
   }
 
-  // ── Alert ──
-  function showAlert(msg, type) {
-    const el = document.getElementById('alert');
-    el.textContent = msg;
-    el.className = `alert ${type} show`;
-    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    if (type === 'success') setTimeout(() => el.classList.remove('show'), 6000);
-  }
-
   function resetForm() {
-    document.getElementById('contactForm').reset();
+    document.getElementById('category').value = '';
+    document.getElementById('subject').value  = '';
+    document.getElementById('content').value  = '';
+    if (MEMBER_ID === null) {
+      document.getElementById('guestName').value  = '';
+      document.getElementById('guestEmail').value = '';
+    }
     selectedFiles = [];
     renderPreviews();
     ['guestName','guestEmail','category','subject','content'].forEach(id => {
@@ -534,6 +907,48 @@
       const el = document.getElementById(id);
       if (el) el.textContent = '';
     });
+  }
+
+  // ══════════════════════════════════
+  //  Lightbox
+  // ══════════════════════════════════
+  function openLightbox(src) {
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightbox').classList.add('show');
+  }
+  function closeLightbox() { document.getElementById('lightbox').classList.remove('show'); }
+
+  // ══════════════════════════════════
+  //  Alert / Toast
+  // ══════════════════════════════════
+  function showAlert(msg, type) {
+    const el = document.getElementById('alert');
+    el.textContent = msg;
+    el.className = `alert ${type} show`;
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (type === 'success') setTimeout(() => el.classList.remove('show'), 6000);
+  }
+
+  function showToast(msg, type = 'success') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `toast ${type} show`;
+    setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  // ══════════════════════════════════
+  //  Utils
+  // ══════════════════════════════════
+  function isValidEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
+  function formatDate(str) {
+    if (!str) return '—';
+    return str.replace('T', ' ').substring(0, 16);
+  }
+  function escHtml(s) {
+    if (!s) return '';
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 </script>
 </body>

@@ -30,7 +30,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .addPathPatterns(
                         // [新增] 取得目前登入者資訊，前端用來取代寫死的 ADMIN_ID
                         "/api/admin/me",
-
+                        "/api/member/me",
                         "/api/member/profile/**",        // 修改與查看個資必須登入
                         "/api/member/status-update/**",  // 更改狀態必須登入（實務上還需再判斷是否為管理員）
                         "/api/member/search",            // 搜尋會員必須登入

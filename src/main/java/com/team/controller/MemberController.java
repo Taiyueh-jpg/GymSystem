@@ -76,6 +76,21 @@ public class MemberController {
         session.invalidate(); // 銷毀通行證
         return ResponseEntity.ok(Map.of("message", "已成功登出"));
     }
+    
+ // ✅ joyce新增 ↓↓↓
+    /**
+     * 👤 取得目前登入的會員資訊
+     * 路徑：GET /api/member/me
+     */
+    @GetMapping("/me")
+    public ResponseEntity<?> getMe(HttpSession session) {
+        Member member = (Member) session.getAttribute("loggedInMember");
+        if (member == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "尚未登入"));
+        }
+        return ResponseEntity.ok(member);
+    }
 
     /**
      * 👤 取得個人資料 (個人中心)
