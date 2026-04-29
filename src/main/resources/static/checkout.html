@@ -178,7 +178,10 @@
                     sessionStorage.removeItem('gymCart'); // 清空購物車
                     window.location.href = "history.html"; // 導向歷史訂單頁面
                 } else {
-                    res.text().then(msg => alert("結帳失敗：" + msg));
+                    // 優雅的錯誤提示，並清除過期的登入狀態，導回登入頁
+                    alert("請先登入會員才能結帳喔！(或您的登入已逾期，請重新登入)");
+                    localStorage.removeItem('gymUser'); // 清除失效的會員記憶
+                    window.location.href = "/login.html"; // 貼心把客人送去登入
                 }
             })
             .catch(err => {

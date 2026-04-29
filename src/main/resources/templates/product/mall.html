@@ -395,6 +395,14 @@
         </div>
     </div>
 
+    <div class="d-flex gap-2 mb-4" style="overflow-x: auto; white-space: nowrap;">
+        <button class="btn btn-outline-warning text-light" onclick="filterCategory('all')">全部商品</button>
+        <button class="btn btn-outline-warning text-light" onclick="filterCategory('營養補劑')">營養補劑 🥤</button>
+        <button class="btn btn-outline-warning text-light" onclick="filterCategory('健身護具')">健身護具 🛡️</button>
+        <button class="btn btn-outline-warning text-light" onclick="filterCategory('運動周邊')">運動周邊 🎽</button>
+    </div>
+    
+
     <!-- 商品數量 -->
     <p class="product-count">共 <span id="productCount">0</span> 項商品</p>
 
@@ -482,6 +490,7 @@ function renderProducts(products) {
                 </div>
                 <div class="card-body">
                     <div>
+                        <div style="font-size: 0.8rem; color: var(--brand); margin-bottom: 4px;">[ ${p.category || '未分類'} ]</div>
                         <div class="card-pname">${p.pname}</div>
                         <div>
                             <span class="card-price">$ ${Number(p.price).toLocaleString()}</span>
@@ -612,6 +621,19 @@ async function logout() {
     await fetch('/api/members/logout', { method: 'POST' });
     window.location.href = '/';
 }
+
+// ── 商品分類過濾 ──
+function filterCategory(cat) {
+    if (cat === 'all') {
+        // 如果選全部，就顯示所有商品
+        renderProducts(allProducts);
+    } else {
+        // 使用 JavaScript 的 filter 功能，只留下分類符合的商品
+        const filteredList = allProducts.filter(p => p.category === cat);
+        renderProducts(filteredList);
+    }
+}
+
 </script>
 </body>
 </html>

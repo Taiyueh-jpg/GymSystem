@@ -34,10 +34,10 @@ public class WebConfig implements WebMvcConfigurer {
                         "/api/member/profile/**",        // 修改與查看個資必須登入
                         "/api/member/status-update/**",  // 更改狀態必須登入（實務上還需再判斷是否為管理員）
                         "/api/member/search",            // 搜尋會員必須登入
-                        "/api/admin/coaches"             // 查看教練名單必須登入
+                        "/api/admin/coaches",            // 查看教練名單必須登入
 
                         // 💡 未來其他同學的 API 也可以加在這裡，例如：
-                        // "/api/orders/**",
+                        "/api/orders/**"
                         // "/api/schedule/**"
                 )
 
