@@ -2,7 +2,7 @@ package com.team.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping; // 🌟 新增
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -12,17 +12,14 @@ import com.team.service.MemberService;
 
 import jakarta.servlet.http.HttpSession;
 
-@Controller  
-// ⚠️ 注意！這裡把原本的 @RequestMapping("/api/members") 拿掉，
-// 因為我們要同時處理根目錄 ("/") 和 "/api/members/"
+/**
+ * 🌐 會員控制層 (Member Controller)
+ */
+@Controller // 👈 必須是 Controller，因為我們要回傳畫面
 public class MemberController {
 
     @Autowired
     private MemberService memberService;
-
-    // ============================================================
-    // 🌟 第一部分：取代原本 MainUI 和 MemberUI 的「畫面導向」功能
-    // ============================================================
 
     // 首頁
     @GetMapping({"/", "/index"})
@@ -47,10 +44,6 @@ public class MemberController {
     public String showProfilePage() {
         return "member/profile";
     }
-
-    // ============================================================
-    // 第二部分：原本處理登入/註冊資料的 API 功能 (記得把 /api/members 補回去)
-    // ============================================================
 
     @PostMapping("/api/members/register")
     public String handleRegister(MemberRegisterDTO registerData) {

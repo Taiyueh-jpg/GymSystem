@@ -1,15 +1,20 @@
 package com.team.configure;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer; 
 
 /**
- * 跨域資源共享 (CORS) 核心設定
- * 負責打通 VS Code (前端) 與 Eclipse (後端) 的 API 通訊橋樑
+ * 🗺️ 系統設定：攔截器的管制範圍與白名單
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
+
+    // 把同學寫的警衛請進來
+    @Autowired
+    private LoginInterceptor loginInterceptor;
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
@@ -17,10 +22,31 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(
                     "http://127.0.0.1:5500", 
                     "http://localhost:5500"
-                ) // 嚴格指定允許 VS Code Live Server 的來源
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // 允許的 HTTP 請求方法
-                .allowedHeaders("*") // 允許所有請求標頭
-                .allowCredentials(true) // 允許前端攜帶 Cookie 或驗證憑證
-                .maxAge(3600); // 預檢請求 (Preflight) 快取時間，提升效能
+                )
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true)
+                .maxAge(3600);
+    } // 👈 就是這裡！剛剛少了一個大括號，導致後面的程式碼全毀！
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(loginInterceptor)
+                // 🛑 受保護的 API（黑名單）
+                .addPathPatterns(
+                        "/api/admin/me",
+                        "/api/member/profile/**",
+                        "/api/member/status-update/**",
+                        "/api/member/search",
+                        "/api/admin/coaches",
+                        "/api/orders/**" // 👈 首席架構師滷蛋加的訂單保護傘！
+                )
+                // 🟢 完全開放的公共 API（白名單）
+                .excludePathPatterns(
+                        "/api/member/login",
+                        "/api/member/register",
+                        "/api/admin/login",
+                        "/api/admin/staff"
+                );
     }
 }
