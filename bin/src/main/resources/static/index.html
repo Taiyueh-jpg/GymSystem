@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-TW" ng-app="GymApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GymSystem | 全球頂級健身系統</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="js/app.js"></script>
+
+    <style>
+        /* 保留同學寫的完美 CSS 樣式 */
+        body { background-color: #121212; color: #ffffff; font-family: 'Segoe UI', sans-serif; }
+        .hero-section {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), 
+                              url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop');
+            background-size: cover; background-position: center; min-height: 80vh; display: flex; align-items: center; text-align: center;
+        }
+        .feature-section { background-color: #1e1e1e; padding: 80px 0; border-top: 1px solid #333; }
+        .footer { background-color: #0a0a0a; padding: 20px 0; border-top: 1px solid #222; }
+        [ng\:cloak], [ng-cloak], .ng-cloak { display: none !important; } /* 防止 Angular 閃爍 */
+    </style>
+</head>
+
+<body ng-controller="MainCtrl" ng-cloak>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">🏋️ GymSystem</a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a href="mall.html" class="nav-link text-light">周邊商城</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="article/article-list.html" class="nav-link text-light">最新公告</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="faq.html" class="nav-link text-light">常見問題</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="contact/contact.html" class="nav-link text-light">聯絡我們</a>
+                    </li>
+                    <li class="nav-item" ng-if="isGuest()">
+                        <a href="contact/guest-inquiry.html" class="nav-link text-info fw-bold">查詢留言</a>
+                    </li>
+                </ul>
+
+                <div class="d-flex align-items-center mt-2 mt-lg-0">
+                    <a href="login.html" class="btn btn-outline-light btn-sm" ng-if="isGuest()">登入 / 註冊</a>
+                    
+                    <span class="text-warning me-3 fw-bold" ng-if="!isGuest()">歡迎回來, {{ currentUser.name }}</span>
+                    <button class="btn btn-danger btn-sm" ng-if="!isGuest()" ng-click="logout()">登出</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="container">
+            <h1 class="display-3 fw-bolder mb-4" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">突破極限，成就更好的自己</h1>
+            <p class="lead mb-5 text-light" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">
+                歡迎體驗我們為您打造的專屬健身生態圈。<br>
+                立即預約專業 1對1 教練、揮灑汗水的有氧團課，或選購最高品質的健身補劑。
+            </p>
+            <div>
+                <a href="login.html" class="btn btn-secondary btn-lg px-5 me-3 fw-bold shadow" ng-if="isGuest()">請先登入以預約</a>
+                
+                <a href="course.html" class="btn btn-success btn-lg px-5 me-3 fw-bold shadow" ng-if="isMember() && currentUser.status === 0">預約體驗課程</a>
+                
+                <a href="course.html" class="btn btn-primary btn-lg px-5 me-3 fw-bold shadow" ng-if="isMember() && currentUser.status === 1">立即預約團課/私教</a>
+
+                <a href="admin-dashboard.html" class="btn btn-info btn-lg px-5 me-3 fw-bold shadow" ng-if="isAdmin()">進入管理後台</a>
+
+                <a href="mall.html" class="btn btn-outline-light btn-lg px-5 fw-bold">逛逛商城</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="feature-section">
+        <div class="container text-center">
+            <h2 class="fw-bold mb-5">探索 GymSystem</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="p-4 rounded" style="background-color: #252525;">
+                        <h1 class="mb-3">💪</h1>
+                        <h4 class="fw-bold">專業課程預約</h4>
+                        <p class="text-muted small">隨時查看並預約頂級教練的私人課程或團體有氧，不漏接任何訓練機會。</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-4 rounded" style="background-color: #252525;">
+                        <h1 class="mb-3">🛒</h1>
+                        <h4 class="fw-bold">精選周邊商城</h4>
+                        <p class="text-muted small">從高蛋白乳清到專業護具，一鍵下單，直接宅配到家或場館自取。</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-4 rounded shadow" style="background-color: #252525; cursor: pointer;" 
+                         ng-click="isGuest() ? null : (window.location.href='profile.html')"
+                         ng-class="{'opacity-50': isGuest()}">
+                        <h1 class="mb-3">📊</h1>
+                        <h4 class="fw-bold">會員專屬中心</h4>
+                        <p class="text-warning small" ng-if="isGuest()">※ 請先登入解鎖個人紀錄</p>
+                        <p class="text-muted small" ng-if="!isGuest()">追蹤您的訂單紀錄、課程進度以及身體數據，全方位管理您的健康。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer text-center text-muted small">
+        <div class="container">
+            © 2026 GymSystem 健身房系統開發團隊. All Rights Reserved.
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

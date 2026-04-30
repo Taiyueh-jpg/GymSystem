@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-TW" ng-app="GymApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GymSystem 後台管理 - 訂單戰情室</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="js/app.js"></script>
+    <style>
+        [ng\:cloak], [ng-cloak], .ng-cloak { display: none !important; }
+    </style>
+</head>
+<body class="bg-dark text-light" ng-controller="MainCtrl" ng-cloak>
+
+    <nav class="navbar navbar-dark bg-secondary mb-4">
+        <span class="navbar-brand mb-0 h1">🛠️ GymSystem 後台管理系統</span>
+        <div class="d-flex align-items-center">
+            <span class="mr-3 text-warning">管理員：{{ currentUser.name }}</span>
+            <button class="btn btn-sm btn-danger" ng-click="logout()">登出系統</button>
+            <a href="admin-dashboard.html" class="btn btn-sm btn-outline-light ml-2">回管理大廳</a>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-5">
+        <h2 class="mb-4">📦 全站訂單總覽</h2>
+        
+        <div class="card text-dark">
+            <div class="card-body p-0">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>訂單編號</th>
+                            <th>會員 ID</th>
+                            <th>下單時間</th>
+                            <th>總金額</th>
+                            <th>付款方式</th>
+                            <th>狀態</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="order-list">
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-2 mb-0">載入中...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 👉 權限檢查：確保只有員工能進入 (否則踢回首頁)
+        window.onload = function() {
+            const user = JSON.parse(localStorage.getItem('gymUser'));
+            if (!user || !user.role) {
+                alert('權限不足，請使用員工帳號登入！');
+                window.location.href = 'index.html';
+                return;
+            }
+            fetchAllOrders();
+        };
+
+        function fetchAllOrders() {
+            const orderList = document.getElementById('order-list');
+            orderList.innerHTML = '<tr><td colspan="7" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 mb-0">載入中...</p></td></tr>';
+
+            fetch('/api/orders')
+                .then(response => {
+                    if (!response.ok) throw new Error('無法取得訂單資料');
+                    return response.json();
+                })
+                .then(orders => {
+                    orderList.innerHTML = ''; 
+                    if(orders.length === 0) {
+                        orderList.innerHTML = '<tr><td colspan="7" class="text-center py-4">目前尚無任何訂單</td></tr>';
+                        return;
+                    }
+
+                    orders.forEach(order => {
+                        const date = new Date(order.orderDate);
+                        const formattedDate = date.toLocaleString('zh-TW', { hour12: false });
+                        
+                        let statusHtml = '';
+                        let actionBtn = '';
+                        
+                        if (order.status === 'processing') {
+                            statusHtml = '<span class="badge badge-warning px-2 py-1">處理中</span>';
+                            actionBtn = `<button class="btn btn-sm btn-primary shadow-sm" onclick="shipOrder(${order.orderId})">🚀 執行出貨</button>`;
+                        } else if (order.status === 'shipped') {
+                            statusHtml = '<span class="badge badge-success px-2 py-1">已出貨</span>';
+                            actionBtn = '<button class="btn btn-sm btn-secondary" disabled>已完成</button>';
+                        } else {
+                            statusHtml = `<span class="badge badge-secondary">${order.status}</span>`;
+                        }
+
+                        const rowHtml = `
+                            <tr>
+                                <td class="font-weight-bold"># ${order.orderId}</td>
+                                <td>👤 會員 ${order.memberId}</td>
+                                <td>${formattedDate}</td>
+                                <td class="text-danger font-weight-bold">NT$ ${order.totalAmount}</td>
+                                <td>${order.paymentType}</td>
+                                <td>${statusHtml}</td>
+                                <td>${actionBtn}</td>
+                            </tr>
+                        `;
+                        orderList.innerHTML += rowHtml;
+                    });
+                })
+                .catch(err => {
+                    alert(err.message);
+                });
+        }
+
+        function shipOrder(orderId) {
+            if(!confirm(`確定要將訂單 # ${orderId} 設為已出貨嗎？`)) return;
+
+            fetch(`/api/orders/${orderId}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'shipped' })
+            })
+            .then(res => {
+                if(res.ok) {
+                    alert(`訂單 # ${orderId} 已成功出貨！`);
+                    fetchAllOrders(); 
+                } else {
+                    alert("出貨失敗！");
+                }
+            });
+        }
+    </script>
+</body>
+</html>
