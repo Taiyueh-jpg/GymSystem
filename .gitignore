@@ -12,6 +12,7 @@ target/
 !**/src/test/**/target/
 
 # ── Eclipse ──
+bin/
 .apt_generated
 .classpath
 .factorypath
