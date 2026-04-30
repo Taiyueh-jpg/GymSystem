@@ -140,52 +140,74 @@
             document.getElementById('display-total').innerText = 'NT$ ' + totalAmount;
         }
 
-        // 🚀 送出結帳 API
-        function submitOrder() {
-            const delivery = document.getElementById('deliveryMethod').value;
-            const payment = document.getElementById('paymentType').value;
+        // 🚀 送出結帳 API (百萬顧問升級版)
+function submitOrder() {
+    const delivery = document.getElementById('deliveryMethod').value;
+    const payment = document.getElementById('paymentType').value;
 
-            if (!delivery || !payment) {
-                alert("請完整選擇配送與付款方式！");
-                return;
+    if (!delivery || !payment) {
+        alert("請完整選擇配送與付款方式！");
+        return;
+    }
+
+    // 1️⃣ 再次從 localStorage 抓取會員狀態，確保安全
+    const user = JSON.parse(localStorage.getItem('gymUser'));
+    if (!user || !user.memberId) {
+        alert("會員憑證遺失，請重新登入！");
+        window.location.href = "login.html";
+        return;
+    }
+
+    // 2️⃣ 打包 JSON 資料 (補上缺失的 memberId！)
+    const payload = {
+        porder: {
+            memberId: user.memberId,  //後端資料庫必須知道是誰買的！
+            deliveryMethod: delivery,
+            paymentType: payment,
+            totalAmount: totalAmount,
+            status: "paid" 
+        },
+        details: currentCart.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            unitPrice: item.price
+        }))
+    };
+
+    console.log("👉 準備送出的 JSON:", payload);
+
+    // 3️⃣ 發送 API 請求
+    fetch('/api/orders/checkout', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            // 嚴格遵守無狀態規範，將會員 ID 放在 Header 給後端攔截器檢查
+            'Authorization': user.memberId.toString() 
+        },
+        credentials: 'include', // 若同學A的攔截器仍依賴 Cookie，此行可強迫瀏覽器攜帶憑證過關
+        body: JSON.stringify(payload)
+    })
+    .then(async res => {
+        if (res.ok) {
+            alert("🎉 訂單下單成功！感謝您的購買。");
+            sessionStorage.removeItem('gymCart'); // 清空購物車
+            window.location.href = "history.html"; // 導向歷史訂單頁面
+        } else {
+            // 精準解析後端傳來的錯誤 JSON
+            const errorText = await res.text();
+            try {
+                const errorObj = JSON.parse(errorText);
+                alert("結帳失敗：" + (errorObj.error || errorObj.message || errorText));
+            } catch (e) {
+                alert("結帳失敗：" + errorText);
             }
-
-            // 打包 JSON 資料 (對接滷蛋的 OrderController / CheckoutRequest)
-            const payload = {
-                porder: {
-                    deliveryMethod: delivery,
-                    paymentType: payment,
-                    totalAmount: totalAmount,
-                    status: "paid" // 預設為已付款
-                },
-                details: currentCart.map(item => ({
-                    productId: item.productId,
-                    quantity: item.quantity,
-                    unitPrice: item.price
-                }))
-            };
-
-            console.log("👉 準備送出的 JSON:", payload);
-
-            fetch('/api/orders/checkout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-            .then(res => {
-                if (res.ok) {
-                    alert("🎉 訂單下單成功！感謝您的購買。");
-                    sessionStorage.removeItem('gymCart'); // 清空購物車
-                    window.location.href = "history.html"; // 導向歷史訂單頁面
-                } else {
-                    res.text().then(msg => alert("結帳失敗：" + msg));
-                }
-            })
-            .catch(err => {
-                console.error("結帳發生錯誤:", err);
-                alert("連線後端失敗，請確認 Server 是否啟動！");
-            });
         }
+    })
+    .catch(err => {
+        console.error("結帳發生錯誤:", err);
+        alert("連線後端失敗，請確認 Server 是否啟動！");
+    });
+}
     </script>
 </body>
 </html>
