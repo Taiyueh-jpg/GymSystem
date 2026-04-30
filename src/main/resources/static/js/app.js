@@ -53,7 +53,7 @@ app.controller('AuthCtrl', function($scope, $http, $window) {
     };
 
     $scope.doLogin = function() {
-        var apiUrl = $scope.loginType === 'member' ? '/api/members/login' : '/api/admins/login';
+        var apiUrl = $scope.loginType === 'member' ? '/api/members/login' : '/api/admin/login';
 
         $http.post(apiUrl, $scope.loginData)
             .then(function(response) {
