@@ -12,6 +12,7 @@ target/
 !**/src/test/**/target/
 
 # ── Eclipse ──
+bin/
 .apt_generated
 .classpath
 .factorypath
@@ -19,6 +20,7 @@ target/
 .settings
 .springBeans
 .sts4-cache
+META-INF/
 
 # ── IntelliJ IDEA ──
 .idea

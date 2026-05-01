@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" ng-app="GymApp">
+<head>
+    <meta charset="UTF-8">
+    <title>團體課程總覽</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="../js/app.js"></script>
+    <script src="../js/course-list.js"></script>
+</head>
+<body ng-controller="CourseListController">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <a class="navbar-brand" href="../member-course-index.html">健身房管理系統</a>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="navbar-text text-light small">目前測試身分：會員 {{ memberId || 1 }}</span>
+            <a class="btn btn-outline-light btn-sm" href="./course-intro.html">團課介紹</a>
+            <a class="btn btn-outline-light btn-sm" href="./coach-list.html">教練列表</a>
+            <a class="btn btn-outline-light btn-sm" href="./reservation-list.html">我的預約</a>
+            <a class="btn btn-outline-light btn-sm" href="../member-course-index.html">回首頁</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-4">
+    <div class="mb-4">
+        <h2 class="fw-bold">團體課程總覽</h2>
+        <p class="text-muted mb-1">依課程類型與月份查看團體課，可用行事曆或最近課程列表瀏覽。</p>
+        <p class="text-muted mb-0">行事曆會顯示課程時間、課程名稱與教練名稱，點選單堂課後在下方操作區預約、取消或查看介紹。</p>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <label class="form-label fw-bold">開發測試用會員 ID</label>
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                <input type="number" class="form-control member-input" ng-model="memberId">
+                <button class="btn btn-outline-primary" ng-click="refreshPage()" ng-disabled="loading">查詢此會員預約狀態</button>
+            </div>
+            <div class="form-text">正式登入後會由系統自動取得會員身分；目前僅供測試不同會員預約狀態。</div>
+        </div>
+    </div>
+
+    <div class="alert alert-success" ng-if="message">{{ message }}</div>
+    <div class="alert alert-danger" ng-if="errorMessage">{{ errorMessage }}</div>
+
+    <div class="text-center my-5" ng-if="loading">
+        <div class="spinner-border" role="status"></div>
+        <p class="mt-2">團體課資料載入中...</p>
+    </div>
+
+    <div ng-if="!loading">
+        <div class="mb-4">
+            <h5 class="fw-bold mb-3">課程類型</h5>
+            <button class="btn me-2 mb-2" ng-repeat="category in categories" ng-class="selectedCategory === category ? 'btn-primary' : 'btn-outline-primary'" ng-click="selectCategory(category)">{{ category }}</button>
+        </div>
+
+        <div class="mb-4">
+            <button class="btn me-2 mb-2" ng-class="viewMode === 'calendar' ? 'btn-success' : 'btn-outline-success'" ng-click="setViewMode('calendar')">行事曆模式</button>
+            <button class="btn mb-2" ng-class="viewMode === 'list' ? 'btn-success' : 'btn-outline-success'" ng-click="setViewMode('list')">最近課程</button>
+        </div>
+
+        <div class="alert alert-warning" ng-if="filteredCourses.length === 0">目前沒有符合條件的團體課程。</div>
+
+        <div ng-if="viewMode === 'calendar' && filteredCourses.length > 0">
+            <div class="calendar-header mb-3">
+                <button class="btn btn-outline-secondary" ng-click="previousMonth()">上一個月</button>
+                <div class="calendar-title">{{ calendarYear }} 年 {{ calendarMonth + 1 }} 月</div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-secondary" ng-click="goCurrentMonth()">回到本月</button>
+                    <button class="btn btn-outline-secondary" ng-click="nextMonth()">下一個月</button>
+                </div>
+            </div>
+
+            <div class="calendar-grid course-calendar-grid">
+                <div class="calendar-weekday">日</div><div class="calendar-weekday">一</div><div class="calendar-weekday">二</div><div class="calendar-weekday">三</div><div class="calendar-weekday">四</div><div class="calendar-weekday">五</div><div class="calendar-weekday">六</div>
+                <div class="calendar-day course-calendar-day" ng-repeat="day in calendarDays" ng-class="{'calendar-day-muted': !day.isCurrentMonth, 'calendar-day-active': selectedDateKey === day.dateKey, 'calendar-day-today': day.isToday}" ng-click="selectDate(day)">
+                    <div class="calendar-day-number">{{ day.dayNumber }}</div>
+                    <div class="calendar-course-list" ng-if="day.items.length > 0">
+                        <div class="calendar-course-item" ng-repeat="course in day.items" ng-click="selectCalendarCourse(course, $event)" ng-class="{'calendar-course-reserved': course.isReserved, 'calendar-course-selected': selectedCalendarCourse && selectedCalendarCourse.courseId === course.courseId, 'calendar-course-full': !course.isReserved && course.remainingSeats <= 0}">
+                            <div class="calendar-course-time">{{ course.startTimeText }}</div>
+                            <div class="calendar-course-name">{{ course.courseName }}</div>
+                            <div class="calendar-course-coach">{{ course.coachName }}</div>
+                            <div class="calendar-course-status">
+                                <span ng-if="course.isReserved">已預約</span>
+                                <span ng-if="!course.isReserved && course.remainingSeats > 0">可預約</span>
+                                <span ng-if="!course.isReserved && course.remainingSeats <= 0">已額滿</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="selected-course-panel mt-4" id="selectedCoursePanel" ng-if="selectedCalendarCourse">
+                <div class="alert alert-success mb-3" ng-if="actionMessage">{{ actionMessage }}</div>
+                <div class="alert alert-danger mb-3" ng-if="actionErrorMessage">{{ actionErrorMessage }}</div>
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                    <div>
+                        <h4 class="fw-bold mb-1">已選課程：{{ selectedCalendarCourse.courseName }}</h4>
+                        <p class="text-muted mb-1">{{ selectedCalendarCourse.courseDateText }} {{ selectedCalendarCourse.startTimeText }} - {{ selectedCalendarCourse.endTimeText }}</p>
+                        <p class="text-muted mb-0">教練：<a class="text-decoration-none" ng-href="{{ getCoachCardLink(selectedCalendarCourse.coachId) }}">{{ selectedCalendarCourse.coachName }}</a>｜類型：{{ selectedCalendarCourse.category }}</p>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-success me-1">group</span>
+                        <span class="badge bg-primary me-1">{{ selectedCalendarCourse.category }}</span>
+                        <span class="badge bg-warning text-dark" ng-if="selectedCalendarCourse.isReserved">已預約</span>
+                        <span class="badge bg-danger" ng-if="!selectedCalendarCourse.isReserved && selectedCalendarCourse.remainingSeats <= 0">已額滿</span>
+                        <span class="badge bg-info text-dark" ng-if="!selectedCalendarCourse.isReserved && selectedCalendarCourse.remainingSeats > 0">可預約</span>
+                    </div>
+                </div>
+                <div class="row course-row-info mt-3">
+                    <div class="col-md-2 col-6 mb-2"><span class="info-label">課程 ID</span><span class="info-value">{{ selectedCalendarCourse.courseId }}</span></div>
+                    <div class="col-md-2 col-6 mb-2"><span class="info-label">名額</span><span class="info-value">{{ selectedCalendarCourse.enrolledCount }} / {{ selectedCalendarCourse.capacity }}</span></div>
+                    <div class="col-md-2 col-6 mb-2"><span class="info-label">剩餘</span><span class="info-value" ng-class="selectedCalendarCourse.remainingSeats > 0 ? 'text-success' : 'text-danger'">{{ selectedCalendarCourse.remainingSeats > 0 ? selectedCalendarCourse.remainingSeats : '已額滿' }}</span></div>
+                    <div class="col-md-3 col-6 mb-2" ng-if="selectedCalendarCourse.isReserved"><span class="info-label">預約編號</span><span class="info-value">{{ selectedCalendarCourse.reservationId }}</span></div>
+                </div>
+                <div class="mt-3 d-flex gap-2 flex-wrap">
+                    <a class="btn btn-outline-primary" ng-href="./course-intro.html?courseName={{ encodeCourseName(selectedCalendarCourse.courseName) }}">查看課程介紹</a>
+                    <a class="btn btn-outline-secondary" ng-href="{{ getCoachCardLink(selectedCalendarCourse.coachId) }}">查看教練介紹</a>
+                    <button class="btn btn-danger" ng-if="selectedCalendarCourse.isReserved" ng-click="cancelReservation(selectedCalendarCourse)" ng-disabled="processing">取消預約</button>
+                    <button class="btn btn-primary" ng-if="!selectedCalendarCourse.isReserved && selectedCalendarCourse.remainingSeats > 0" ng-click="reserveCourse(selectedCalendarCourse)" ng-disabled="processing">預約課程</button>
+                    <button class="btn btn-secondary" ng-if="!selectedCalendarCourse.isReserved && selectedCalendarCourse.remainingSeats <= 0" disabled>已額滿</button>
+                    <button class="btn btn-outline-secondary" ng-click="clearSelectedCalendarCourse()">取消選取</button>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <h4 class="fw-bold mb-3">{{ selectedDateKey || '請選擇日期' }} 團體課明細</h4>
+                <div class="alert alert-warning" ng-if="selectedDateKey && selectedDateItems.length === 0">此日期沒有符合條件的團體課。</div>
+                <div class="timeline-list" ng-if="selectedDateItems.length > 0">
+                    <div class="timeline-item" ng-repeat="course in selectedDateItems" ng-class="course.isReserved ? 'reserved-row' : ''">
+                        <div class="timeline-date"><div class="date-main">{{ course.courseDateText }}</div><div class="time-main">{{ course.startTimeText }} - {{ course.endTimeText }}</div></div>
+                        <div class="timeline-content">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+                                <div><h4 class="fw-bold mb-1">{{ course.courseName }}</h4><p class="text-muted mb-0">教練：<a class="text-decoration-none" ng-href="{{ getCoachCardLink(course.coachId) }}">{{ course.coachName }}</a>｜{{ course.description || '尚無課程描述' }}</p></div>
+                                <div class="text-end"><span class="badge bg-success me-1">group</span><span class="badge bg-primary me-1">{{ course.category }}</span><span class="badge bg-warning text-dark" ng-if="course.isReserved">已預約</span></div>
+                            </div>
+                            <div class="row course-row-info mt-3"><div class="col-md-2 col-6 mb-2"><span class="info-label">課程 ID</span><span class="info-value">{{ course.courseId }}</span></div><div class="col-md-2 col-6 mb-2"><span class="info-label">名額</span><span class="info-value">{{ course.enrolledCount }} / {{ course.capacity }}</span></div><div class="col-md-2 col-6 mb-2"><span class="info-label">剩餘</span><span class="info-value" ng-class="course.remainingSeats > 0 ? 'text-success' : 'text-danger'">{{ course.remainingSeats > 0 ? course.remainingSeats : '已額滿' }}</span></div><div class="col-md-2 col-6 mb-2" ng-if="course.isReserved"><span class="info-label">預約編號</span><span class="info-value">{{ course.reservationId }}</span></div></div>
+                        </div>
+                        <div class="timeline-action">
+                            <button class="btn btn-outline-primary w-100 mb-2" ng-click="selectCalendarCourse(course, $event)">查看 / 操作</button>
+                            <a class="btn btn-outline-primary w-100 mb-2" ng-href="./course-intro.html?courseName={{ encodeCourseName(course.courseName) }}">查看課程介紹</a>
+                            <button class="btn btn-danger w-100" ng-if="course.isReserved" ng-click="cancelReservation(course)" ng-disabled="processing">取消預約</button>
+                            <button class="btn btn-primary w-100" ng-if="!course.isReserved && course.remainingSeats > 0" ng-click="reserveCourse(course)" ng-disabled="processing">預約課程</button>
+                            <button class="btn btn-secondary w-100" ng-if="!course.isReserved && course.remainingSeats <= 0" disabled>已額滿</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div ng-if="viewMode === 'list' && filteredCourses.length > 0">
+            <h4 class="fw-bold mb-3">最近課程：由近到遠</h4>
+            <div class="timeline-list">
+                <div class="timeline-item" ng-repeat="course in upcomingCourses" ng-class="course.isReserved ? 'reserved-row' : ''">
+                    <div class="timeline-date"><div class="date-main">{{ course.courseDateText }}</div><div class="time-main">{{ course.startTimeText }} - {{ course.endTimeText }}</div></div>
+                    <div class="timeline-content"><div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2"><div><h4 class="fw-bold mb-1">{{ course.courseName }}</h4><p class="text-muted mb-0">教練：<a class="text-decoration-none" ng-href="{{ getCoachCardLink(course.coachId) }}">{{ course.coachName }}</a>｜{{ course.description || '尚無課程描述' }}</p></div><div class="text-end"><span class="badge bg-success me-1">group</span><span class="badge bg-primary me-1">{{ course.category }}</span><span class="badge bg-warning text-dark" ng-if="course.isReserved">已預約</span></div></div><div class="row course-row-info mt-3"><div class="col-md-2 col-6 mb-2"><span class="info-label">課程 ID</span><span class="info-value">{{ course.courseId }}</span></div><div class="col-md-2 col-6 mb-2"><span class="info-label">名額</span><span class="info-value">{{ course.enrolledCount }} / {{ course.capacity }}</span></div><div class="col-md-2 col-6 mb-2"><span class="info-label">剩餘</span><span class="info-value" ng-class="course.remainingSeats > 0 ? 'text-success' : 'text-danger'">{{ course.remainingSeats > 0 ? course.remainingSeats : '已額滿' }}</span></div><div class="col-md-2 col-6 mb-2" ng-if="course.isReserved"><span class="info-label">預約編號</span><span class="info-value">{{ course.reservationId }}</span></div></div></div>
+                    <div class="timeline-action"><button class="btn btn-outline-primary w-100 mb-2" ng-click="selectCalendarCourse(course, $event)">查看 / 操作</button><a class="btn btn-outline-primary w-100 mb-2" ng-href="./course-intro.html?courseName={{ encodeCourseName(course.courseName) }}">查看課程介紹</a><button class="btn btn-danger w-100" ng-if="course.isReserved" ng-click="cancelReservation(course)" ng-disabled="processing">取消預約</button><button class="btn btn-primary w-100" ng-if="!course.isReserved && course.remainingSeats > 0" ng-click="reserveCourse(course)" ng-disabled="processing">預約課程</button><button class="btn btn-secondary w-100" ng-if="!course.isReserved && course.remainingSeats <= 0" disabled>已額滿</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

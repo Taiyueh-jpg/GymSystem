@@ -46,19 +46,14 @@
       padding: 0 40px;
       height: 64px;
     }
-    .nav-logo {
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: #fff;
-      text-decoration: none;
+    .nav-logo { font-size: 1.1rem; font-weight: 700; color: #fff; text-decoration: none; }
+    .nav-links { display: flex; gap: 4px; }
+    .nav-links a {
+      color: var(--muted); text-decoration: none; padding: 6px 12px;
+      border-radius: 6px; font-size: 14px; transition: all .2s;
     }
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      font-size: .88rem;
-      color: var(--muted);
-    }
+    .nav-links a:hover, .nav-links a.active { background: var(--border); color: var(--text); }
+    .nav-right { color: var(--muted); font-size: .88rem; display: flex; align-items: center; }
     .nav-right span { color: var(--text); }
 
     /* ── Layout ── */
@@ -402,9 +397,15 @@
 
 <!-- Navbar -->
 <nav>
-  <a href="index.html" class="nav-logo">🏋️ GymSystem <span style="color:var(--muted);font-size:.85rem;font-weight:400;">Admin</span></a>
+  <a href="../admin-dashboard.html" class="nav-logo">🏋️ GymSystem Admin</a>
+  <div class="nav-links">
+    <a href="contact-admin.html" class="active">客服留言</a>
+    <a href="keyword-filter-admin.html">關鍵字過濾</a>
+    <a href="../article/article-admin.html">文章管理</a>
+  </div>
   <div class="nav-right">
-    管理員：<span>Admin</span>
+    <a href="../admin-dashboard.html" style="color:#ccc;text-decoration:none;margin-right:15px;">回管理大廳</a>
+    <span>管理員：Admin</span>
   </div>
 </nav>
 

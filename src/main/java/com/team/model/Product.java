@@ -44,9 +44,15 @@ public class Product {
     public void setPrice(BigDecimal price) { this.price = price; }
 
     public String getImageBase64() { return imageBase64; }
-    public void setImageBase64(String imageBase64) { this.imageBase64 = imageBase64;
-    }
+    public void setImageBase64(String imageBase64) { this.imageBase64 = imageBase64; }
     
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
+    @Column(name = "category", length = 50)
+    private String category;
+
+	public String getCategory() {
+		return category;
+	}
+	public void setCategory(String category) {
+		this.category = category;
+	}
 }

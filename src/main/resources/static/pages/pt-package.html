@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" ng-app="GymApp">
+<head>
+    <meta charset="UTF-8">
+    <title>購買私教方案</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="../js/app.js"></script>
+    <script src="../js/pt-package.js"></script>
+</head>
+
+<body ng-controller="PtPackageController">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <a class="navbar-brand" href="../member-course-index.html">健身房管理系統</a>
+
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="navbar-text text-light small">
+                目前測試身分：會員 {{ memberId || 1 }}
+            </span>
+            <a class="btn btn-outline-light btn-sm" href="./course-list.html">團體課總覽</a>
+            <a class="btn btn-outline-light btn-sm" href="./course-intro.html">團課介紹</a>
+            <a class="btn btn-outline-light btn-sm" href="./coach-list.html">教練列表</a>
+            <a class="btn btn-outline-light btn-sm" href="./reservation-list.html">我的預約</a>
+            <a class="btn btn-warning btn-sm" href="./pt-package.html">購買私教方案</a>
+            <a class="btn btn-outline-light btn-sm" href="../member-course-index.html">回首頁</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-4">
+
+    <div class="mb-4">
+        <h2 class="fw-bold">購買私教方案</h2>
+        <p class="text-muted mb-1">
+            選擇會員與私教方案，購買成功後會新增私教訂單，並增加會員剩餘私教堂數。
+        </p>
+        <p class="text-muted mb-0">
+            Demo 版本會直接建立 paid 訂單；正式版本可再串接付款流程。
+        </p>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <label class="form-label fw-bold">開發測試用會員 ID</label>
+
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                <input type="number"
+                       class="form-control member-input"
+                       ng-model="memberId">
+
+                <button class="btn btn-outline-primary"
+                        ng-click="refreshMemberInfo()"
+                        ng-disabled="loading || processing">
+                    查詢會員堂數
+                </button>
+
+                <span class="badge bg-info text-dark fs-6" ng-if="!loadingPtSessions">
+                    目前剩餘私教堂數：{{ remainingPtSessions }} 堂
+                </span>
+
+                <span class="badge bg-secondary fs-6" ng-if="loadingPtSessions">
+                    私教堂數查詢中...
+                </span>
+            </div>
+
+            <div class="form-text">
+                正式登入後會由系統自動取得會員身分；目前僅供測試不同會員購買私教方案。
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-success" ng-if="message">
+        {{ message }}
+    </div>
+
+    <div class="alert alert-danger" ng-if="errorMessage">
+        {{ errorMessage }}
+    </div>
+
+    <div class="text-center my-5" ng-if="loading">
+        <div class="spinner-border" role="status"></div>
+        <p class="mt-2">私教方案載入中...</p>
+    </div>
+
+    <div ng-if="!loading">
+
+        <div class="alert alert-warning" ng-if="packages.length === 0">
+            目前沒有可購買的私教方案，請確認後端 GET /pt-packages/active 是否有資料。
+        </div>
+
+        <div class="row" ng-if="packages.length > 0">
+            <div class="col-md-4 mb-4" ng-repeat="pkg in packages track by pkg.packageId">
+                <div class="card shadow-sm h-100"
+                     ng-class="selectedPackage && selectedPackage.packageId === pkg.packageId ? 'border-primary border-2' : ''">
+
+                    <div class="card-body d-flex flex-column">
+
+                        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                            <div>
+                                <h4 class="card-title fw-bold mb-1">{{ pkg.packageName }}</h4>
+                                <span class="badge"
+                                      ng-class="getPackageBadgeClass(pkg)">
+                                    {{ getPackageBadgeText(pkg) }}
+                                </span>
+                            </div>
+
+                            <span class="badge bg-success" ng-if="pkg.status === 1">開放</span>
+                        </div>
+
+                        <p class="text-muted flex-grow-1 mt-3">
+                            {{ pkg.description || '此方案尚無描述' }}
+                        </p>
+
+                        <div class="mb-3">
+                            <div class="display-5 fw-bold text-primary">
+                                {{ pkg.sessionCount }} 堂
+                            </div>
+
+                            <div class="fs-4 fw-bold">
+                                NT$ {{ pkg.price | number:0 }}
+                            </div>
+
+                            <div class="text-muted" ng-if="pkg.savingAmount > 0">
+                                原價
+                                <span class="text-decoration-line-through">
+                                    NT$ {{ pkg.originalPrice | number:0 }}
+                                </span>
+                            </div>
+
+                            <div class="text-muted" ng-if="pkg.savingAmount <= 0">
+                                單堂原價 NT$ {{ baseSessionPrice | number:0 }}
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <div class="p-2 border rounded bg-light h-100">
+                                    <div class="small text-muted">平均每堂</div>
+                                    <div class="fw-bold text-primary">
+                                        NT$ {{ pkg.averagePrice | number:0 }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-6">
+                                <div class="p-2 border rounded bg-light h-100">
+                                    <div class="small text-muted">折扣</div>
+                                    <div class="fw-bold"
+                                         ng-class="pkg.savingAmount > 0 ? 'text-danger' : 'text-muted'">
+                                        {{ pkg.discountText }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12" ng-if="pkg.savingAmount > 0">
+                                <div class="p-2 border rounded bg-warning bg-opacity-25">
+                                    <div class="small text-muted">現省</div>
+                                    <div class="fw-bold text-danger">
+                                        NT$ {{ pkg.savingAmount | number:0 }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn w-100 mt-auto"
+                                ng-class="selectedPackage && selectedPackage.packageId === pkg.packageId ? 'btn-primary' : 'btn-outline-primary'"
+                                ng-click="selectPackage(pkg)">
+                            {{ selectedPackage && selectedPackage.packageId === pkg.packageId ? '已選擇' : '選擇方案' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mt-2" ng-if="selectedPackage">
+            <div class="card-body">
+                <h4 class="fw-bold mb-3">購買確認</h4>
+
+                <div class="row course-row-info">
+                    <div class="col-md-3 col-6 mb-2">
+                        <span class="info-label">會員 ID</span>
+                        <span class="info-value">{{ memberId }}</span>
+                    </div>
+
+                    <div class="col-md-3 col-6 mb-2">
+                        <span class="info-label">目前剩餘堂數</span>
+                        <span class="info-value">{{ remainingPtSessions }} 堂</span>
+                    </div>
+
+                    <div class="col-md-3 col-6 mb-2">
+                        <span class="info-label">購買方案</span>
+                        <span class="info-value">{{ selectedPackage.packageName }}</span>
+                    </div>
+
+                    <div class="col-md-3 col-6 mb-2">
+                        <span class="info-label">購買後增加</span>
+                        <span class="info-value text-success">+{{ selectedPackage.sessionCount }} 堂</span>
+                    </div>
+
+                    <div class="col-md-3 col-6 mb-2">
+                        <span class="info-label">平均每堂</span>
+                        <span class="info-value text-primary">
+                            NT$ {{ selectedPackage.averagePrice | number:0 }}
+                        </span>
+                    </div>
+
+                    <div class="col-md-3 col-6 mb-2">
+                        <span class="info-label">折扣</span>
+                        <span class="info-value">
+                            {{ selectedPackage.discountText }}
+                        </span>
+                    </div>
+
+                    <div class="col-md-3 col-6 mb-2" ng-if="selectedPackage.savingAmount > 0">
+                        <span class="info-label">現省</span>
+                        <span class="info-value text-danger">
+                            NT$ {{ selectedPackage.savingAmount | number:0 }}
+                        </span>
+                    </div>
+
+                    <div class="col-md-3 col-6 mb-2">
+                        <span class="info-label">購買後預估總堂數</span>
+                        <span class="info-value text-success">
+                            {{ remainingPtSessions + selectedPackage.sessionCount }} 堂
+                        </span>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mt-3 mb-3">
+                    購買成功後，系統會建立一筆 paid 私教訂單，效期預設為 6 個月。
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <button class="btn btn-primary"
+                            ng-click="purchaseSelectedPackage()"
+                            ng-disabled="processing">
+                        {{ processing ? '購買處理中...' : '確認購買' }}
+                    </button>
+
+                    <button class="btn btn-outline-secondary"
+                            ng-click="clearSelectedPackage()"
+                            ng-disabled="processing">
+                        取消選擇
+                    </button>
+
+                    <a class="btn btn-outline-primary" href="./coach-list.html">
+                        回教練列表預約私教
+                    </a>
+
+                    <a class="btn btn-outline-secondary" href="./reservation-list.html">
+                        查看我的預約
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mt-4" ng-if="lastOrder">
+            <div class="card-body">
+                <h4 class="fw-bold mb-3">最近購買結果</h4>
+
+                <div class="row course-row-info">
+                    <div class="col-md-3 col-6 mb-2">
+                        <span class="info-label">訂單編號</span>
+                        <span class="info-value">PT Order #{{ lastOrder.ptOrderId }}</span>
+                    </div>
+
+                    <div class="col-md-3 col-6 mb-2">
+                        <span class="info-label">方案</span>
+                        <span class="info-value">{{ lastOrder.packageName }}</span>
+                    </div>
+
+                    <div class="col-md-3 col-6 mb-2">
+                        <span class="info-label">新增堂數</span>
+                        <span class="info-value text-success">{{ lastOrder.remainingSessions }} 堂</span>
+                    </div>
+
+                    <div class="col-md-3 col-6 mb-2">
+                        <span class="info-label">訂單狀態</span>
+                        <span class="info-value">{{ lastOrder.orderStatus }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
