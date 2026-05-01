@@ -113,12 +113,60 @@
             renderCartSummary();
         };
 
-        // 渲染右側摘要
+        // 渲染右側摘要 (百萬級動態升級版)
         function renderCartSummary() {
             const list = document.getElementById('cart-items-list');
             list.innerHTML = '';
             totalAmount = 0;
 
+            currentCart.forEach((item, index) => {
+                const subtotal = item.price * item.quantity;
+                totalAmount += subtotal;
+
+                list.innerHTML += `
+                    <div class="summary-item align-items-center mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="product-img-mini d-flex align-items-center justify-content-center fs-4">📦</div>
+                            <div>
+                                <div class="fw-bold small">${item.pname}</div>
+                                <div class="text-muted small">NT$ ${item.price}</div>
+                            </div>
+                        </div>
+                        <!-- 🔥 這裡加入增減數量的按鈕 -->
+                        <div class="d-flex flex-column align-items-end">
+                            <div class="fw-bold mb-1">NT$ ${subtotal}</div>
+                            <div class="input-group input-group-sm" style="width: 90px;">
+                                <button class="btn btn-outline-secondary" type="button" onclick="updateQty(${index}, -1)">-</button>
+                                <input type="text" class="form-control text-center px-1" value="${item.quantity}" readonly>
+                                <button class="btn btn-outline-secondary" type="button" onclick="updateQty(${index}, 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('display-total').innerText = 'NT$ ' + totalAmount;
+        }
+
+        // 🔥 新增這個函數：處理數量變更
+        function updateQty(index, change) {
+            let item = currentCart[index];
+            item.quantity += change;
+
+            if (item.quantity < 1) {
+                if(confirm('確定要將此商品移出購物車嗎？')) {
+                    currentCart.splice(index, 1);
+                } else {
+                    item.quantity = 1; // 取消刪除就恢復數量
+                }
+            }
+
+            // 更新 session storage
+            sessionStorage.setItem('gymCart', JSON.stringify(currentCart));
+            
+            // 重新渲染畫面
+            renderCartSummary();
+        }
             currentCart.forEach(item => {
                 const subtotal = item.price * item.quantity;
                 totalAmount += subtotal;
@@ -135,7 +183,7 @@
                         <div class="fw-bold">NT$ ${subtotal}</div>
                     </div>
                 `;
-            });
+            }); 
 
             document.getElementById('display-total').innerText = 'NT$ ' + totalAmount;
         }
