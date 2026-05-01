@@ -46,13 +46,24 @@ public class ProductService {
 
     // ── 修改商品（後台用）──
     public Product updateProduct(Long id, Product updatedProduct) {
+        // 1. 從資料庫抓出目前的舊資料
         Product existing = getProductById(id);
+        
+        // 2. 將前端傳來的新資料，一一覆蓋上去
         existing.setPname(updatedProduct.getPname());
         existing.setPrice(updatedProduct.getPrice());
-        // 如果有傳新圖片才更新，沒傳則保留舊圖
+        
+        // 🔥 關鍵修復：把前端傳來的庫存數量更新進去！
+        if (updatedProduct.getStock() != null) {
+            existing.setStock(updatedProduct.getStock());
+        }
+
+        // 3. 圖片處理 (有傳新圖片才更新，沒傳則保留舊圖)
         if (updatedProduct.getImageBase64() != null && !updatedProduct.getImageBase64().isBlank()) {
             existing.setImageBase64(updatedProduct.getImageBase64());
         }
+        
+        // 4. 存回資料庫
         return productDao.save(existing);
     }
 

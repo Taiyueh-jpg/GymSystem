@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-TW" ng-app="GymApp">
+<head>
+    <meta charset="UTF-8">
+    <title>GymSystem | 商城商品管理</title>
+    <!-- 載入 Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- 載入 AngularJS 與 您的 app.js -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="js/app.js"></script>
+    
+    <style>
+        body { background-color: #f4f6f9; color: #333; }
+        .sidebar { min-height: 100vh; background-color: #212529; }
+        .sidebar a { color: #adb5bd; text-decoration: none; padding: 15px 20px; display: block; border-bottom: 1px solid #343a40; transition: 0.3s; }
+        .sidebar a:hover, .sidebar a.active { background-color: #0d6efd; color: #fff; }
+    </style>
+</head>
+
+<body ng-controller="MainCtrl" ng-cloak>
+    
+    <!-- 全域權限防護 -->
+    <script>
+        window.onload = function() {
+            var user = JSON.parse(localStorage.getItem('gymUser'));
+            if (!user || !user.role || user.role !== 'admin') {
+                alert('權限不足，請使用管理員帳號登入！');
+                window.location.href = 'index.html';
+            }
+        };
+    </script>
+
+    <div class="d-flex">
+        <!-- ========================================== -->
+        <!-- 左側邊欄 -->
+        <!-- ========================================== -->
+        <div class="sidebar text-white" style="width: 250px; flex-shrink: 0;">
+            <div class="p-4 text-center border-bottom border-secondary">
+                <h4 class="fw-bold">GymSystem 後台</h4>
+                <span class="badge bg-primary mt-2">目前登入：{{ currentUser.name }}</span>
+            </div>
+            <nav class="mt-3">
+                <a href="admin-dashboard.html">👥 會員與員工管理 (A)</a>
+                <a href="#">📅 課程與排班管理 (B)</a>
+                <!-- 🔥 這裡加上 active，標示目前在此頁面 -->
+                <a href="admin-product.html" class="active">🛍️ 商城商品管理 (C)</a>
+                <a href="admin-orders.html">📦 訂單出貨戰情室 (D)</a>
+                <a href="article/article-admin.html">📢 公告文章管理 (E)</a>
+                <a href="contact/contact-admin.html">💬 客服留言回覆 (E)</a>
+                <a href="contact/keyword-filter-admin.html">🚫 留言關鍵字過濾 (E)</a>
+                
+                <a href="#" class="text-danger mt-5" ng-click="logout()">🚪 登出系統</a>
+                <a href="index.html" class="text-info">🏠 回到前台首頁</a>
+            </nav>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- 右側主內容區 (掛載 flex-grow-1 填滿剩餘空間) -->
+        <!-- ========================================== -->
+        <div class="flex-grow-1 p-5" ng-controller="AdminProductCtrl">
+    
+    <div class="p-4 bg-white rounded shadow-sm">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0">🛒 商城商品管理</h2>
+            <button class="btn btn-primary fw-bold" ng-click="openModal('add')">+ 新增商品</button>
+        </div>
+
+        <!-- 載入中提示 -->
+        <div class="text-center py-5" ng-if="isLoading">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 text-muted">商品資料載入中...</p>
+        </div>
+
+        <!-- 商品資料表 -->
+        <div class="table-responsive" ng-if="!isLoading">
+            <table class="table table-hover align-middle text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>商品圖片</th>
+                        <th>商品名稱</th>
+                        <th>分類</th>
+                        <th>價格 (NT$)</th>
+                        <th>庫存數量</th> <!-- 🔥 新增庫存欄位 -->
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="product in products">
+                        <td class="fw-bold">{{ product.productId }}</td>
+                        <td>
+                            <img ng-src="{{ product.imageBase64 || 'https://placehold.co/100x100?text=No+Image' }}" alt="商品圖片" 
+                                 style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; background-color: #f8f9fa;">
+                        </td>
+                        <td class="text-start">{{ product.pname }}</td>
+                        <td><span class="badge bg-secondary">{{ product.category || '未分類' }}</span></td>
+                        <td class="text-danger fw-bold">{{ product.price | number:0 }}</td>
+                        
+                        <!-- 🔥 庫存數量顯示 (小於等於5時顯示紅色警告) -->
+                        <td class="fw-bold" ng-class="{'text-danger': product.stock <= 5, 'text-success': product.stock > 5}">
+                            {{ product.stock != null ? product.stock : 0 }} 
+                            <span ng-if="product.stock <= 5" class="badge bg-danger ms-1">補貨</span>
+                        </td>
+                        
+                        <td>
+                            <button class="btn btn-sm btn-outline-warning fw-bold me-1" ng-click="openModal('edit', product)">編輯</button>
+                            <button class="btn btn-sm btn-outline-danger fw-bold" ng-click="deleteProduct(product.productId, product.pname)">刪除</button>
+                        </td>
+                    </tr>
+                    <tr ng-if="products.length === 0">
+                        <td colspan="7" class="text-muted py-4">目前沒有任何商品資料，請點擊右上角新增。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- 📦 新增 / 編輯商品 Modal (加入數量輸入) -->
+        <!-- ========================================== -->
+        <div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg"> <!-- 加寬 Modal 容納三個欄位 -->
+                <div class="modal-content">
+                    <div class="modal-header bg-dark text-white">
+                        <h5 class="modal-title fw-bold">{{ modalMode === 'add' ? '新增商品' : '編輯商品' }}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <form id="productForm">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">商品名稱</label>
+                                <input type="text" class="form-control" ng-model="currentProduct.pname" placeholder="請輸入商品名稱" required>
+                            </div>
+                            
+                            <!-- 🔥 將分類、價格、數量並排為一行 -->
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">商品分類</label>
+                                    <select class="form-select" ng-model="currentProduct.category">
+                                        <option value="" disabled>請選擇分類</option>
+                                        <option value="高蛋白">高蛋白</option>
+                                        <option value="配件">運動配件</option>
+                                        <option value="護具">健身護具</option>
+                                        <option value="服飾">運動服飾</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">價格 (NT$)</label>
+                                    <input type="number" class="form-control" ng-model="currentProduct.price" placeholder="請輸入價格" min="0" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">庫存數量</label>
+                                    <input type="number" class="form-control" ng-model="currentProduct.stock" placeholder="輸入數量" min="0" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">商品圖片連結 (URL)</label>
+                                <input type="text" class="form-control" ng-model="currentProduct.imageBase64" placeholder="請輸入圖片網址 (如 https://...)">
+                                <div class="mt-2 text-center p-2 border rounded bg-light" ng-if="currentProduct.imageBase64">
+                                    <small class="text-muted d-block mb-1">圖片預覽：</small>
+                                    <img ng-src="{{ currentProduct.imageBase64 }}" style="max-height: 150px; max-width: 100%; object-fit: contain;">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-primary fw-bold" ng-click="saveProduct()">儲存商品</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    </div>
+
+    <!-- 🔥 關鍵修復：補上 Bootstrap Bundle JS 驅動程式，Modal 彈窗才會動！ -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

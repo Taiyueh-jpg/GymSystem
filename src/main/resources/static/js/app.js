@@ -110,3 +110,123 @@ app.controller('AuthCtrl', function($scope, $http, $window) {
             });
     };
 });
+
+// (滷蛋範圍開始)
+// 將控制器註冊至您的主模組 (假設為 GymApp)
+app.controller('AdminProductCtrl', function($scope, $http, $window) {
+    
+    $scope.products = [];
+    $scope.isLoading = true;
+    $scope.modalMode = 'add'; 
+    $scope.currentProduct = {};
+
+    // 1️⃣ 【無狀態核心防禦】檢查管理員登入狀態
+    var userStr = $window.localStorage.getItem('gymUser');
+    if (!userStr) {
+        alert("存取拒絕：您尚未登入！");
+        $window.location.href = '/login.html';
+        return;
+    }
+    var currentUser = JSON.parse(userStr);
+    
+    // 防呆：確認是 Admin 角色 (配合您 AdminController 的設定)
+    if (!currentUser.role || currentUser.role !== 'admin') {
+        alert("權限不足：此頁面僅限管理員存取！");
+        $window.location.href = '/index.html';
+        return;
+    }
+
+    // 建立授權 Header
+    var getAuthConfig = function() {
+        return {
+            headers: {
+                'Authorization': currentUser.adminId ? currentUser.adminId.toString() : currentUser.memberId.toString(),
+                'Content-Type': 'application/json'
+            }
+        };
+    };
+
+    // 2️⃣ 載入所有商品 (呼叫信穎的 API: GET /api/products)
+    $scope.loadProducts = function() {
+        $scope.isLoading = true;
+        $http.get('/api/products', getAuthConfig())
+            .then(function(response) {
+                $scope.products = response.data;
+            })
+            .catch(function(error) {
+                console.error("載入商品失敗:", error);
+                alert("無法取得商品資料，請確認伺服器狀態。");
+            })
+            .finally(function() {
+                $scope.isLoading = false;
+            });
+    };
+
+    // 3️⃣ 打開 Modal
+    $scope.openModal = function(mode, product) {
+        $scope.modalMode = mode;
+        if (mode === 'edit') {
+            $scope.currentProduct = angular.copy(product);
+            // 確保舊資料如果沒有 stock 屬性，預設為 0
+            if ($scope.currentProduct.stock == null) {
+                $scope.currentProduct.stock = 0;
+            }
+        } else {
+            // 🔥 新增商品時，初始化 stock 為 0
+            $scope.currentProduct = { category: '高蛋白', price: 0, stock: 0, imageBase64: '' }; 
+        }
+        
+        var myModal = new bootstrap.Modal(document.getElementById('productModal'));
+        myModal.show();
+    };
+
+    // 4️⃣ 儲存商品
+    $scope.saveProduct = function() {
+        // 🔥 防呆：檢查必填欄位與庫存數量
+        if (!$scope.currentProduct.pname || $scope.currentProduct.price == null) {
+            alert("請填寫商品名稱與價格！");
+            return;
+        }
+        if ($scope.currentProduct.stock == null || $scope.currentProduct.stock < 0) {
+            alert("庫存數量不能為空或負數！");
+            return;
+        }
+
+        var request;
+        if ($scope.modalMode === 'add') {
+            request = $http.post('/api/products', $scope.currentProduct, getAuthConfig());
+        } else {
+            request = $http.put('/api/products/' + $scope.currentProduct.productId, $scope.currentProduct, getAuthConfig());
+        }
+
+        request.then(function(response) {
+            alert($scope.modalMode === 'add' ? '新增成功！' : '更新成功！');
+            var modalInstance = bootstrap.Modal.getInstance(document.getElementById('productModal'));
+            modalInstance.hide();
+            $scope.loadProducts(); 
+        }).catch(function(error) {
+            console.error("儲存失敗:", error);
+            var errorMsg = error.data && error.data.message ? error.data.message : "請檢查輸入資料。";
+            alert("儲存商品失敗：" + errorMsg);
+        });
+    };
+
+    // 5️⃣ 刪除商品 (呼叫信穎的 API: DELETE /api/products/{id})
+    $scope.deleteProduct = function(productId, pname) {
+        if ($window.confirm('警告：確定要永久刪除「' + pname + '」嗎？\n(注意：若有訂單明細關聯此商品可能會無法刪除)')) {
+            $http.delete('/api/products/' + productId, getAuthConfig())
+                .then(function(response) {
+                    alert('刪除成功！');
+                    $scope.loadProducts();
+                })
+                .catch(function(error) {
+                    console.error("刪除失敗:", error);
+                    alert('刪除失敗：可能因資料庫外鍵約束(已存在訂單)而遭拒絕。');
+                });
+        }
+    };
+
+    // 啟動時載入
+    $scope.loadProducts();
+});
+//(滷蛋範圍結束)

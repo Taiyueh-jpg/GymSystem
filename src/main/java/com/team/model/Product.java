@@ -27,6 +27,10 @@ public class Product {
     @Column(name = "image_base64", columnDefinition = "LONGTEXT")
     private String imageBase64;
     
+    // 在 Product增加數量
+    @Column(name = "stock", nullable = false)
+    private Integer stock = 0; // 商品庫存數量
+    
  
 
     // =====================================
@@ -49,7 +53,13 @@ public class Product {
     private String category;
     
     public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }	
+    public void setCategory(String category) { this.category = category; }
+	public Integer getStock() {
+		return stock;
+	}
+	public void setStock(Integer stock) {
+		this.stock = stock;
+	}	
 
 	
 }
