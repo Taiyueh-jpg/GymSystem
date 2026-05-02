@@ -1,15 +1,23 @@
 package com.team.controller;
 
-import com.team.dto.CheckoutRequest;
-import com.team.model.Porder;
-import com.team.model.OrderDetail; // ✅ 補上 OrderDetail 的匯入
-import com.team.service.OrderService;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.List; // ✅ 補上 List 的匯入
 import java.util.Map;  // ✅ 補上 Map 的匯入
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.team.dto.CheckoutRequest;
+import com.team.model.OrderDetail; // ✅ 補上 OrderDetail 的匯入
+import com.team.model.Porder;
+import com.team.service.OrderService;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -81,6 +89,20 @@ public class OrderController {
     public List<Porder> getAllOrders() {
         // TODO: 未來這裡可以加上「權限檢查」，確認當前登入的人是不是 Admin
         return orderService.getAllOrders();
+    }
+    
+    /**
+     * PUT 請求：編輯訂單明細 (單一數量修改)
+     * 網址範例：http://localhost:8080/api/orders/16/details
+     */
+    @PutMapping("/{orderId}/details")
+    public ResponseEntity<?> updateDetails(@PathVariable Long orderId, @RequestBody List<OrderDetail> updatedDetails) {
+        try {
+            orderService.updateOrderDetails(orderId, updatedDetails);
+            return ResponseEntity.ok().body(Map.of("message", "訂單明細更新成功"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
 }

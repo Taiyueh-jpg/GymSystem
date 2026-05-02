@@ -85,8 +85,15 @@
                 <li class="nav-item"><a class="nav-link active" href="/product/mall.html">周邊商城</a></li>
             </ul>
             <ul class="navbar-nav align-items-center gap-3">
+                <!-- 🔥 新增：我的歷史訂單入口按鈕 -->
                 <li class="nav-item">
-                    <!-- 🔥 使用 ng-click 綁定開關函數 -->
+                    <a href="/history.html" class="btn btn-outline-warning btn-sm fw-bold px-3">
+                        📜 我的歷史訂單
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <!-- 使用 ng-click 綁定開關函數 -->
                     <button class="btn-cart" ng-click="toggleCart()">
                         🛒 購物車 <span class="cart-badge" ng-show="cart.length > 0">{{ cart.length }}</span>
                     </button>

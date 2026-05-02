@@ -1,139 +1,210 @@
 <!DOCTYPE html>
+<!-- 🌟 宣告 AngularJS 應用程式 -->
 <html lang="zh-TW" ng-app="GymApp">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GymSystem 後台管理 - 訂單戰情室</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-    
+    <title>GymSystem | 訂單出貨戰情室</title>
+    <!-- 載入 Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- 載入 AngularJS 與 您的 app.js -->
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
     <script src="js/app.js"></script>
+    
     <style>
+        body { background-color: #f4f6f9; color: #333; }
+        .sidebar { min-height: 100vh; background-color: #212529; }
+        .sidebar a { color: #adb5bd; text-decoration: none; padding: 15px 20px; display: block; border-bottom: 1px solid #343a40; transition: 0.3s; }
+        .sidebar a:hover, .sidebar a.active { background-color: #0d6efd; color: #fff; }
         [ng\:cloak], [ng-cloak], .ng-cloak { display: none !important; }
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
     </style>
 </head>
-<body class="bg-dark text-light" ng-controller="MainCtrl" ng-cloak>
 
-    <nav class="navbar navbar-dark bg-secondary mb-4">
-        <span class="navbar-brand mb-0 h1">🛠️ GymSystem 後台管理系統</span>
-        <div class="d-flex align-items-center">
-            <span class="mr-3 text-warning">管理員：{{ currentUser.name }}</span>
-            <button class="btn btn-sm btn-danger" ng-click="logout()">登出系統</button>
-            <a href="admin-dashboard.html" class="btn btn-sm btn-outline-light ml-2">回管理大廳</a>
-        </div>
-    </nav>
+<body ng-controller="MainCtrl" ng-cloak>
+    
+    <!-- 全域權限防護 -->
+    <script>
+        window.onload = function() {
+            var user = JSON.parse(localStorage.getItem('gymUser'));
+            if (!user || !user.role || user.role !== 'admin') {
+                alert('權限不足，請使用管理員帳號登入！');
+                window.location.href = 'index.html';
+            }
+        };
+    </script>
 
-    <div class="container-fluid px-5">
-        <h2 class="mb-4">📦 全站訂單總覽</h2>
-        
-        <div class="card text-dark">
-            <div class="card-body p-0">
-                <table class="table table-hover table-striped mb-0">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th>訂單編號</th>
-                            <th>會員 ID</th>
-                            <th>下單時間</th>
-                            <th>總金額</th>
-                            <th>付款方式</th>
-                            <th>狀態</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="order-list">
-                        <tr>
-                            <td colspan="7" class="text-center py-4">
-                                <div class="spinner-border text-primary" role="status"></div>
-                                <p class="mt-2 mb-0">載入中...</p>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+    <div class="d-flex">
+        <!-- ========================================== -->
+        <!-- 左側邊欄 (統一後台視覺) -->
+        <!-- ========================================== -->
+        <div class="sidebar text-white" style="width: 250px; flex-shrink: 0;">
+            <div class="p-4 text-center border-bottom border-secondary">
+                <h4 class="fw-bold">GymSystem 後台</h4>
+                <span class="badge bg-primary mt-2">目前登入：{{ currentUser.name }}</span>
             </div>
+            <nav class="mt-3">
+                <a href="admin-dashboard.html">👥 會員與員工管理 (A)</a>
+                <a href="#">📅 課程與排班管理 (B)</a>
+                <a href="admin-product.html">🛍️ 商城商品管理 (C)</a>
+                <!-- 🔥 這裡加上 active，標示目前在此頁面 -->
+                <a href="admin-orders.html" class="active">📦 訂單出貨戰情室 (D)</a>
+                <a href="article/article-admin.html">📢 公告文章管理 (E)</a>
+                <a href="contact/contact-admin.html">💬 客服留言回覆 (E)</a>
+                <a href="contact/keyword-filter-admin.html">🚫 留言關鍵字過濾 (E)</a>
+                
+                <a href="#" class="text-danger mt-5" ng-click="logout()">🚪 登出系統</a>
+                <a href="index.html" class="text-info">🏠 回到前台首頁</a>
+            </nav>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- 右側主內容區：訂單戰情室 (掛載 AdminOrderCtrl) -->
+        <!-- ========================================== -->
+        <div class="flex-grow-1 p-5" ng-controller="AdminOrderCtrl">
+            
+            <div class="p-4 bg-white rounded shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold mb-0">📦 全站訂單總覽</h2>
+                    <button class="btn btn-outline-secondary fw-bold" ng-click="loadOrders()">↻ 重新整理</button>
+                </div>
+
+                <!-- 載入中提示 -->
+                <div class="text-center py-5" ng-if="isLoading">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 text-muted">訂單資料載入中...</p>
+                </div>
+
+                <!-- 訂單資料表 -->
+                <div class="table-responsive" ng-if="!isLoading">
+                    <table class="table table-hover align-middle text-center">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>訂單編號</th>
+                                <th>會員 ID</th>
+                                <th>下單時間</th>
+                                <th>總金額</th>
+                                <th>配送方式</th>
+                                <th>付款方式</th>
+                                <th>狀態</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="order in orders | orderBy:'-orderId'">
+                                <td class="fw-bold">#{{ order.orderId }}</td>
+                                <td><span class="badge bg-secondary">會員 {{ order.memberId }}</span></td>
+                                <td class="text-muted">{{ order.orderDate | date:'yyyy-MM-dd HH:mm' }}</td>
+                                <td class="text-danger fw-bold">NT$ {{ order.totalAmount | number:0 }}</td>
+                                <td>{{ order.deliveryMethod }}</td>
+                                <td>{{ order.paymentType }}</td>
+                                <td>
+                                    <!-- 動態狀態標籤 -->
+                                    <span class="status-badge" 
+                                          ng-class="{
+                                              'bg-warning text-dark': order.status === 'paid',
+                                              'bg-info text-white': order.status === 'shipped',
+                                              'bg-success text-white': order.status === 'completed'
+                                          }">
+                                        {{ formatStatus(order.status) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <!-- 出貨按鈕：只有 'paid' (已付款) 狀態才會顯示 -->
+                                    <button class="btn btn-sm btn-primary fw-bold shadow-sm" 
+                                            ng-if="order.status === 'paid'" 
+                                            ng-click="shipOrder(order.orderId)">
+                                        🚀 執行出貨
+                                    </button>
+                                    <button class="btn btn-sm btn-secondary fw-bold" 
+                                            ng-if="order.status === 'shipped'" disabled>
+                                        已出貨
+                                    </button>
+                                    <button class="btn btn-sm btn-success fw-bold" 
+                                            ng-if="order.status === 'completed'" disabled>
+                                        已完成
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr ng-if="orders.length === 0">
+                                <td colspan="8" class="text-muted py-4">目前尚無任何訂單資料。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
     </div>
 
+    <!-- AngularJS 訂單戰情室專屬控制器 -->
     <script>
-        // 👉 權限檢查：確保只有員工能進入 (否則踢回首頁)
-        window.onload = function() {
-            const user = JSON.parse(localStorage.getItem('gymUser'));
-            if (!user || !user.role) {
-                alert('權限不足，請使用員工帳號登入！');
-                window.location.href = 'index.html';
-                return;
-            }
-            fetchAllOrders();
-        };
+        app.controller('AdminOrderCtrl', function($scope, $http, $window) {
+            
+            $scope.orders = [];
+            $scope.isLoading = true;
 
-        function fetchAllOrders() {
-            const orderList = document.getElementById('order-list');
-            orderList.innerHTML = '<tr><td colspan="7" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 mb-0">載入中...</p></td></tr>';
-
-            fetch('/api/orders')
-                .then(response => {
-                    if (!response.ok) throw new Error('無法取得訂單資料');
-                    return response.json();
-                })
-                .then(orders => {
-                    orderList.innerHTML = ''; 
-                    if(orders.length === 0) {
-                        orderList.innerHTML = '<tr><td colspan="7" class="text-center py-4">目前尚無任何訂單</td></tr>';
-                        return;
+            // 取得管理員 Token
+            var currentUser = JSON.parse($window.localStorage.getItem('gymUser'));
+            var getAuthConfig = function() {
+                return {
+                    headers: {
+                        'Authorization': currentUser.adminId ? currentUser.adminId.toString() : currentUser.memberId.toString(),
+                        'Content-Type': 'application/json'
                     }
+                };
+            };
 
-                    orders.forEach(order => {
-                        const date = new Date(order.orderDate);
-                        const formattedDate = date.toLocaleString('zh-TW', { hour12: false });
-                        
-                        let statusHtml = '';
-                        let actionBtn = '';
-                        
-                        if (order.status === 'processing') {
-                            statusHtml = '<span class="badge badge-warning px-2 py-1">處理中</span>';
-                            actionBtn = `<button class="btn btn-sm btn-primary shadow-sm" onclick="shipOrder(${order.orderId})">🚀 執行出貨</button>`;
-                        } else if (order.status === 'shipped') {
-                            statusHtml = '<span class="badge badge-success px-2 py-1">已出貨</span>';
-                            actionBtn = '<button class="btn btn-sm btn-secondary" disabled>已完成</button>';
-                        } else {
-                            statusHtml = `<span class="badge badge-secondary">${order.status}</span>`;
-                        }
-
-                        const rowHtml = `
-                            <tr>
-                                <td class="font-weight-bold"># ${order.orderId}</td>
-                                <td>👤 會員 ${order.memberId}</td>
-                                <td>${formattedDate}</td>
-                                <td class="text-danger font-weight-bold">NT$ ${order.totalAmount}</td>
-                                <td>${order.paymentType}</td>
-                                <td>${statusHtml}</td>
-                                <td>${actionBtn}</td>
-                            </tr>
-                        `;
-                        orderList.innerHTML += rowHtml;
+            // 1️⃣ 載入所有訂單 (精準呼叫 OrderController 的 /api/orders/all)
+            $scope.loadOrders = function() {
+                $scope.isLoading = true;
+                $http.get('/api/orders/all', getAuthConfig())
+                    .then(function(response) {
+                        $scope.orders = response.data || [];
+                    })
+                    .catch(function(error) {
+                        console.error("載入訂單失敗:", error);
+                        alert("無法取得訂單資料，請確認後端 API 是否正常啟動。");
+                    })
+                    .finally(function() {
+                        $scope.isLoading = false;
                     });
-                })
-                .catch(err => {
-                    alert(err.message);
-                });
-        }
+            };
 
-        function shipOrder(orderId) {
-            if(!confirm(`確定要將訂單 # ${orderId} 設為已出貨嗎？`)) return;
-
-            fetch(`/api/orders/${orderId}/status`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: 'shipped' })
-            })
-            .then(res => {
-                if(res.ok) {
-                    alert(`訂單 # ${orderId} 已成功出貨！`);
-                    fetchAllOrders(); 
-                } else {
-                    alert("出貨失敗！");
+            // 2️⃣ 執行出貨 (精準呼叫 OrderController 的 /api/orders/{orderId}/status)
+            $scope.shipOrder = function(orderId) {
+                if ($window.confirm("確定要將訂單 #" + orderId + " 標記為「已出貨」嗎？")) {
+                    
+                    // 傳送 JSON 格式的狀態更新請求
+                    var payload = { status: "shipped" };
+                    
+                    $http.put('/api/orders/' + orderId + '/status', payload, getAuthConfig())
+                        .then(function(response) {
+                            alert("✅ 訂單 #" + orderId + " 出貨成功！");
+                            $scope.loadOrders(); // 重新整理列表
+                        })
+                        .catch(function(error) {
+                            console.error("出貨失敗:", error);
+                            alert("狀態更新失敗，請檢查後端錯誤日誌。");
+                        });
                 }
-            });
-        }
+            };
+
+            // 狀態文字轉換工具
+            $scope.formatStatus = function(status) {
+                switch(status) {
+                    case 'paid': return '已付款 (待出貨)';
+                    case 'shipped': return '已出貨';
+                    case 'completed': return '已完成';
+                    default: return status;
+                }
+            };
+
+            // 初始化載入
+            $scope.loadOrders();
+        });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

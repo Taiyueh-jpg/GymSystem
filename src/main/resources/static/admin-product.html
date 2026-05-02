@@ -60,10 +60,41 @@
         <!-- ========================================== -->
         <div class="flex-grow-1 p-5" ng-controller="AdminProductCtrl">
     
-    <div class="p-4 bg-white rounded shadow-sm">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="fw-bold mb-0">🛒 商城商品管理</h2>
             <button class="btn btn-primary fw-bold" ng-click="openModal('add')">+ 新增商品</button>
+        </div>
+
+        
+        <!-- 🔥 企業級新增：即時搜尋與分類過濾區塊 (已升級 Dot Rule) -->
+        <div class="row mb-4 align-items-center" ng-if="!isLoading">
+            <!-- 左側：關鍵字搜尋 -->
+            <div class="col-md-5 mb-3 mb-md-0">
+                <div class="input-group shadow-sm">
+                    <span class="input-group-text bg-white border-end-0">🔍</span>
+                    <!-- ng-model 改綁定 filterData.keyword -->
+                    <input type="text" class="form-control border-start-0 ps-0" placeholder="輸入商品名稱即時搜尋..." ng-model="filterData.keyword">
+                </div>
+            </div>
+            
+            <!-- 右側：動態分類按鈕 -->
+            <div class="col-md-7 d-flex flex-wrap gap-2 justify-content-md-end">
+                <button class="btn btn-sm rounded-pill fw-bold px-3" 
+                        ng-class="filterData.category === 'All' ? 'btn-dark' : 'btn-outline-secondary'" 
+                        ng-click="setCategory('All')">全部商品</button>
+                <button class="btn btn-sm rounded-pill fw-bold px-3" 
+                        ng-class="filterData.category === '高蛋白' ? 'btn-dark' : 'btn-outline-secondary'" 
+                        ng-click="setCategory('高蛋白')">高蛋白</button>
+                <button class="btn btn-sm rounded-pill fw-bold px-3" 
+                        ng-class="filterData.category === '配件' ? 'btn-dark' : 'btn-outline-secondary'" 
+                        ng-click="setCategory('配件')">運動配件</button>
+                <button class="btn btn-sm rounded-pill fw-bold px-3" 
+                        ng-class="filterData.category === '護具' ? 'btn-dark' : 'btn-outline-secondary'" 
+                        ng-click="setCategory('護具')">健身護具</button>
+                <button class="btn btn-sm rounded-pill fw-bold px-3" 
+                        ng-class="filterData.category === '服飾' ? 'btn-dark' : 'btn-outline-secondary'" 
+                        ng-click="setCategory('服飾')">運動服飾</button>
+            </div>
         </div>
 
         <!-- 載入中提示 -->
@@ -82,12 +113,13 @@
                         <th>商品名稱</th>
                         <th>分類</th>
                         <th>價格 (NT$)</th>
-                        <th>庫存數量</th> <!-- 🔥 新增庫存欄位 -->
+                        <th>庫存數量</th>
                         <th>操作</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="product in products">
+                    <!-- 🔥 關鍵修復：套用自訂的 customFilter -->
+                    <tr ng-repeat="product in products | filter:customFilter">
                         <td class="fw-bold">{{ product.productId }}</td>
                         <td>
                             <img ng-src="{{ product.imageBase64 || 'https://placehold.co/100x100?text=No+Image' }}" alt="商品圖片" 
@@ -97,7 +129,6 @@
                         <td><span class="badge bg-secondary">{{ product.category || '未分類' }}</span></td>
                         <td class="text-danger fw-bold">{{ product.price | number:0 }}</td>
                         
-                        <!-- 🔥 庫存數量顯示 (小於等於5時顯示紅色警告) -->
                         <td class="fw-bold" ng-class="{'text-danger': product.stock <= 5, 'text-success': product.stock > 5}">
                             {{ product.stock != null ? product.stock : 0 }} 
                             <span ng-if="product.stock <= 5" class="badge bg-danger ms-1">補貨</span>
@@ -108,8 +139,13 @@
                             <button class="btn btn-sm btn-outline-danger fw-bold" ng-click="deleteProduct(product.productId, product.pname)">刪除</button>
                         </td>
                     </tr>
-                    <tr ng-if="products.length === 0">
-                        <td colspan="7" class="text-muted py-4">目前沒有任何商品資料，請點擊右上角新增。</td>
+
+                    <!-- 當過濾後沒有商品時的友善提示 -->
+                    <tr ng-if="(products | filter:customFilter).length === 0">
+                        <td colspan="7" class="text-muted py-5">
+                            <div class="fs-1 mb-2">🔍</div>
+                            <h5>找不到符合「{{ filterData.keyword }}」的商品</h5>
+                        </td>
                     </tr>
                 </tbody>
             </table>

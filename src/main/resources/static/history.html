@@ -1,26 +1,21 @@
 <!DOCTYPE html>
-<!-- 🌟 宣告 AngularJS 應用程式，嚴格遵守前端規範 -->
 <html lang="zh-TW" ng-app="GymApp">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>我的歷史訂單 | GymSystem</title>
     
-    <!-- 引入 Bootstrap 與字體 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     
-    <!-- 引入 AngularJS 與 共用邏輯 app.js -->
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
     <script src="/js/app.js"></script>
     
     <style>
         [ng\:cloak], [ng-cloak], .ng-cloak { display: none !important; }
         body { background-color: #f4f7f6; font-family: 'Noto Sans TC', sans-serif; }
-        
         .navbar { background: #0d0d0d; border-bottom: 1px solid #333; }
         .navbar-brand { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 2px; color: #e8ff00 !important; }
-        
         .page-header { background-color: #fff; padding: 30px 0; border-bottom: 1px solid #eee; margin-bottom: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         .order-table th { background-color: #222; color: #fff; font-weight: 500; border: none; }
         .order-table td { vertical-align: middle; background-color: #fff; }
@@ -28,22 +23,17 @@
         .status-paid { background-color: #e8ff00; color: #0d0d0d; }
         .status-shipped { background-color: #17a2b8; color: #fff; }
         .status-completed { background-color: #28a745; color: #fff; }
-        
-        /* Modal 標題樣式 */
         .modal-header { background-color: #0d0d0d; color: #e8ff00; border-bottom: 2px solid #e8ff00; }
         .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 1px; }
         .btn-close-white { filter: invert(1) grayscale(100%) brightness(200%); }
     </style>
 </head>
 
-<!-- 🌟 指定控制器 HistoryCtrl -->
 <body ng-controller="HistoryCtrl" ng-cloak>
 
-    <!-- 頂部導航列 -->
     <nav class="navbar navbar-dark sticky-top">
         <div class="container d-flex justify-content-between align-items-center">
             <a class="navbar-brand" href="/">🏋 GYMSYSTEM 會員中心</a>
-            
             <div class="d-flex align-items-center">
                 <a href="/profile.html" class="btn btn-outline-light btn-sm me-2">回個人資料</a>
                 <a href="/product/mall.html" class="btn btn-info btn-sm me-3 text-dark fw-bold" style="background-color: #0dcaf0; border: none;">繼續逛商城</a>
@@ -53,64 +43,97 @@
         </div>
     </nav>
 
-    <!-- 頁面標題 -->
     <div class="page-header">
         <div class="container">
             <h2 class="fw-bold mb-0">我的訂單紀錄</h2>
         </div>
     </div>
 
-    <!-- 訂單主檔內容區塊 -->
-    <div class="container">
-        <!-- 載入中提示 -->
+    <div class="container pb-5">
+        <!-- 🔥 企業級新增：時間範圍區間查詢面板 -->
+        <div class="row mb-4 align-items-end bg-white p-3 rounded shadow-sm mx-0" ng-if="orders.length > 0">
+            <div class="col-lg-8">
+                <h6 class="fw-bold mb-2 text-secondary">📅 選擇查詢區間</h6>
+                <div class="input-group input-group-sm shadow-none">
+                    <span class="input-group-text bg-light fw-bold text-dark border-secondary">開始日期</span>
+                    <input type="date" class="form-control border-secondary" ng-model="dateFilter.start">
+                    <span class="input-group-text bg-light fw-bold text-dark border-start-0 border-end-0 border-secondary">至</span>
+                    <span class="input-group-text bg-light fw-bold text-dark border-secondary">結束日期</span>
+                    <input type="date" class="form-control border-secondary" ng-model="dateFilter.end">
+                    <button class="btn btn-dark fw-bold px-3" ng-click="clearDateFilter()">清除區間</button>
+                </div>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <span class="badge bg-primary fs-6 p-2 shadow-sm">
+                    符合條件：{{ (orders | filter:customDateFilter).length }} 筆訂單
+                </span>
+            </div>
+        </div>
         <div class="text-center py-5" ng-if="isLoading">
             <div class="spinner-border text-warning" role="status"></div>
             <p class="mt-2 text-muted">正在為您載入訂單資料...</p>
         </div>
 
-        <!-- 當沒有訂單時的畫面 -->
         <div class="text-center py-5 bg-white rounded shadow-sm" ng-if="!isLoading && orders.length === 0">
             <div class="fs-1 mb-3">📦</div>
             <h5 class="text-muted">您目前還沒有任何訂單紀錄喔！</h5>
             <a href="/product/mall.html" class="btn btn-warning mt-3 fw-bold">馬上去逛逛商城</a>
         </div>
 
-        <!-- 有訂單時顯示表格 -->
         <div class="table-responsive bg-white rounded shadow-sm" ng-if="!isLoading && orders.length > 0">
             <table class="table table-hover order-table mb-0 text-center">
                 <thead>
                     <tr>
                         <th class="py-3">訂單編號</th>
                         <th class="py-3">下單時間</th>
-                        <th class="py-3">配送方式</th>
-                        <th class="py-3">付款方式</th>
+                        <th class="py-3">配送/付款</th>
                         <th class="py-3">總金額</th>
                         <th class="py-3">狀態</th>
-                        <th class="py-3">操作</th>
+                        <th class="py-3" style="min-width: 180px;">操作</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="order in orders">
+                    <tr ng-repeat="order in orders | filter:customDateFilter">
                         <td class="fw-bold">#{{ order.orderId }}</td>
                         <td class="text-muted">{{ order.orderDate | date:'yyyy-MM-dd HH:mm' }}</td>
-                        <td>{{ order.deliveryMethod }}</td>
-                        <td>{{ order.paymentType }}</td>
-                        <td class="fw-bold text-danger">NT$ {{ order.totalAmount }}</td>
+                        <td>{{ order.deliveryMethod }} <br> <small class="text-muted">{{ order.paymentType }}</small></td>
+                        <td class="fw-bold text-danger fs-5">NT$ {{ order.totalAmount }}</td>
                         <td>
                             <span class="status-badge" 
                                   ng-class="{
                                       'status-paid': order.status === 'paid',
                                       'status-shipped': order.status === 'shipped',
-                                      'status-completed': order.status === 'completed'
+                                      'status-completed': order.status === 'completed',
+                                      'bg-secondary text-white': order.status === 'cancelled',
+                                      'bg-danger text-white': order.status === 'returned'
                                   }">
                                 {{ formatStatus(order.status) }}
                             </span>
                         </td>
                         <td>
-                            <!-- 🔥 點擊觸發 viewDetails 函數 -->
-                            <button class="btn btn-outline-dark btn-sm fw-bold" ng-click="viewDetails(order.orderId)">
+                            <!-- 1. 永遠可以查看明細 -->
+                            <button class="btn btn-outline-dark btn-sm fw-bold w-100 mb-1" ng-click="viewDetails(order, false)">
                                 查看明細
                             </button>
+
+                            <!-- 🔥 2. 企業級防呆升級：只要真實狀態符合，或是畫面翻譯顯示為「處理中」，一律放行顯示編輯區塊 -->
+                            <div ng-if="order.status === 'paid' || order.status === 'processing' || formatStatus(order.status) === '處理中'">
+                                <!-- 15分鐘內的編輯按鈕 -->
+                                <button class="btn btn-warning btn-sm fw-bold w-100" 
+                                        ng-if="canCancel(order.orderDate)"
+                                        ng-click="viewDetails(order, true)">
+                                    編輯訂單 ({{ getRemainingCancelTime(order.orderDate) }})
+                                </button>
+                                
+                                <!-- 超過15分鐘的編輯按鈕 (變暗無法點選) -->
+                                <button class="btn btn-secondary btn-sm fw-bold w-100" 
+                                        ng-if="!canCancel(order.orderDate)" disabled>
+                                    編輯訂單
+                                </button>
+                                <small class="text-muted d-block mt-1" style="font-size: 0.75rem;" ng-if="!canCancel(order.orderDate)">
+                                    (15分鐘內才可以編輯訂單)
+                                </small>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
@@ -119,70 +142,127 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- 🛒 訂單明細 Bootstrap Modal (彈出視窗) -->
+    <!-- 🛒 訂單明細與編輯 Modal -->
     <!-- ========================================== -->
-    <div class="modal fade" id="orderDetailModal" tabindex="-1" aria-labelledby="orderDetailModalLabel" aria-hidden="true">
+    <div class="modal fade" id="orderDetailModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="orderDetailModalLabel">訂單明細 #{{ selectedOrderId }}</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title">訂單 #{{ selectedOrder.orderId }} {{ isEditMode ? ' - 編輯模式' : ' - 明細查看' }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
                     
-                    <!-- 明細載入中提示 -->
                     <div class="text-center py-4" ng-if="isLoadingDetails">
                         <div class="spinner-border text-dark" role="status"></div>
-                        <p class="mt-2 text-muted">明細讀取中...</p>
                     </div>
 
-                    <!-- 明細表格 -->
                     <div class="table-responsive" ng-if="!isLoadingDetails">
-                        <table class="table table-bordered text-center align-middle">
+                        <table class="table table-bordered text-center align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>商品編號</th>
+                                    <th>商品名稱</th>
                                     <th>單價</th>
-                                    <th>數量</th>
+                                    <th style="width: 130px;">數量</th>
                                     <th>小計</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr ng-repeat="detail in selectedOrderDetails">
-                                    <td class="fw-bold">PROD-{{ detail.productId }}</td>
+                                    <td class="fw-bold text-start">{{ getProductName(detail.productId) }}</td>
                                     <td>NT$ {{ detail.unitPrice }}</td>
-                                    <td>{{ detail.quantity }}</td>
+                                    <td>
+                                        <!-- 查看模式 -->
+                                        <span class="fs-5 fw-bold" ng-if="!isEditMode">{{ detail.quantity }}</span>
+                                        <!-- 編輯模式：數量增減 -->
+                                        <div class="input-group input-group-sm mx-auto" ng-if="isEditMode">
+                                            <button class="btn btn-outline-secondary fw-bold" ng-click="changeQty(detail, -1, $index)">-</button>
+                                            <input type="text" class="form-control text-center fw-bold px-1" ng-model="detail.quantity" readonly>
+                                            <button class="btn btn-outline-secondary fw-bold" ng-click="changeQty(detail, 1, $index)">+</button>
+                                        </div>
+                                    </td>
                                     <td class="text-danger fw-bold">NT$ {{ detail.unitPrice * detail.quantity }}</td>
-                                </tr>
-                                <!-- 若無明細防呆處理 -->
-                                <tr ng-if="selectedOrderDetails.length === 0">
-                                    <td colspan="4" class="text-muted py-3">此訂單沒有明細紀錄。</td>
                                 </tr>
                             </tbody>
                         </table>
-                    </div>
-                    
-                </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">關閉視窗</button>
-                </div>
-            </div>
-        </div>
-    </div>
+                        
+                        <!-- 🔥 新增：編輯模式下的「+ 新增商品」按鈕 -->
+                        <div class="text-center mt-3 border-top pt-3" ng-if="isEditMode">
+                            <button class="btn btn-sm btn-outline-primary fw-bold px-4 rounded-pill" ng-click="toggleProductSelector()">
+                                {{ isSelectingProduct ? '隱藏商品列表 ▲' : '＋ 新增其他商品 ▼' }}
+                            </button>
+                        </div>
+                        
+                        <!-- 🔥 新增：商品挑選區塊 (預設隱藏) -->
+                        <div class="mt-3 p-3 bg-light rounded border" ng-show="isEditMode && isSelectingProduct">
+                            <h6 class="fw-bold mb-3 text-secondary">請點擊要加入的商品：</h6>
+                            <div style="max-height: 200px; overflow-y: auto;">
+                                <div class="list-group">
+                                    <!-- 迴圈顯示所有商品 (透過 allProducts 陣列) -->
+                                    <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                                            ng-repeat="prod in allProducts"
+                                            ng-click="addDetailItem(prod)">
+                                        <span>{{ prod.pname }}</span>
+                                        <span class="badge bg-warning text-dark rounded-pill">NT$ {{ prod.price }}</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
 
-    <!-- AngularJS 專屬控制器腳本 -->
+                    </div>
     <script>
-        app.controller('HistoryCtrl', function($scope, $http, $window) {
-            
+        app.controller('HistoryCtrl', function($scope, $http, $window, $interval) {
             $scope.isLoading = true;
             $scope.orders = [];
-            
-            // 明細專用變數
-            $scope.selectedOrderId = null;
+            $scope.selectedOrder = {};
             $scope.selectedOrderDetails = [];
             $scope.isLoadingDetails = false;
-            
-            // 1️⃣ 【無狀態核心防禦】初始化
+            $scope.isEditMode = false; // 控制是否為編輯模式
+            $scope.productDictionary = {};
+
+            // ==========================================
+            // 📅 時間區間篩選邏輯引擎
+            // ==========================================
+            $scope.dateFilter = {
+                start: null,
+                end: null
+            };
+
+            // 清除篩選條件
+            $scope.clearDateFilter = function() {
+                $scope.dateFilter.start = null;
+                $scope.dateFilter.end = null;
+            };
+
+            // 自訂過濾器：比對訂單時間是否在選擇的區間內
+            $scope.customDateFilter = function(order) {
+                // 如果沒有設定任何日期，就全部顯示
+                if (!$scope.dateFilter.start && !$scope.dateFilter.end) {
+                    return true; 
+                }
+                
+                // 取得該筆訂單的毫秒數 (忽略時分秒，以日期為準)
+                var orderDate = new Date(order.orderDate).setHours(0, 0, 0, 0);
+                
+                var matchStart = true;
+                var matchEnd = true;
+
+                // 若有設定開始日期
+                if ($scope.dateFilter.start) {
+                    var startDate = new Date($scope.dateFilter.start).setHours(0, 0, 0, 0);
+                    matchStart = orderDate >= startDate;
+                }
+
+                // 若有設定結束日期
+                if ($scope.dateFilter.end) {
+                    // 結束日期算到當天的 23:59:59
+                    var endDate = new Date($scope.dateFilter.end).setHours(23, 59, 59, 999);
+                    matchEnd = orderDate <= endDate;
+                }
+
+                return matchStart && matchEnd;
+            };
+
             var userStr = $window.localStorage.getItem('gymUser');
             if (!userStr) {
                 alert("您尚未登入或憑證已過期，請先登入！");
@@ -191,74 +271,121 @@
             }
             $scope.currentUser = JSON.parse(userStr);
 
-            // 取得共用的 Header 授權設定
             var getRequestConfig = function() {
-                return {
-                    headers: {
-                        'Authorization': $scope.currentUser.memberId.toString(),
-                        'Content-Type': 'application/json'
-                    }
-                };
+                return { headers: { 'Authorization': $scope.currentUser.memberId.toString(), 'Content-Type': 'application/json' } };
             };
 
-            // 2️⃣ 呼叫後端 API 獲取歷史訂單
-            $scope.fetchOrderHistory = function() {
-                console.log("👉 [前端監控] 準備向後端請求歷史訂單...");
-                $http.get('/api/orders/member/' + $scope.currentUser.memberId, getRequestConfig())
-                    .then(function(response) {
-                        $scope.orders = response.data || [];
-                    })
-                    .catch(function(error) {
-                        console.error("❌ API 請求失敗:", error);
-                        alert("獲取訂單資料失敗，請確認後端伺服器狀態。");
-                    })
-                    .finally(function() {
-                        $scope.isLoading = false; 
+            $scope.loadProductDictionary = function() {
+                $http.get('/api/products', getRequestConfig())
+                    .then(function(res) {
+                        (res.data || []).forEach(function(p) { $scope.productDictionary[p.productId] = p.pname; });
                     });
             };
 
-            // 3️⃣ 🔥 呼叫後端 API 獲取「單筆訂單明細」
-            $scope.viewDetails = function(orderId) {
-                $scope.selectedOrderId = orderId;
+            $scope.getProductName = function(productId) {
+                return $scope.productDictionary[productId] || ('商品編號 PROD-' + productId);
+            };
+
+            $scope.fetchOrderHistory = function() {
+                $http.get('/api/orders/member/' + $scope.currentUser.memberId, getRequestConfig())
+                    .then(function(res) { $scope.orders = res.data || []; })
+                    .finally(function() { $scope.isLoading = false; });
+            };
+
+            // 🔥 核心：開啟 Modal 並判斷是否為編輯模式
+            $scope.viewDetails = function(order, editMode) {
+                $scope.selectedOrder = order;
+                $scope.isEditMode = editMode;
                 $scope.isLoadingDetails = true;
-                $scope.selectedOrderDetails = [];
-
-                console.log("👉 [前端監控] 準備獲取訂單明細，訂單 ID:", orderId);
-
-                // 呼叫您 (同學D) 在 OrderController 寫好的 API
-                $http.get('/api/orders/' + orderId + '/details', getRequestConfig())
-                    .then(function(response) {
-                        console.log("✅ [前端監控] 明細回傳成功:", response.data);
-                        $scope.selectedOrderDetails = response.data || [];
-                        
-                        // 資料準備好後，呼叫 Bootstrap 5 原生 API 顯示 Modal
+                
+                $http.get('/api/orders/' + order.orderId + '/details', getRequestConfig())
+                    .then(function(res) {
+                        // 為了避免直接污染原始資料，使用深拷貝複製明細
+                        $scope.selectedOrderDetails = angular.copy(res.data || []);
                         var myModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('orderDetailModal'));
                         myModal.show();
                     })
-                    .catch(function(error) {
-                        console.error("❌ 明細請求失敗:", error);
-                        if (error.status === 401 || error.status === 403) {
-                            alert("獲取失敗：登入憑證無效！");
-                        } else {
-                            alert("獲取明細失敗，請確認後端是否發生 500 錯誤。");
-                        }
-                    })
-                    .finally(function() {
-                        $scope.isLoadingDetails = false;
-                    });
+                    .finally(function() { $scope.isLoadingDetails = false; });
             };
 
-            // 狀態文字轉換工具
+            // 🔥 單一編輯功能：增減數量與刪除
+            $scope.changeQty = function(detail, change, index) {
+                detail.quantity += change;
+                if (detail.quantity < 1) {
+                    if ($window.confirm('確定要將「' + $scope.getProductName(detail.productId) + '」從訂單中移除嗎？')) {
+                        // 會員是老大！確認後直接從明細陣列中剔除該商品
+                        $scope.selectedOrderDetails.splice(index, 1);
+                    } else {
+                        detail.quantity = 1; // 反悔不刪，數量加回 1
+                    }
+                }
+            };
+
+            // 🔥 單一編輯功能：真實呼叫後端 API
+            $scope.saveOrderEdits = function() {
+                // 防呆：如果會員把商品刪光了
+                if ($scope.selectedOrderDetails.length === 0) {
+                    alert("訂單不能沒有商品！如果您不想購買了，請點擊左下角的「取消整筆訂單」。");
+                    return;
+                }
+
+                if ($window.confirm('確定要儲存修改後的明細嗎？(總金額將會重新計算)')) {
+                    // 真槍實彈：將修改後的明細陣列打給後端
+                    $http.put('/api/orders/' + $scope.selectedOrder.orderId + '/details', $scope.selectedOrderDetails, getRequestConfig())
+                        .then(function(res) {
+                            alert("✅ 訂單修改成功！");
+                            var myModal = bootstrap.Modal.getInstance(document.getElementById('orderDetailModal'));
+                            if (myModal) myModal.hide();
+                            $scope.fetchOrderHistory(); // 重新整理列表，讓會員看到最新的總金額！
+                        })
+                        .catch(function(err) {
+                            console.error("更新明細失敗:", err);
+                            alert("更新失敗，請確認後端 API 伺服器狀態。");
+                        });
+                }
+            };
+
+            var cancelTimeLimit = 15 * 60 * 1000; 
+
+            $scope.canCancel = function(orderDateStr) {
+                var orderDate = new Date(orderDateStr).getTime();
+                var now = new Date().getTime();
+                return (now - orderDate) <= cancelTimeLimit;
+            };
+
+            $scope.getRemainingCancelTime = function(orderDateStr) {
+                var diff = new Date(orderDateStr).getTime() + cancelTimeLimit - new Date().getTime();
+                if (diff <= 0) return "已過期";
+                var minutes = Math.floor(diff / 60000);
+                var seconds = Math.floor((diff % 60000) / 1000);
+                return minutes + "分 " + seconds + "秒";
+            };
+
+            $interval(function() {}, 1000); // 每秒更新一次倒數計時
+
+            $scope.cancelOrder = function(orderId) {
+                if ($window.confirm('確定要取消這筆訂單嗎？（此操作無法復原）')) {
+                    $http.put('/api/orders/' + orderId + '/status', { status: 'cancelled' }, getRequestConfig())
+                        .then(function() {
+                            alert('訂單已成功取消！');
+                            bootstrap.Modal.getInstance(document.getElementById('orderDetailModal')).hide();
+                            $scope.fetchOrderHistory(); 
+                        });
+                }
+            };
+
             $scope.formatStatus = function(status) {
                 switch(status) {
                     case 'paid': return '已付款';
                     case 'shipped': return '已出貨';
                     case 'completed': return '已完成';
+                    case 'cancelled': return '已取消';
+                    case 'returned': return '退貨處理中';
                     default: return '處理中';
                 }
             };
 
-            // 頁面載入時執行
+            $scope.loadProductDictionary();
             $scope.fetchOrderHistory();
         });
     </script>

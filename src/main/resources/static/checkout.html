@@ -5,37 +5,75 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>確認結帳 | GymSystem</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
     <script src="js/app.js"></script>
     <style>
         [ng\:cloak], [ng-cloak], .ng-cloak { display: none !important; }
-        body { background-color: #f4f7f6; }
-        .checkout-container { max-width: 900px; margin: 40px auto; }
-        .card { border: none; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .summary-item { display: flex; justify-content: space-between; margin-bottom: 10px; }
-        .product-img-mini { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin-right: 15px; background: #eee; }
+        :root {
+            --brand:    #e8ff00;
+            --dark:     #0d0d0d;
+            --surface:  #1a1a1a;
+            --card-bg:  #222222;
+            --border:   #333333;
+            --text:     #f0f0f0;
+            --muted:    #aaaaaa;
+        }
+        
+        body { background-color: var(--dark); color: var(--text); font-family: 'Noto Sans TC', sans-serif; }
+        
+        /* ── Navbar ── */
+        .navbar { background: #0d0d0d; border-bottom: 1px solid var(--border); }
+        .navbar-brand { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 2px; color: var(--brand) !important; }
+        
+        /* ── 結帳容器與卡片 (🔥 放大寬度與間距) ── */
+        .checkout-container { max-width: 1200px; margin: 50px auto; padding-bottom: 80px; }
+        .card { background-color: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.5); padding: 2rem !important; }
+        .card-title { color: var(--brand); font-family: 'Bebas Neue', 'Noto Sans TC', sans-serif; font-size: 2rem; letter-spacing: 1px; border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 30px; }
+        
+        /* ── 表單元件 (🔥 放大輸入框) ── */
+        .form-label { color: var(--text); font-weight: 500; font-size: 1.1rem; }
+        .form-select, .form-control { background-color: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 14px; font-size: 1.05rem; }
+        .form-select:focus, .form-control:focus { background-color: var(--surface); color: var(--text); border-color: var(--brand); box-shadow: 0 0 0 0.25rem rgba(232, 255, 0, 0.25); }
+        select option { background-color: var(--surface); color: var(--text); }
+        
+        /* ── 購物車明細與按鈕 (🔥 放大圖片與文字) ── */
+        .summary-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 25px; border-bottom: 1px dashed var(--border); }
+        .product-img-mini { width: 90px; height: 90px; object-fit: cover; border-radius: 8px; margin-right: 20px; background: var(--surface); border: 1px solid var(--border); }
+        .item-title { font-size: 1.15rem; font-weight: 500; margin-bottom: 6px; color: var(--text); }
+        .item-price { font-size: 1rem; color: var(--muted); }
+        
+        .text-brand { color: var(--brand) !important; }
+        .btn-brand { background-color: var(--brand); color: var(--dark); border: none; font-weight: bold; font-size: 1.2rem !important; transition: all 0.2s; }
+        .btn-brand:hover { background-color: #d4e600; color: var(--dark); transform: translateY(-2px); }
+        .qty-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 1.1rem; }
+        .qty-btn:hover { background: var(--border); color: var(--text); }
+        .qty-input { background: var(--dark) !important; border: 1px solid var(--border) !important; color: var(--text) !important; font-size: 1.1rem; }
+        
+        .alert-info-dark { background-color: rgba(232, 255, 0, 0.1); border: 1px solid rgba(232, 255, 0, 0.2); color: var(--text); font-size: 1.05rem; }
     </style>
 </head>
 <body ng-controller="MainCtrl" ng-cloak>
 
-    <nav class="navbar navbar-dark bg-dark mb-4 shadow-sm">
+    <nav class="navbar navbar-dark sticky-top">
         <div class="container">
-            <span class="navbar-brand mb-0 h1">🏋️ GymSystem 結帳中心</span>
+            <span class="navbar-brand mb-0">🏋️ GYMSYSTEM 結帳中心</span>
             <div class="d-flex align-items-center">
-                <a href="mall.html" class="btn btn-outline-light btn-sm me-3">返回商城</a>
-                <span class="text-warning me-3 fw-bold" ng-if="currentUser">Hi, {{ currentUser.name }}</span>
+                <a href="product/mall.html" class="btn btn-outline-light btn-sm me-3 fs-6">返回商城</a>
+                <span class="text-brand me-3 fw-bold fs-5" ng-if="currentUser">Hi, {{ currentUser.name }}</span>
             </div>
         </div>
     </nav>
 
     <div class="container checkout-container">
-        <div class="row g-4">
-            <div class="col-md-7">
-                <div class="card p-4">
-                    <h4 class="mb-4 fw-bold">🚚 收件與支付資訊</h4>
+        <div class="row g-5">
+            <!-- 左側：收件資訊 -->
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <h4 class="card-title">🚚 收件與支付資訊</h4>
                     <form id="checkoutForm">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">配送方式</label>
+                        <div class="mb-4">
+                            <label class="form-label">配送方式</label>
                             <select class="form-select" id="deliveryMethod" required>
                                 <option value="" disabled selected>請選擇配送方式</option>
                                 <option value="宅配到府">宅配到府</option>
@@ -44,39 +82,37 @@
                             </select>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">付款方式</label>
+                        <div class="mb-5">
+                            <label class="form-label">付款方式</label>
                             <select class="form-select" id="paymentType" required>
                                 <option value="" disabled selected>請選擇付款方式</option>
-                                <option value="信用卡">信用卡 / 金融卡</option>
+                                <option value="信用卡">信用卡 / 金融卡 (線上刷卡)</option>
                                 <option value="LINE Pay">LINE Pay</option>
                                 <option value="貨到付款">貨到付款</option>
                             </select>
                         </div>
-
-                        <hr class="my-4">
                         
-                        <div class="alert alert-info">
-                            <small>💡 點擊「確認下單」後，系統將自動處理您的訂單明細。</small>
+                        <div class="alert alert-info-dark rounded-3 p-4">
+                            <span class="fs-5">💡</span> 點擊「確認下單」後，系統將依據您選擇的付款方式進行安全跳轉，全程採取高規格加密防護。
                         </div>
                     </form>
                 </div>
             </div>
 
-            <div class="col-md-5">
-                <div class="card p-4 bg-white">
-                    <h4 class="mb-4 fw-bold">🛒 訂單摘要</h4>
-                    <div id="cart-items-list">
-                        </div>
+            <!-- 右側：訂單摘要 -->
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <h4 class="card-title">🛒 訂單摘要</h4>
+                    <div id="cart-items-list" class="mb-4 flex-grow-1 overflow-auto" style="max-height: 450px; padding-right: 10px;">
+                        <!-- 動態商品明細會灌在這裡 -->
+                    </div>
                     
-                    <hr>
-                    
-                    <div class="summary-item fs-5 fw-bold text-danger">
-                        <span>總計金額</span>
-                        <span id="display-total">NT$ 0</span>
+                    <div class="d-flex justify-content-between align-items-center mt-4 pt-4 border-top border-secondary">
+                        <span class="fs-4 fw-bold text-muted">總計金額</span>
+                        <span id="display-total" class="fs-1 fw-bold text-brand" style="font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px;">NT$ 0</span>
                     </div>
 
-                    <button class="btn btn-primary w-100 py-3 mt-4 fw-bold fs-5 shadow" onclick="submitOrder()">
+                    <button class="btn btn-brand w-100 py-3 mt-4 shadow" onclick="submitOrder()">
                         確認下單 🚀
                     </button>
                 </div>
@@ -89,7 +125,6 @@
         let totalAmount = 0;
 
         window.onload = function() {
-            // 1. 登入檢查
             const user = JSON.parse(localStorage.getItem('gymUser'));
             if (!user || !user.memberId) {
                 alert("結帳前請先登入會員！");
@@ -97,117 +132,118 @@
                 return;
             }
 
-            // 2. 抓取購物車資料 (若 localStorage 為空，則塞入測試資料方便你測試)
             let cartData = JSON.parse(sessionStorage.getItem('gymCart'));
-            
             if (!cartData || cartData.length === 0) {
-                console.log("偵測到購物車為空，自動塞入測試資料...");
                 cartData = [
-                    { productId: 1, pname: "測試商品 A (乳清蛋白)", price: 1200, quantity: 1 },
-                    { productId: 2, pname: "測試商品 B (運動毛巾)", price: 350, quantity: 2 }
+                    { productId: 1, pname: "頂級乳清蛋白粉 (雙倍巧克力)", price: 1200, quantity: 1, imageBase64: "" },
+                    { productId: 2, pname: "GymSystem 吸汗運動毛巾 (黑)", price: 350, quantity: 2, imageBase64: "" }
                 ];
-                localStorage.setItem('gymCart', JSON.stringify(cartData));
+                sessionStorage.setItem('gymCart', JSON.stringify(cartData));
             }
             
             currentCart = cartData;
             renderCartSummary();
         };
 
-        // 渲染右側摘要
         function renderCartSummary() {
             const list = document.getElementById('cart-items-list');
             list.innerHTML = '';
             totalAmount = 0;
 
-            currentCart.forEach(item => {
+            currentCart.forEach((item, index) => {
                 const subtotal = item.price * item.quantity;
                 totalAmount += subtotal;
+                
+                const imgSrc = item.imageBase64 ? `<img src="${item.imageBase64}" class="product-img-mini">` : `<div class="product-img-mini d-flex align-items-center justify-content-center fs-2">📦</div>`;
 
                 list.innerHTML += `
-                    <div class="summary-item align-items-center mb-3">
-                        <div class="d-flex align-items-center">
-                            <div class="product-img-mini d-flex align-items-center justify-content-center fs-4">📦</div>
-                            <div>
-                                <div class="fw-bold small">${item.pname}</div>
-                                <div class="text-muted small">NT$ ${item.price} x ${item.quantity}</div>
+                    <div class="summary-item">
+                        <div class="d-flex align-items-center" style="width: 60%;">
+                            ${imgSrc}
+                            <div class="pe-3">
+                                <div class="item-title">${item.pname}</div>
+                                <div class="item-price">單價 NT$ ${item.price.toLocaleString()}</div>
                             </div>
                         </div>
-                        <div class="fw-bold">NT$ ${subtotal}</div>
+                        <div class="d-flex flex-column align-items-end">
+                            <div class="fs-5 fw-bold mb-3 text-white">NT$ ${subtotal.toLocaleString()}</div>
+                            <div class="input-group input-group-md" style="width: 120px;">
+                                <button class="btn qty-btn fw-bold" type="button" onclick="updateQty(${index}, -1)">-</button>
+                                <input type="text" class="form-control text-center px-1 qty-input fw-bold" value="${item.quantity}" readonly>
+                                <button class="btn qty-btn fw-bold" type="button" onclick="updateQty(${index}, 1)">+</button>
+                            </div>
+                        </div>
                     </div>
                 `;
             });
 
-            document.getElementById('display-total').innerText = 'NT$ ' + totalAmount;
+            document.getElementById('display-total').innerText = 'NT$ ' + totalAmount.toLocaleString();
         }
 
-        // 🚀 送出結帳 API (百萬顧問升級版)
-function submitOrder() {
-    const delivery = document.getElementById('deliveryMethod').value;
-    const payment = document.getElementById('paymentType').value;
+        function updateQty(index, change) {
+            let item = currentCart[index];
+            item.quantity += change;
 
-    if (!delivery || !payment) {
-        alert("請完整選擇配送與付款方式！");
-        return;
-    }
-
-    // 1️⃣ 再次從 localStorage 抓取會員狀態，確保安全
-    const user = JSON.parse(localStorage.getItem('gymUser'));
-    if (!user || !user.memberId) {
-        alert("會員憑證遺失，請重新登入！");
-        window.location.href = "login.html";
-        return;
-    }
-
-    // 2️⃣ 打包 JSON 資料 (補上缺失的 memberId！)
-    const payload = {
-        porder: {
-            memberId: user.memberId,  //後端資料庫必須知道是誰買的！
-            deliveryMethod: delivery,
-            paymentType: payment,
-            totalAmount: totalAmount,
-            status: "paid" 
-        },
-        details: currentCart.map(item => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            unitPrice: item.price
-        }))
-    };
-
-    console.log("👉 準備送出的 JSON:", payload);
-
-    // 3️⃣ 發送 API 請求
-    fetch('/api/orders/checkout', {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            // 嚴格遵守無狀態規範，將會員 ID 放在 Header 給後端攔截器檢查
-            'Authorization': user.memberId.toString() 
-        },
-        credentials: 'include', // 若同學A的攔截器仍依賴 Cookie，此行可強迫瀏覽器攜帶憑證過關
-        body: JSON.stringify(payload)
-    })
-    .then(async res => {
-        if (res.ok) {
-            alert("🎉 訂單下單成功！感謝您的購買。");
-            sessionStorage.removeItem('gymCart'); // 清空購物車
-            window.location.href = "history.html"; // 導向歷史訂單頁面
-        } else {
-            // 精準解析後端傳來的錯誤 JSON
-            const errorText = await res.text();
-            try {
-                const errorObj = JSON.parse(errorText);
-                alert("結帳失敗：" + (errorObj.error || errorObj.message || errorText));
-            } catch (e) {
-                alert("結帳失敗：" + errorText);
+            if (item.quantity < 1) {
+                if(confirm('確定要將此商品移出購物車嗎？')) {
+                    currentCart.splice(index, 1);
+                } else {
+                    item.quantity = 1; 
+                }
             }
+            sessionStorage.setItem('gymCart', JSON.stringify(currentCart));
+            renderCartSummary();
         }
-    })
-    .catch(err => {
-        console.error("結帳發生錯誤:", err);
-        alert("連線後端失敗，請確認 Server 是否啟動！");
-    });
-}
+
+        function submitOrder() {
+            const delivery = document.getElementById('deliveryMethod').value;
+            const payment = document.getElementById('paymentType').value;
+
+            if (!delivery || !payment) {
+                alert("請完整選擇配送與付款方式！");
+                return;
+            }
+
+            const user = JSON.parse(localStorage.getItem('gymUser'));
+            
+            const payload = {
+                porder: {
+                    memberId: user.memberId, 
+                    deliveryMethod: delivery,
+                    paymentType: payment,
+                    totalAmount: totalAmount,
+                    status: "processing" // 準備進入金流，先設為處理中
+                },
+                details: currentCart.map(item => ({
+                    productId: item.productId,
+                    quantity: item.quantity,
+                    unitPrice: item.price
+                }))
+            };
+
+            // 原本的寫死結帳邏輯，我們將在下一步改寫為金流 API 呼叫
+            fetch('/api/orders/checkout', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': user.memberId.toString() 
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(async res => {
+                if (res.ok) {
+                    alert("🎉 訂單下單成功！(即將切換為真實金流畫面)");
+                    sessionStorage.removeItem('gymCart'); 
+                    window.location.href = "history.html"; 
+                } else {
+                    const errorText = await res.text();
+                    alert("結帳失敗：" + errorText);
+                }
+            })
+            .catch(err => {
+                alert("連線後端失敗，請確認 Server 是否啟動！");
+            });
+        }
     </script>
 </body>
 </html>

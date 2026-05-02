@@ -114,6 +114,40 @@ app.controller('AuthCtrl', function($scope, $http, $window) {
 // (滷蛋範圍開始)
 // 將控制器註冊至您的主模組 (假設為 GymApp)
 app.controller('AdminProductCtrl', function($scope, $http, $window) {
+
+    // ==========================================
+    // 🔍 企業級即時搜尋與分類過濾邏輯 (Dot Rule 升級版)
+    // ==========================================
+    // 將過濾條件打包成物件，徹底避開 ng-if 產生的子作用域陷阱
+    $scope.filterData = {
+        keyword: '',
+        category: 'All'
+    };
+
+    // 切換分類按鈕觸發的函數
+    $scope.setCategory = function(category) {
+        $scope.filterData.category = category;
+    };
+
+    // 核心過濾器：同時判斷「關鍵字」與「分類」
+    $scope.customFilter = function(product) {
+        // 1. 判斷關鍵字 (安全防呆與轉小寫)
+        var matchKeyword = true;
+        if ($scope.filterData.keyword) {
+            var searchStr = $scope.filterData.keyword.toLowerCase();
+            var pName = product.pname ? product.pname.toLowerCase() : '';
+            matchKeyword = pName.includes(searchStr);
+        }
+
+        // 2. 判斷分類
+        var matchCategory = true;
+        if ($scope.filterData.category !== 'All') {
+            var prodCat = product.category || '未分類';
+            matchCategory = (prodCat === $scope.filterData.category);
+        }
+
+        return matchKeyword && matchCategory;
+    };
     
     $scope.products = [];
     $scope.isLoading = true;
@@ -228,5 +262,183 @@ app.controller('AdminProductCtrl', function($scope, $http, $window) {
 
     // 啟動時載入
     $scope.loadProducts();
+});
+
+// ==========================================
+// 📦 歷史訂單與編輯模組 (HistoryCtrl)
+// ==========================================
+app.controller('HistoryCtrl', function($scope, $http, $window, $interval) {
+    $scope.isLoading = true;
+    $scope.orders = [];
+    $scope.selectedOrder = {};
+    $scope.selectedOrderDetails = [];
+    $scope.isLoadingDetails = false;
+    $scope.isEditMode = false; // 控制是否為編輯模式
+    $scope.productDictionary = {};
+    $scope.allProducts = []; // 🔥 新增：儲存完整的商品列表供挑選
+    $scope.isSelectingProduct = false; // 🔥 新增：控制商品挑選區塊的顯示/隱藏
+
+    var userStr = $window.localStorage.getItem('gymUser');
+    if (!userStr) {
+        alert("您尚未登入或憑證已過期，請先登入！");
+        $window.location.href = '/login.html';
+        return;
+    }
+    $scope.currentUser = JSON.parse(userStr);
+
+    var getRequestConfig = function() {
+        return { headers: { 'Authorization': $scope.currentUser.memberId.toString(), 'Content-Type': 'application/json' } };
+    };
+
+    // 載入商品字典 (升級版：同時存下完整的商品陣列)
+        $scope.loadProductDictionary = function() {
+            $http.get('/api/products', getRequestConfig())
+                .then(function(res) {
+                    $scope.allProducts = res.data || []; // 存下完整商品資料
+                    $scope.allProducts.forEach(function(p) { 
+                        $scope.productDictionary[p.productId] = p.pname; 
+                    });
+                })
+                .catch(function(err) {
+                    console.warn("無法取得商品字典");
+                });
+        };
+
+    $scope.getProductName = function(productId) {
+        return $scope.productDictionary[productId] || ('商品編號 PROD-' + productId);
+    };
+
+    $scope.fetchOrderHistory = function() {
+        $http.get('/api/orders/member/' + $scope.currentUser.memberId, getRequestConfig())
+            .then(function(res) { $scope.orders = res.data || []; })
+            .finally(function() { $scope.isLoading = false; });
+    };
+
+    // 🔥 核心：開啟 Modal 並判斷是否為編輯模式
+    $scope.viewDetails = function(order, editMode) {
+        $scope.selectedOrder = order;
+        $scope.isEditMode = editMode;
+        $scope.isLoadingDetails = true;
+        
+        $http.get('/api/orders/' + order.orderId + '/details', getRequestConfig())
+            .then(function(res) {
+                // 為了避免直接污染原始資料，使用深拷貝複製明細
+                $scope.selectedOrderDetails = angular.copy(res.data || []);
+                var myModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('orderDetailModal'));
+                myModal.show();
+            })
+            .finally(function() { $scope.isLoadingDetails = false; });
+    };
+
+    // 🔥 新增：開關商品挑選區塊
+        $scope.toggleProductSelector = function() {
+            $scope.isSelectingProduct = !$scope.isSelectingProduct;
+        };
+
+        // 🔥 新增：將挑選的商品加入訂單明細
+        $scope.addDetailItem = function(product) {
+            // 檢查該商品是否已經在訂單明細中了
+            var existingItem = $scope.selectedOrderDetails.find(function(detail) {
+                return detail.productId === product.productId;
+            });
+
+            if (existingItem) {
+                // 如果已經有了，就直接數量 +1
+                existingItem.quantity += 1;
+            } else {
+                // 如果沒有，就建立一個全新的明細物件加進陣列
+                $scope.selectedOrderDetails.push({
+                    productId: product.productId,
+                    unitPrice: product.price,
+                    quantity: 1
+                });
+            }
+            // 加入後自動隱藏列表，保持畫面清爽
+            $scope.isSelectingProduct = false;
+        };
+
+    // 🔥 單一編輯功能：增減數量
+    $scope.changeQty = function(detail, change) {
+        detail.quantity += change;
+        if (detail.quantity < 1) {
+            detail.quantity = 1; // 數量最少為 1，若要刪除整筆應使用取消訂單
+            alert("商品數量最少需為 1。若不需購買，請點擊「取消整筆訂單」。");
+        }
+    };
+
+    // 🔥 單一編輯功能：儲存修改並呼叫後端 API
+    $scope.saveOrderEdits = function() {
+        if ($window.confirm('確定要更新這筆訂單的明細數量嗎？')) {
+            $http.put('/api/orders/' + $scope.selectedOrder.orderId + '/details', $scope.selectedOrderDetails, getRequestConfig())
+                .then(function(res) {
+                    alert("✅ 儲存成功！");
+                    var myModal = bootstrap.Modal.getInstance(document.getElementById('orderDetailModal'));
+                    if (myModal) myModal.hide();
+                    $scope.fetchOrderHistory(); // 重新整理歷史清單以更新最新總金額
+                })
+                .catch(function(err) {
+                    console.error("更新明細失敗:", err);
+                    alert("更新失敗，請檢查網路連線或稍後再試。");
+                });
+        }
+    };
+
+    var cancelTimeLimit = 15 * 60 * 1000; 
+
+    $scope.canCancel = function(orderDateStr) {
+        var orderDate = new Date(orderDateStr).getTime();
+        var now = new Date().getTime();
+        return (now - orderDate) <= cancelTimeLimit;
+    };
+
+    $scope.getRemainingCancelTime = function(orderDateStr) {
+        var diff = new Date(orderDateStr).getTime() + cancelTimeLimit - new Date().getTime();
+        if (diff <= 0) return "已過期";
+        var minutes = Math.floor(diff / 60000);
+        var seconds = Math.floor((diff % 60000) / 1000);
+        return minutes + "分 " + seconds + "秒";
+    };
+
+    $interval(function() {}, 1000); // 每秒更新一次倒數計時
+
+    // 🚀 取消整筆訂單 (狀態更新為 cancelled)
+    $scope.cancelOrder = function(orderId) {
+        if ($window.confirm('確定要取消這筆訂單嗎？（此操作無法復原）')) {
+            $http.put('/api/orders/' + orderId + '/status', { status: 'cancelled' }, getRequestConfig())
+                .then(function() {
+                    alert('訂單已成功取消！');
+                    var myModal = bootstrap.Modal.getInstance(document.getElementById('orderDetailModal'));
+                    if (myModal) myModal.hide();
+                    $scope.fetchOrderHistory(); 
+                });
+        }
+    };
+
+    $scope.returnOrder = function(orderId) {
+        if ($window.confirm('您即將申請退貨，後續將有專人與您聯繫。確定申請？')) {
+            $http.put('/api/orders/' + orderId + '/status', { status: 'returned' }, getRequestConfig())
+                .then(function() {
+                    alert('退貨申請已送出！');
+                    var myModal = bootstrap.Modal.getInstance(document.getElementById('orderDetailModal'));
+                    if (myModal) myModal.hide();
+                    $scope.fetchOrderHistory();
+                });
+        }
+    };
+
+    $scope.formatStatus = function(status) {
+        switch(status) {
+            case 'paid': return '已付款';
+            case 'processing': return '處理中';
+            case 'shipped': return '已出貨';
+            case 'completed': return '已完成';
+            case 'cancelled': return '已取消';
+            case 'returned': return '退貨處理中';
+            default: return '處理中';
+        }
+    };
+
+    $scope.loadProductDictionary();
+    $scope.fetchOrderHistory();
 });
 //(滷蛋範圍結束)
