@@ -2,17 +2,13 @@ package com.team.configure;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
  * 🗺️ 系統設定：攔截器的管制範圍與白名單
- *
- * ✅ [修改紀錄]
- *    新增 "/api/admin/me" 到攔截名單（addPathPatterns）。
- *    原因：GET /api/admin/me 是前端用來驗證登入狀態並取得 adminId 的 API，
- *          必須受 LoginInterceptor 保護，未登入時自動回傳 401。
- *          若不加入攔截，即使 session 中沒有登入資訊，也能任意存取。
+ * 專家優化版：完美融合跨域設定與精準的權限分流 (會員 vs 管理員)
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -21,34 +17,49 @@ public class WebConfig implements WebMvcConfigurer {
     private LoginInterceptor loginInterceptor;
 
     @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        // 保留同學的跨域設定，這對前端讀取 Session 非常重要
+        registry.addMapping("/**")
+                .allowedOrigins(
+                    "http://127.0.0.1:5500", 
+                    "http://localhost:5500"
+                )
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true)
+                .maxAge(3600);
+    }
+
+    @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(loginInterceptor)
-
                 // ─────────────────────────────────────────────────────
-                // 🛑 受保護的 API（黑名單）：必須登入才能存取
+                // 🛑 僅限「一般會員」登入才能存取的 API（黑名單）
                 // ─────────────────────────────────────────────────────
                 .addPathPatterns(
-                        // [新增] 取得目前登入者資訊，前端用來取代寫死的 ADMIN_ID
-                        "/api/admin/me",
-
-                        "/api/member/profile/**",        // 修改與查看個資必須登入
-                        "/api/member/status-update/**",  // 更改狀態必須登入（實務上還需再判斷是否為管理員）
-                        "/api/member/search",            // 搜尋會員必須登入
-                        "/api/admin/coaches"             // 查看教練名單必須登入
-
-                        // 💡 未來其他同學的 API 也可以加在這裡，例如：
-                        // "/api/orders/**",
-                        // "/api/schedule/**"
+                        "/api/member/me",
+                        "/api/member/profile/**", 
+                        "/api/orders/**" // 首席架構師滷蛋的訂單保護傘
                 )
-
+                
                 // ─────────────────────────────────────────────────────
-                // 🟢 完全開放的公共 API（白名單）：不需要登入
+                // 🟢 完全開放的公共 API（白名單），以及「管理員專屬」API
                 // ─────────────────────────────────────────────────────
                 .excludePathPatterns(
-                        "/api/member/login",    // 登入必須開放，否則永遠進不來
-                        "/api/member/register", // 註冊必須開放
-                        "/api/admin/login",     // 管理員登入必須開放
-                        "/api/admin/staff"      // ⚠️ 為了測試方便，新增員工暫時開放；正式上線前建議移除
+                        // === 完全開放區 ===
+                        "/api/member/login",
+                        "/api/member/register",
+                        "/api/admin/login",
+                        "/api/admin/staff",
+                        
+                        // === 👑 管理員專屬區 (交給 Controller 驗證 Session) ===
+                        // 💡 關鍵修復：把它們移出黑名單，讓 MemberController 自己用 loggedInAdmin 判斷！
+                        "/api/admin/me",
+                        "/api/admin/coaches",
+                        "/api/member/search",            
+                        "/api/member/status-update/**",
+                        "/api/member/birthdays",
+                        "/api/member/active-count"
                 );
     }
 }
