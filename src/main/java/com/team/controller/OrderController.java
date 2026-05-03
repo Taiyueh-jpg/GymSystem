@@ -1,11 +1,12 @@
 package com.team.controller;
 
-import java.util.List; // ✅ 補上 List 的匯入
-import java.util.Map;  // ✅ 補上 Map 的匯入
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.team.dto.CheckoutRequest;
-import com.team.model.OrderDetail; // ✅ 補上 OrderDetail 的匯入
+import com.team.model.OrderDetail;
 import com.team.model.Porder;
 import com.team.service.OrderService;
 
@@ -87,7 +88,6 @@ public class OrderController {
      */
     @GetMapping("/all")
     public List<Porder> getAllOrders() {
-        // TODO: 未來這裡可以加上「權限檢查」，確認當前登入的人是不是 Admin
         return orderService.getAllOrders();
     }
     
@@ -100,6 +100,20 @@ public class OrderController {
         try {
             orderService.updateOrderDetails(orderId, updatedDetails);
             return ResponseEntity.ok().body(Map.of("message", "訂單明細更新成功"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * DELETE 請求：刪除訂單 (後台管理員專用)
+     * 網址範例：http://localhost:8080/api/orders/14
+     */
+    @DeleteMapping("/{orderId}")
+    public ResponseEntity<?> deleteOrder(@PathVariable Long orderId) {
+        try {
+            orderService.deleteOrder(orderId);
+            return ResponseEntity.ok().body(Map.of("message", "刪除成功"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

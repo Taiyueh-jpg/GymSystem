@@ -63,8 +63,6 @@ public class OrderService {
      * 查詢特定會員的所有訂單 (供會員中心使用)
      */
     public List<Porder> getMemberOrderHistory(Long memberId) {
-        // 這部分可以之後在 PorderDao 增加查詢方法
-        //return porderDao.findAll(); 
         return porderDao.findByMemberIdOrderByOrderDateDesc(memberId);
     }
 
@@ -130,5 +128,18 @@ public class OrderService {
         // 4. 更新主檔的總金額並儲存！
         porder.setTotalAmount(newTotal);
         porderDao.save(porder);
+    }
+
+    /**
+     * 🗑️ 刪除訂單 (包含主檔與明細) - 後台管理員專用
+     */
+    @Transactional
+    public void deleteOrder(Long orderId) {
+        // 1. 必須先刪除該訂單底下的所有明細 (避免 Foreign Key 外鍵約束報錯)
+        List<OrderDetail> details = orderDetailDao.findByOrderId(orderId);
+        orderDetailDao.deleteAll(details);
+        
+        // 2. 確認明細清空後，再刪除訂單主檔
+        porderDao.deleteById(orderId);
     }
 }

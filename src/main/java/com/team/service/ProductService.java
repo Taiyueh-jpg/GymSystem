@@ -53,9 +53,14 @@ public class ProductService {
         existing.setPname(updatedProduct.getPname());
         existing.setPrice(updatedProduct.getPrice());
         
-        // 🔥 關鍵修復：把前端傳來的庫存數量更新進去！
+        // 把前端傳來的庫存數量更新進去
         if (updatedProduct.getStock() != null) {
             existing.setStock(updatedProduct.getStock());
+        }
+
+        // 🚀 關鍵修復：補上前端傳來的「分類 (Category)」更新邏輯！
+        if (updatedProduct.getCategory() != null && !updatedProduct.getCategory().isBlank()) {
+            existing.setCategory(updatedProduct.getCategory());
         }
 
         // 3. 圖片處理 (有傳新圖片才更新，沒傳則保留舊圖)

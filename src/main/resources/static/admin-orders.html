@@ -5,28 +5,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GymSystem | 訂單出貨戰情室</title>
-    <!-- 載入 Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-    <!-- 載入 AngularJS 與 您的 app.js -->
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
     <script src="js/app.js"></script>
-    
     <style>
         body { background-color: #f4f6f9; color: #333; }
         .sidebar { min-height: 100vh; background-color: #212529; }
         .sidebar a { color: #adb5bd; text-decoration: none; padding: 15px 20px; display: block; border-bottom: 1px solid #343a40; transition: 0.3s; }
         .sidebar a:hover, .sidebar a.active { background-color: #0d6efd; color: #fff; }
         [ng\:cloak], [ng-cloak], .ng-cloak { display: none !important; }
-        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
+        .status-badge { display: inline-block; width: 110px; padding: 8px 0; font-size: 0.9rem; border-radius: 6px; }
     </style>
 </head>
 
 <body ng-controller="MainCtrl" ng-cloak>
-    
-    <!-- 全域權限防護 -->
+
     <script>
-        window.onload = function() {
+        window.onload = function () {
             var user = JSON.parse(localStorage.getItem('gymUser'));
             if (!user || !user.role || user.role !== 'admin') {
                 alert('權限不足，請使用管理員帳號登入！');
@@ -36,9 +31,7 @@
     </script>
 
     <div class="d-flex">
-        <!-- ========================================== -->
-        <!-- 左側邊欄 (統一後台視覺) -->
-        <!-- ========================================== -->
+        <!-- 左側邊欄 -->
         <div class="sidebar text-white" style="width: 250px; flex-shrink: 0;">
             <div class="p-4 text-center border-bottom border-secondary">
                 <h4 class="fw-bold">GymSystem 後台</h4>
@@ -48,35 +41,27 @@
                 <a href="admin-dashboard.html">👥 會員與員工管理 (A)</a>
                 <a href="#">📅 課程與排班管理 (B)</a>
                 <a href="admin-product.html">🛍️ 商城商品管理 (C)</a>
-                <!-- 🔥 這裡加上 active，標示目前在此頁面 -->
                 <a href="admin-orders.html" class="active">📦 訂單出貨戰情室 (D)</a>
                 <a href="article/article-admin.html">📢 公告文章管理 (E)</a>
                 <a href="contact/contact-admin.html">💬 客服留言回覆 (E)</a>
                 <a href="contact/keyword-filter-admin.html">🚫 留言關鍵字過濾 (E)</a>
-                
                 <a href="#" class="text-danger mt-5" ng-click="logout()">🚪 登出系統</a>
                 <a href="index.html" class="text-info">🏠 回到前台首頁</a>
             </nav>
         </div>
 
-        <!-- ========================================== -->
-        <!-- 右側主內容區：訂單戰情室 (掛載 AdminOrderCtrl) -->
-        <!-- ========================================== -->
+        <!-- 右側戰情室 -->
         <div class="flex-grow-1 p-5" ng-controller="AdminOrderCtrl">
-            
             <div class="p-4 bg-white rounded shadow-sm">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="fw-bold mb-0">📦 全站訂單總覽</h2>
                     <button class="btn btn-outline-secondary fw-bold" ng-click="loadOrders()">↻ 重新整理</button>
                 </div>
 
-                <!-- 載入中提示 -->
                 <div class="text-center py-5" ng-if="isLoading">
                     <div class="spinner-border text-primary" role="status"></div>
-                    <p class="mt-2 text-muted">訂單資料載入中...</p>
                 </div>
 
-                <!-- 訂單資料表 -->
                 <div class="table-responsive" ng-if="!isLoading">
                     <table class="table table-hover align-middle text-center">
                         <thead class="table-dark">
@@ -88,7 +73,7 @@
                                 <th>配送方式</th>
                                 <th>付款方式</th>
                                 <th>狀態</th>
-                                <th>操作</th>
+                                <th style="min-width: 200px;">操作</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -100,108 +85,167 @@
                                 <td>{{ order.deliveryMethod }}</td>
                                 <td>{{ order.paymentType }}</td>
                                 <td>
-                                    <!-- 動態狀態標籤 -->
-                                    <span class="status-badge" 
-                                          ng-class="{
+                                    <!-- 狀態徽章 -->
+                                    <span class="status-badge fw-bold shadow-sm" ng-class="{
                                               'bg-warning text-dark': order.status === 'paid',
-                                              'bg-info text-white': order.status === 'shipped',
-                                              'bg-success text-white': order.status === 'completed'
+                                              'bg-info text-dark': order.status === 'shipped',
+                                              'bg-success text-white': order.status === 'completed',
+                                              'bg-danger text-white': order.status === 'cancelled',
+                                              'bg-dark text-white': order.status === 'returned',
+                                              'bg-secondary text-white': order.status === 'processing' || !(['paid', 'shipped', 'completed', 'cancelled', 'returned'].includes(order.status))
                                           }">
                                         {{ formatStatus(order.status) }}
                                     </span>
                                 </td>
                                 <td>
-                                    <!-- 出貨按鈕：只有 'paid' (已付款) 狀態才會顯示 -->
-                                    <button class="btn btn-sm btn-primary fw-bold shadow-sm" 
-                                            ng-if="order.status === 'paid'" 
-                                            ng-click="shipOrder(order.orderId)">
-                                        🚀 執行出貨
+                                    <!-- 🔥 絕對統一的操作按鈕！每筆訂單都長一樣 -->
+                                    <button class="btn btn-sm btn-outline-dark fw-bold me-1" ng-click="viewOrder(order)">
+                                        👁️ 查看訂單
                                     </button>
-                                    <button class="btn btn-sm btn-secondary fw-bold" 
-                                            ng-if="order.status === 'shipped'" disabled>
-                                        已出貨
-                                    </button>
-                                    <button class="btn btn-sm btn-success fw-bold" 
-                                            ng-if="order.status === 'completed'" disabled>
-                                        已完成
+                                    <button class="btn btn-sm btn-outline-danger fw-bold" ng-click="deleteOrder(order.orderId)">
+                                        🗑️ 刪除訂單
                                     </button>
                                 </td>
-                            </tr>
-                            <tr ng-if="orders.length === 0">
-                                <td colspan="8" class="text-muted py-4">目前尚無任何訂單資料。</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
+            <!-- ========================================== -->
+            <!-- 👁️ 查看明細與修改狀態 Modal (後台專用) -->
+            <!-- ========================================== -->
+            <div class="modal fade" id="adminOrderDetailModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-dark text-white">
+                            <h5 class="modal-title fw-bold">訂單 #{{ selectedOrder.orderId }} - 管理明細</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <!-- 明細表格 -->
+                            <table class="table table-bordered text-center align-middle mb-4">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>商品名稱</th>
+                                        <th>單價</th>
+                                        <th>數量</th>
+                                        <th>小計</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="detail in selectedOrderDetails">
+                                        <td class="fw-bold text-start">{{ getProductName(detail.productId) }}</td>
+                                        <td>NT$ {{ detail.unitPrice }}</td>
+                                        <td><span class="fs-5 fw-bold">{{ detail.quantity }}</span></td>
+                                        <td class="text-danger fw-bold">NT$ {{ detail.unitPrice * detail.quantity }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            
+                            <!-- 管理員更改狀態區塊 -->
+                            <div class="p-3 bg-light rounded border border-secondary">
+                                <h6 class="fw-bold mb-3">🔄 管理員狀態變更 (執行出貨/退款)</h6>
+                                <div class="input-group">
+                                    <select class="form-select border-secondary fw-bold" ng-model="selectedOrder.status">
+                                        <option value="processing">處理中 (等待處理)</option>
+                                        <option value="paid">已付款 (準備出貨)</option>
+                                        <option value="shipped">已出貨 (運送中)</option>
+                                        <option value="completed">已完成 (交易結束)</option>
+                                        <option value="cancelled">已取消 (終止交易)</option>
+                                        <option value="returned">退貨申請中 (處理退貨)</option>
+                                    </select>
+                                    <button class="btn btn-primary fw-bold px-4" ng-click="updateOrderStatus()">儲存狀態更新</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <!-- AngularJS 訂單戰情室專屬控制器 -->
     <script>
-        app.controller('AdminOrderCtrl', function($scope, $http, $window) {
-            
+        app.controller('AdminOrderCtrl', function ($scope, $http, $window) {
             $scope.orders = [];
             $scope.isLoading = true;
+            $scope.productDictionary = {};
+            $scope.selectedOrder = {};
+            $scope.selectedOrderDetails = [];
 
-            // 取得管理員 Token
             var currentUser = JSON.parse($window.localStorage.getItem('gymUser'));
-            var getAuthConfig = function() {
-                return {
-                    headers: {
-                        'Authorization': currentUser.adminId ? currentUser.adminId.toString() : currentUser.memberId.toString(),
-                        'Content-Type': 'application/json'
-                    }
-                };
+            var getAuthConfig = function () {
+                return { headers: { 'Authorization': currentUser.adminId ? currentUser.adminId.toString() : currentUser.memberId.toString(), 'Content-Type': 'application/json' } };
             };
 
-            // 1️⃣ 載入所有訂單 (精準呼叫 OrderController 的 /api/orders/all)
-            $scope.loadOrders = function() {
+            // 取得商品字典 (為了讓明細顯示名稱)
+            $scope.loadProductDictionary = function() {
+                $http.get('/api/products', getAuthConfig()).then(function(res) {
+                    (res.data || []).forEach(function(p) { $scope.productDictionary[p.productId] = p.pname; });
+                });
+            };
+            $scope.getProductName = function(productId) {
+                return $scope.productDictionary[productId] || ('商品 ID: ' + productId);
+            };
+
+            // 載入所有訂單
+            $scope.loadOrders = function () {
                 $scope.isLoading = true;
                 $http.get('/api/orders/all', getAuthConfig())
-                    .then(function(response) {
-                        $scope.orders = response.data || [];
-                    })
-                    .catch(function(error) {
-                        console.error("載入訂單失敗:", error);
-                        alert("無法取得訂單資料，請確認後端 API 是否正常啟動。");
-                    })
-                    .finally(function() {
-                        $scope.isLoading = false;
+                    .then(function (response) { $scope.orders = response.data || []; })
+                    .finally(function () { $scope.isLoading = false; });
+            };
+
+            // 👁️ 查看訂單 (打開 Modal)
+            $scope.viewOrder = function(order) {
+                $scope.selectedOrder = angular.copy(order);
+                $http.get('/api/orders/' + order.orderId + '/details', getAuthConfig())
+                    .then(function(res) {
+                        $scope.selectedOrderDetails = res.data || [];
+                        var myModal = new bootstrap.Modal(document.getElementById('adminOrderDetailModal'));
+                        myModal.show();
                     });
             };
 
-            // 2️⃣ 執行出貨 (精準呼叫 OrderController 的 /api/orders/{orderId}/status)
-            $scope.shipOrder = function(orderId) {
-                if ($window.confirm("確定要將訂單 #" + orderId + " 標記為「已出貨」嗎？")) {
-                    
-                    // 傳送 JSON 格式的狀態更新請求
-                    var payload = { status: "shipped" };
-                    
-                    $http.put('/api/orders/' + orderId + '/status', payload, getAuthConfig())
-                        .then(function(response) {
-                            alert("✅ 訂單 #" + orderId + " 出貨成功！");
-                            $scope.loadOrders(); // 重新整理列表
-                        })
-                        .catch(function(error) {
-                            console.error("出貨失敗:", error);
-                            alert("狀態更新失敗，請檢查後端錯誤日誌。");
+            // 💾 儲存狀態變更
+            $scope.updateOrderStatus = function() {
+                var payload = { status: $scope.selectedOrder.status };
+                $http.put('/api/orders/' + $scope.selectedOrder.orderId + '/status', payload, getAuthConfig())
+                    .then(function() {
+                        alert("✅ 狀態更新成功！");
+                        var myModal = bootstrap.Modal.getInstance(document.getElementById('adminOrderDetailModal'));
+                        if (myModal) myModal.hide();
+                        $scope.loadOrders();
+                    }).catch(function() { alert("狀態更新失敗！"); });
+            };
+
+            // 🗑️ 刪除訂單
+            $scope.deleteOrder = function(orderId) {
+                if ($window.confirm('🚨 警告：確定要永久刪除訂單 #' + orderId + ' 嗎？此操作將連同明細一併刪除，無法復原！')) {
+                    $http.delete('/api/orders/' + orderId, getAuthConfig())
+                        .then(function() {
+                            alert("✅ 訂單刪除成功！");
+                            $scope.loadOrders();
+                        }).catch(function(err) {
+                            alert("❌ 刪除失敗！請確認後端是否已實作 DELETE API。");
                         });
                 }
             };
 
-            // 狀態文字轉換工具
-            $scope.formatStatus = function(status) {
-                switch(status) {
+            $scope.formatStatus = function (status) {
+                switch (status) {
                     case 'paid': return '已付款 (待出貨)';
+                    case 'processing': return '處理中';
                     case 'shipped': return '已出貨';
                     case 'completed': return '已完成';
-                    default: return status;
+                    case 'cancelled': return '已取消';
+                    case 'returned': return '退貨申請中';
+                    default: return '處理中'; 
                 }
             };
 
-            // 初始化載入
+            $scope.loadProductDictionary();
             $scope.loadOrders();
         });
     </script>
