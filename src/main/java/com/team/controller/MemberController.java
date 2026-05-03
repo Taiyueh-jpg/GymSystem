@@ -1,5 +1,6 @@
 package com.team.controller;
 
+import com.team.model.Admin;
 import com.team.model.Member;
 import com.team.service.MemberService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +17,7 @@ import java.util.Map;
 
 /**
  * 🌐 會員控制層 (Member Controller)
- * * 技術細節：
- * 1. 遵循 RESTful API 設計規範。
- * 2. 使用 ResponseEntity 封裝回傳結果與 HTTP 狀態碼。
- * 3. 實作跨域處理 (@CrossOrigin) 以便與 VSCode 前端對接。
+ * 專家優化版：全面防堵 IDOR (越權存取) 漏洞，嚴格區分「會員」與「管理員」的職責。
  */
 @RestController
 @RequestMapping("/api/member")
@@ -33,25 +31,17 @@ public class MemberController {
     // 🔓 訪客與一般會員功能 (Guest & Member)
     // ==========================================
 
-    /**
-     * 📝 會員註冊
-     * 路徑：POST /api/member/register
-     */
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Member member) {
         try {
+            // 白話文註解：呼叫 Service 進行註冊，若 Email 重複 Service 會拋出錯誤
             Member registeredMember = memberService.register(member);
             return new ResponseEntity<>(registeredMember, HttpStatus.CREATED);
         } catch (RuntimeException e) {
-            // 回傳 400 Bad Request 與錯誤訊息 (例如：Email 已重複)
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
-    /**
-     * 🔑 會員登入
-     * 路徑：POST /api/member/login
-     */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> loginData, HttpSession session) {
         try {
@@ -59,30 +49,32 @@ public class MemberController {
             String password = loginData.get("password");
             Member member = memberService.login(email, password);
             
-            // 👉 【新增資安防護】：登入成功，將會員資料存入 Session (發放通行證)
+            // 白話文註解：登入成功，將會員資料存入 Session 當作通行證
             session.setAttribute("loggedInMember", member);
-            
             return ResponseEntity.ok(member);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", e.getMessage()));
         }
     }
     
-    /**
-     * 🚪 會員登出 (銷毀 Session)
-     */
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpSession session) {
-        session.invalidate(); // 銷毀通行證
+        // 白話文註解：銷毀 Session，把通行證撕毀
+        session.invalidate(); 
         return ResponseEntity.ok(Map.of("message", "已成功登出"));
     }
 
-    /**
-     * 👤 取得個人資料 (個人中心)
-     * 路徑：GET /api/member/profile/{id}
-     */
     @GetMapping("/profile/{id}")
-    public ResponseEntity<Member> getProfile(@PathVariable Long id) {
+    public ResponseEntity<?> getProfile(@PathVariable Long id, HttpSession session) {
+        // 🛡️ 資安防護：檢查是否有權限查看
+        Member loggedInMember = (Member) session.getAttribute("loggedInMember");
+        Admin loggedInAdmin = (Admin) session.getAttribute("loggedInAdmin");
+
+        // 白話文註解：如果沒有管理員登入，且登入的會員 ID 不等於想查詢的 ID，就拒絕他
+        if (loggedInAdmin == null && (loggedInMember == null || !loggedInMember.getMemberId().equals(id))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "無權查看他人資料！"));
+        }
+
         try {
             return ResponseEntity.ok(memberService.getMemberProfile(id));
         } catch (RuntimeException e) {
@@ -90,14 +82,25 @@ public class MemberController {
         }
     }
 
-    /**
-     * 📝 更新個人資料
-     * 路徑：PUT /api/member/profile/{id}
-     */
     @PutMapping("/profile/{id}")
-    public ResponseEntity<?> updateProfile(@PathVariable Long id, @RequestBody Member updatedInfo) {
+    public ResponseEntity<?> updateProfile(@PathVariable Long id, @RequestBody Member updatedInfo, HttpSession session) {
+        // 🛡️ 資安防護：防止越權修改 (IDOR)
+        Member loggedInMember = (Member) session.getAttribute("loggedInMember");
+        Admin loggedInAdmin = (Admin) session.getAttribute("loggedInAdmin");
+
+        // 白話文註解：只有「管理員」或是「本人」才可以修改這筆資料
+        if (loggedInAdmin == null && (loggedInMember == null || !loggedInMember.getMemberId().equals(id))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "安管系統攔截：你只能修改自己的資料！"));
+        }
+
         try {
             Member result = memberService.updateProfile(id, updatedInfo);
+            
+            // 白話文註解：如果是本人修改自己的資料，順便更新 Session 裡面的暫存資料
+            if (loggedInMember != null && loggedInMember.getMemberId().equals(id)) {
+                session.setAttribute("loggedInMember", result);
+            }
+            
             return ResponseEntity.ok(result);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
@@ -105,47 +108,52 @@ public class MemberController {
     }
 
     // ==========================================
-    // 🛡️ 後台管理與行銷功能 (Admin & Marketing)
+    // 🛡️ 後台管理與行銷功能 (Admin Only)
     // ==========================================
 
-    /**
-     * 🔍 關鍵字搜尋會員 (支援分頁)
-     * 路徑：GET /api/member/search?keyword=xxx&page=0&size=10
-     */
     @GetMapping("/search")
-    public ResponseEntity<Page<Member>> searchMembers(
+    public ResponseEntity<?> searchMembers(
             @RequestParam String keyword,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            HttpSession session) {
         
+        // 🛡️ 資安防護：檢查是不是管理員
+        Admin loggedInAdmin = (Admin) session.getAttribute("loggedInAdmin");
+        if (loggedInAdmin == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "權限不足：僅限管理員操作"));
+        }
+
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(memberService.searchMembers(keyword, pageable));
     }
 
-    /**
-     * 🎂 查詢本月壽星 (行銷活動)
-     * 路徑：GET /api/member/birthdays
-     */
     @GetMapping("/birthdays")
-    public ResponseEntity<List<Member>> getBirthdays() {
+    public ResponseEntity<?> getBirthdays(HttpSession session) {
+        // 🛡️ 資安防護：僅限管理員
+        if (session.getAttribute("loggedInAdmin") == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "權限不足：僅限管理員操作"));
+        }
         return ResponseEntity.ok(memberService.getBirthdaysOfCurrentMonth());
     }
 
-    /**
-     * 📊 取得有效會員總數 (戰情室數據)
-     * 路徑：GET /api/member/active-count
-     */
     @GetMapping("/active-count")
-    public ResponseEntity<Long> getActiveCount() {
+    public ResponseEntity<?> getActiveCount(HttpSession session) {
+        // 🛡️ 資安防護：僅限管理員
+        if (session.getAttribute("loggedInAdmin") == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "權限不足：僅限管理員操作"));
+        }
         return ResponseEntity.ok(memberService.getActiveMemberCount());
     }
 
-    /**
-     * 🚫 更新會員狀態 (停權/復權)
-     * 路徑：PUT /api/member/status-update/{id}
-     */
     @PutMapping("/status-update/{id}")
-    public ResponseEntity<?> updateStatus(@PathVariable Long id, @RequestBody Map<String, Integer> statusData) {
+    public ResponseEntity<?> updateStatus(@PathVariable Long id, @RequestBody Map<String, Integer> statusData, HttpSession session) {
+        // 🛡️ 資安防護：防止一般會員把別人停權
+        Admin loggedInAdmin = (Admin) session.getAttribute("loggedInAdmin");
+        if (loggedInAdmin == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "嚴重越權警告：您不是管理員，無法執行停權操作！"));
+        }
+
         Integer newStatus = statusData.get("status");
         memberService.updateMemberStatus(id, newStatus);
         return ResponseEntity.ok(Map.of("message", "狀態已成功更新為 " + newStatus));
