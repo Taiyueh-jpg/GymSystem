@@ -113,7 +113,7 @@ public class MemberController {
 
     @GetMapping("/search")
     public ResponseEntity<?> searchMembers(
-            @RequestParam String keyword,
+            @RequestParam(defaultValue = "") String keyword, // ✅ 關鍵修復：這裡補上了 defaultValue = ""
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             HttpSession session) {
