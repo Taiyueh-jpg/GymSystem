@@ -5,15 +5,19 @@
     <title>GymSystem | 管理後台</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
     <script src="js/app.js"></script>
     
     <style>
-        /* 後台專屬版面樣式 */
         body { background-color: #f4f6f9; color: #333; }
         .sidebar { min-height: 100vh; background-color: #212529; }
         .sidebar a { color: #adb5bd; text-decoration: none; padding: 15px 20px; display: block; border-bottom: 1px solid #343a40; transition: 0.3s; }
         .sidebar a:hover, .sidebar a.active { background-color: #0d6efd; color: #fff; }
+        /* 頁籤專屬視覺優化 */
+        .nav-tabs .nav-link { color: #495057; font-weight: bold; cursor: pointer; border: none; border-bottom: 3px solid transparent; }
+        .nav-tabs .nav-link.active { color: #0d6efd; border-bottom: 3px solid #0d6efd; background: transparent; }
     </style>
 </head>
 
@@ -23,14 +27,15 @@
         window.onload = function() {
             var user = JSON.parse(localStorage.getItem('gymUser'));
             if (!user || !user.role) {
-                alert('權限不足，請使用員工帳號登入！');
+                alert('安管系統攔截：權限不足，請使用員工帳號登入！');
                 window.location.href = 'index.html';
             }
         };
     </script>
 
-    <div class="d-flex" ng-controller="AdminDashCtrl">
+    <div class="d-flex" ng-controller="AdminDashCtrl" ng-init="currentTab = 'member'">
         
+        <!-- 左側導覽列 -->
         <div class="sidebar text-white" style="width: 250px;">
             <div class="p-4 text-center border-bottom border-secondary">
                 <h4 class="fw-bold">GymSystem 後台</h4>
@@ -38,95 +43,389 @@
             </div>
             <nav class="mt-3">
                 <a href="admin-dashboard.html" class="active">👥 會員與員工管理 (A)</a>
-                
                 <a href="#">📅 課程與排班管理 (B)</a>
-                
                 <a href="#">🛍️ 商城商品管理 (C)</a>
-                
                 <a href="admin-orders.html">📦 訂單出貨戰情室 (D)</a>
-                
                 <a href="article/article-admin.html">📢 公告文章管理 (E)</a>
                 <a href="contact/contact-admin.html">💬 客服留言回覆 (E)</a>
                 <a href="contact/keyword-filter-admin.html">🚫 留言關鍵字過濾 (E)</a>
-                
                 <a href="#" class="text-danger mt-5" ng-click="logout()">🚪 登出系統</a>
                 <a href="index.html" class="text-info">🏠 回到前台首頁</a>
             </nav>
         </div>
 
+        <!-- 右側主要內容區 -->
         <div class="flex-grow-1 p-5">
             
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="fw-bold">👥 會員清單總覽</h2>
-                <button class="btn btn-primary" ng-if="currentUser.role === 'admin'">+ 新增教練/員工</button>
+                <h2 class="fw-bold">👥 人員管理中心</h2>
+                <button class="btn btn-primary fw-bold" ng-if="currentUser.role === 'admin'" ng-click="openAddStaffModal()">
+                    + 新增教練/員工
+                </button>
             </div>
+
+            <!-- 🚀 專家優化：Bootstrap 頁籤 (Tabs) -->
+            <ul class="nav nav-tabs mb-4">
+                <li class="nav-item">
+                    <a class="nav-link fs-5" ng-class="{'active': currentTab === 'member'}" ng-click="switchTab('member')">
+                        🏋️ 一般會員清單
+                    </a>
+                </li>
+                <!-- 只有管理員能看到員工頁籤 -->
+                <li class="nav-item" ng-if="currentUser.role === 'admin'">
+                    <a class="nav-link fs-5" ng-class="{'active': currentTab === 'staff'}" ng-click="switchTab('staff')">
+                        👔 內部員工與教練清單
+                    </a>
+                </li>
+            </ul>
 
             <div class="card shadow-sm border-0">
                 <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <input type="text" class="form-control" placeholder="輸入姓名或電話搜尋會員..." ng-model="searchKeyword">
+                    
+                    <!-- ========================================== -->
+                    <!-- 🟢 頁籤內容 1：一般會員清單 (Member) -->
+                    <!-- ========================================== -->
+                    <div ng-show="currentTab === 'member'">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" placeholder="搜尋會員姓名或電話..." ng-model="searchKeyword">
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-dark w-100" ng-click="searchMembers(0)">搜尋會員</button>
+                            </div>
                         </div>
-                        <div class="col-md-2">
-                            <button class="btn btn-dark w-100" ng-click="searchMembers()">搜尋</button>
-                        </div>
+
+                        <table class="table table-hover mt-3 align-middle">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>信箱</th>
+                                    <th>姓名</th>
+                                    <th>狀態</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="member in memberList">
+                                    <td>{{ member.memberId }}</td>
+                                    <td>{{ member.email }}</td>
+                                    <td>{{ member.name }}</td>
+                                    <td>
+                                        <span class="badge" ng-class="member.status === -1 ? 'bg-danger' : (member.status === 1 ? 'bg-success' : 'bg-warning text-dark')">
+                                            {{ member.status === -1 ? '已停權' : (member.status === 1 ? '付費會員' : '一般會員') }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" ng-click="openEditModal(member)">編輯</button>
+                                        <button class="btn btn-sm" 
+                                                ng-class="member.status >= 0 ? 'btn-outline-danger' : 'btn-outline-success'"
+                                                ng-if="currentUser.role === 'admin'"
+                                                ng-click="updateStatus(member.memberId, member.status >= 0 ? -1 : 1, 'member')">
+                                            {{ member.status >= 0 ? '停權' : '復權' }}
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr ng-if="memberList.length === 0">
+                                    <td colspan="5" class="text-center py-4 text-muted">目前沒有會員資料。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- 會員專屬分頁 -->
+                        <nav aria-label="Page navigation" class="mt-4" ng-if="totalPages > 1">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item" ng-class="{disabled: currentPage === 0}">
+                                    <a class="page-link" href="#" ng-click="changePage(currentPage - 1)">上一頁</a>
+                                </li>
+                                <li class="page-item" ng-repeat="i in getNumber(totalPages) track by $index" ng-class="{active: currentPage === $index}">
+                                    <a class="page-link" href="#" ng-click="changePage($index)">{{$index + 1}}</a>
+                                </li>
+                                <li class="page-item" ng-class="{disabled: currentPage === totalPages - 1}">
+                                    <a class="page-link" href="#" ng-click="changePage(currentPage + 1)">下一頁</a>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
 
-                    <table class="table table-hover mt-3">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>ID</th>
-                                <th>信箱</th>
-                                <th>姓名</th>
-                                <th>狀態</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr ng-repeat="member in memberList">
-                                <td>{{ member.memberId }}</td>
-                                <td>{{ member.email }}</td>
-                                <td>{{ member.name }}</td>
-                                <td>
-                                    <span class="badge" ng-class="member.status === 1 ? 'bg-success' : 'bg-warning text-dark'">
-                                        {{ member.status === 1 ? '付費會員' : '一般會員' }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-primary">編輯</button>
-                                    <button class="btn btn-sm btn-outline-danger" ng-if="currentUser.role === 'admin'">停權</button>
-                                </td>
-                            </tr>
-                            <tr ng-if="memberList.length === 0">
-                                <td colspan="5" class="text-center py-4 text-muted">目前沒有資料，或請點擊搜尋。</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <!-- ========================================== -->
+                    <!-- 🔵 頁籤內容 2：內部員工清單 (Staff) -->
+                    <!-- ========================================== -->
+                    <div ng-show="currentTab === 'staff'">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control border-primary" placeholder="搜尋員工姓名或信箱..." ng-model="staffSearchKeyword">
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary w-100" ng-click="searchStaff(0)">搜尋員工</button>
+                            </div>
+                        </div>
+
+                        <table class="table table-hover mt-3 align-middle">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>員工 ID</th>
+                                    <th>員工信箱 (帳號)</th>
+                                    <th>姓名</th>
+                                    <th>職位</th>
+                                    <th>狀態</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="staff in staffList">
+                                    <td><span class="badge bg-secondary">EMP-{{ staff.adminId }}</span></td>
+                                    <td>{{ staff.email }}</td>
+                                    <td class="fw-bold">{{ staff.name }}</td>
+                                    <td>
+                                        <span class="badge" ng-class="staff.role === 'admin' ? 'bg-danger' : 'bg-info text-dark'">
+                                            {{ staff.role === 'admin' ? '管理員' : '教練' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" ng-class="staff.status === 1 ? 'bg-success' : 'bg-danger'">
+                                            {{ staff.status === 1 ? '在職' : '離職/停用' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <!-- 員工停權邏輯：防止管理員停權自己 -->
+                                        <button class="btn btn-sm" 
+                                                ng-class="staff.status === 1 ? 'btn-outline-danger' : 'btn-outline-success'"
+                                                ng-disabled="staff.adminId === currentUser.adminId"
+                                                ng-click="updateStatus(staff.adminId, staff.status === 1 ? -1 : 1, 'staff')">
+                                            {{ staff.status === 1 ? '停權' : '復權' }}
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr ng-if="staffList.length === 0">
+                                    <td colspan="6" class="text-center py-4 text-muted">目前沒有員工資料。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- 員工專屬分頁 -->
+                        <nav aria-label="Page navigation" class="mt-4" ng-if="totalStaffPages > 1">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item" ng-class="{disabled: currentStaffPage === 0}">
+                                    <a class="page-link" href="#" ng-click="changeStaffPage(currentStaffPage - 1)">上一頁</a>
+                                </li>
+                                <li class="page-item" ng-repeat="i in getNumber(totalStaffPages) track by $index" ng-class="{active: currentStaffPage === $index}">
+                                    <a class="page-link" href="#" ng-click="changeStaffPage($index)">{{$index + 1}}</a>
+                                </li>
+                                <li class="page-item" ng-class="{disabled: currentStaffPage === totalStaffPages - 1}">
+                                    <a class="page-link" href="#" ng-click="changeStaffPage(currentStaffPage + 1)">下一頁</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+
                 </div>
             </div>
-
         </div>
+
+        <!-- ========================================== -->
+        <!-- (隱藏區) 原地編輯會員資料 Modal -->
+        <!-- ========================================== -->
+        <div class="modal fade" id="editMemberModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content text-dark">
+                    <div class="modal-header bg-dark text-white">
+                        <h5 class="modal-title fw-bold">編輯會員資料</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">信箱 (作為帳號不可更改)</label>
+                                <input type="email" class="form-control bg-light" ng-model="editData.email" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">姓名</label>
+                                <input type="text" class="form-control" ng-model="editData.name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">電話</label>
+                                <input type="text" class="form-control" ng-model="editData.mobile">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">地址</label>
+                                <input type="text" class="form-control" ng-model="editData.address">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-primary fw-bold" ng-click="saveEdit()">儲存修改</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- (隱藏區) 新增教練/員工 Modal -->
+        <!-- ========================================== -->
+        <div class="modal fade" id="addStaffModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content text-dark">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title fw-bold">➕ 新增教練/員工</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form ng-submit="saveNewStaff()">
+                            <div class="mb-3">
+                                <label class="form-label">員工姓名 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" ng-model="newStaff.name" required placeholder="請輸入真實姓名">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">登入信箱 (帳號) <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" ng-model="newStaff.email" required placeholder="例如：staff@gym.com">
+                            </div>
+                            <div class="mb-3" ng-init="showStaffPwd = false">
+                                <label class="form-label">預設密碼 <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="{{ showStaffPwd ? 'text' : 'password' }}" class="form-control" ng-model="newStaff.password" required placeholder="請設定初始密碼">
+                                    <button class="btn btn-outline-secondary" type="button" ng-click="showStaffPwd = !showStaffPwd" title="顯示/隱藏密碼">
+                                        {{ showStaffPwd ? '🙈' : '👁️' }}
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">職位權限 <span class="text-danger">*</span></label>
+                                <select class="form-select" ng-model="newStaff.role" required>
+                                    <option value="coach">專業教練 (Coach)</option>
+                                    <option value="admin">系統管理員 (Admin)</option>
+                                </select>
+                            </div>
+                            <hr class="my-4">
+                            <div class="d-flex justify-content-end">
+                                <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">取消</button>
+                                <button type="submit" class="btn btn-primary fw-bold">確認新增員工</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
+    <!-- AngularJS 控制器邏輯 -->
     <script>
         app.controller('AdminDashCtrl', function($scope, $http) {
+            
+            // ================== 一般會員變數 ==================
             $scope.memberList = [];
             $scope.searchKeyword = '';
+            $scope.editData = {}; 
+            $scope.currentPage = 0; 
+            $scope.totalPages = 0;  
+            $scope.pageSize = 10;   
 
-            // 呼叫你的 MemberController 搜尋 API
-            $scope.searchMembers = function() {
-                var url = '/api/member/search?keyword=' + $scope.searchKeyword;
-                $http.get(url).then(function(response) {
-                    // Pageable 會把資料放在 content 裡面
-                    $scope.memberList = response.data.content || response.data; 
-                }, function(error) {
-                    console.error("搜尋失敗", error);
-                    alert("獲取會員資料失敗，請確認是否登入或權限不足");
+            // ================== 員工變數 ==================
+            $scope.staffList = [];
+            $scope.staffSearchKeyword = '';
+            $scope.currentStaffPage = 0; 
+            $scope.totalStaffPages = 0;
+            $scope.newStaff = { role: 'coach' }; 
+
+            // 🌟 頁籤切換邏輯
+            $scope.switchTab = function(tabName) {
+                $scope.currentTab = tabName;
+                if(tabName === 'member' && $scope.memberList.length === 0) $scope.searchMembers(0);
+                if(tabName === 'staff' && $scope.staffList.length === 0) $scope.searchStaff(0);
+            };
+
+            // 輔助工具：產生頁碼陣列
+            $scope.getNumber = function(num) {
+                return new Array(num);
+            };
+
+            // ================== 🟢 會員相關 API ==================
+            $scope.searchMembers = function(page) {
+                if (page !== undefined) $scope.currentPage = page;
+                var url = 'http://localhost:8080/api/member/search?keyword=' + $scope.searchKeyword + '&page=' + $scope.currentPage + '&size=' + $scope.pageSize;
+                $http.get(url).then(function(res) {
+                    $scope.memberList = res.data.content || res.data; 
+                    $scope.totalPages = res.data.totalPages || 1;
                 });
             };
 
-            // 進來畫面就先自動搜尋一次(空字串=抓全部)
-            $scope.searchMembers();
+            $scope.changePage = function(page) {
+                if (page >= 0 && page < $scope.totalPages) $scope.searchMembers(page);
+            };
+
+            $scope.openEditModal = function(member) {
+                $scope.editData = angular.copy(member);
+                var modal = new bootstrap.Modal(document.getElementById('editMemberModal'));
+                modal.show();
+            };
+
+            $scope.saveEdit = function() {
+                var url = 'http://localhost:8080/api/member/profile/' + $scope.editData.memberId;
+                $http.put(url, $scope.editData).then(function(res) {
+                    alert('會員資料更新成功！');
+                    bootstrap.Modal.getInstance(document.getElementById('editMemberModal')).hide();
+                    $scope.searchMembers($scope.currentPage);
+                });
+            };
+
+            // ================== 🔵 員工相關 API ==================
+            $scope.searchStaff = function(page) {
+                if (page !== undefined) $scope.currentStaffPage = page;
+                var url = 'http://localhost:8080/api/admin/search?keyword=' + $scope.staffSearchKeyword + '&page=' + $scope.currentStaffPage + '&size=' + $scope.pageSize;
+                $http.get(url).then(function(res) {
+                    $scope.staffList = res.data.content || res.data; 
+                    $scope.totalStaffPages = res.data.totalPages || 1;
+                }, function(err) {
+                    if(err.status === 403) alert("權限不足，無法查看員工清單");
+                });
+            };
+
+            $scope.changeStaffPage = function(page) {
+                if (page >= 0 && page < $scope.totalStaffPages) $scope.searchStaff(page);
+            };
+
+            $scope.openAddStaffModal = function() {
+                $scope.newStaff = { role: 'coach' }; 
+                $scope.showStaffPwd = false; 
+                var modal = new bootstrap.Modal(document.getElementById('addStaffModal'));
+                modal.show();
+            };
+
+            $scope.saveNewStaff = function() {
+                var url = 'http://localhost:8080/api/admin/staff';
+                $http.post(url, $scope.newStaff).then(function(res) {
+                    alert('🎉 成功新增員工/教練：' + res.data.name);
+                    bootstrap.Modal.getInstance(document.getElementById('addStaffModal')).hide();
+                    // 新增完畢後，如果當前在員工頁籤，立刻刷新畫面
+                    if($scope.currentTab === 'staff') $scope.searchStaff(0);
+                }, function(err) {
+                    alert('新增失敗：' + (err.data.message || '該信箱可能已被註冊使用'));
+                });
+            };
+
+            // ================== ⚔️ 共用的停權/復權功能 ==================
+            // 新增第三個參數 type 來區分是停權 member 還是 staff
+            $scope.updateStatus = function(id, newStatus, type) {
+                var actionName = newStatus === 1 ? '復權' : '停權';
+                if(!confirm('確定要將此人員' + actionName + '嗎？')) return;
+
+                // 根據傳入的 type 決定要打哪一支 API
+                var baseUrl = type === 'staff' ? '/api/admin/status-update/' : '/api/member/status-update/';
+                var url = 'http://localhost:8080' + baseUrl + id;
+
+                $http.put(url, { status: newStatus }).then(function(res) {
+                    alert('操作成功！人員已' + actionName);
+                    // 根據 type 刷新對應的表格
+                    if(type === 'staff') $scope.searchStaff($scope.currentStaffPage);
+                    else $scope.searchMembers($scope.currentPage);
+                }, function(err) {
+                    alert('操作失敗：權限不足');
+                });
+            };
+
+            // 啟動程式：進入畫面立刻抓取第 0 頁的會員資料
+            $scope.searchMembers(0);
         });
     </script>
 </body>

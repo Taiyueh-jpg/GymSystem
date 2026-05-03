@@ -1,6 +1,8 @@
 package com.team.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,7 +45,7 @@ public class Admin {
      * 無論透過哪支 API 回傳 Admin 物件，password 都不會出現在 JSON 回應裡。
      * 注意：反序列化（前端傳 JSON 進來）依然可以寫入，登入時接收密碼不受影響。
      */
-    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(name = "password", nullable = false, length = 255)
     private String password;
 
