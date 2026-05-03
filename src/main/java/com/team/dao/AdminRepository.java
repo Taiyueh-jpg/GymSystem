@@ -23,4 +23,7 @@ public interface AdminRepository extends JpaRepository<Admin, Long> {
 
     // 🔍 後台員工管理：支援依姓名模糊搜尋與角色過濾
     Page<Admin> findByNameContainingAndRole(String name, String role, Pageable pageable);
+
+    // 🚀 新增：支援姓名或信箱的模糊搜尋，並帶有分頁功能 (供員工清單總覽使用)
+    Page<Admin> findByNameContainingOrEmailContaining(String name, String email, Pageable pageable);
 }

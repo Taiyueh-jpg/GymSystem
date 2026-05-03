@@ -12,6 +12,14 @@
     <div class="container" ng-controller="AuthCtrl" ng-cloak>
         <div class="row justify-content-center">
             <div class="col-md-5">
+                
+                <!-- 💡 白話文註解：將原本依賴歷史紀錄的按鈕，改為絕對路徑的 a 標籤，確保無論如何都能點擊回到 index.html -->
+                <div class="mb-3 text-start">
+                    <a href="index.html" class="btn btn-outline-light btn-sm fw-bold">
+                        🏠 回到首頁
+                    </a>
+                </div>
+
                 <div class="card service-card p-4 shadow-lg rounded-4">
                     <div class="text-center mb-4">
                         <h2 class="fw-bold text-white">GymSystem</h2>
@@ -43,6 +51,7 @@
                         <a href="register.html" class="text-primary text-decoration-none fw-bold">立即註冊</a>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>

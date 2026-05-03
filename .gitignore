@@ -6,6 +6,7 @@
 src/main/resources/application-secret.properties
 
 # ── Maven ──
+bin/
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
