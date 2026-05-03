@@ -256,6 +256,22 @@
             $scope.allProducts = []; 
             $scope.isSelectingProduct = false;
 
+            // ==========================================
+            // 🚪 登出功能 (無狀態前端 Session 清除)
+            // ==========================================
+            $scope.logout = function() {
+                if ($window.confirm('確定要登出嗎？')) {
+                    // 1. 清除本機登入憑證
+                    $window.localStorage.removeItem('gymUser');
+                    // 2. 清除購物車資料
+                    $window.sessionStorage.removeItem('gymCart');
+                    
+                    alert('已成功登出！即將回到首頁...');
+                    // 3. 導向首頁
+                    $window.location.href = '/index.html';
+                }
+            };
+
             // 📅 時間區間篩選邏輯引擎
             $scope.dateFilter = { start: null, end: null };
             $scope.clearDateFilter = function() { $scope.dateFilter.start = null; $scope.dateFilter.end = null; };
@@ -274,6 +290,7 @@
                 return matchStart && matchEnd;
             };
 
+            // 🛡️ 無狀態架構：檢查使用者登入狀態
             var userStr = $window.localStorage.getItem('gymUser');
             if (!userStr) {
                 alert("您尚未登入或憑證已過期，請先登入！");
@@ -282,6 +299,7 @@
             }
             $scope.currentUser = JSON.parse(userStr);
 
+            // 建立帶著權限 Token 的 Header
             var getRequestConfig = function() {
                 return { headers: { 'Authorization': $scope.currentUser.memberId.toString(), 'Content-Type': 'application/json' } };
             };
