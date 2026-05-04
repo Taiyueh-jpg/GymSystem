@@ -52,19 +52,11 @@ public class Member {
     @Column(name = "status", nullable = false)
     private Integer status = 1;
 
-    /**
-     * 📅 建立時間
-     * insertable = false, updatable = false 讓 Hibernate 在執行 SQL 時
-     * 忽略此欄位，交由資料庫 DEFAULT CURRENT_TIMESTAMP 處理。
-     */
+    // 💡 確保時間完全交由資料庫 (MySQL) 控制，避免 Java 端覆蓋
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    /**
-     * 🔄 更新時間
-     * 同樣交由資料庫的 ON UPDATE CURRENT_TIMESTAMP 自動處理，
-     * 確保資料庫與程式端的行為一致，避免時區或同步問題。
-     */
+    // 💡 確保時間完全交由資料庫 (MySQL) 控制，避免 Java 端覆蓋
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 }
