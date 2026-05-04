@@ -49,9 +49,11 @@ public class Member {
     @Column(name = "status", nullable = false)
     private Integer status = 1; // 1=正常, 0=停權
 
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
-    
-    @Column(name = "updated_at")
+    // 💡 確保時間完全交由資料庫 (MySQL) 控制，避免 Java 端覆蓋
+    @Column(name = "created_at", insertable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    // 💡 確保時間完全交由資料庫 (MySQL) 控制，避免 Java 端覆蓋
+    @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 }
