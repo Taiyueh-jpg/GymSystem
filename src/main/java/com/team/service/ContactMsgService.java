@@ -35,6 +35,7 @@ public class ContactMsgService {
     @Autowired private Cloudinary                     cloudinary;
     @Autowired private KeywordFilterService           keywordFilterService;  // ✅ 新增
     @Autowired private EmailService                   emailService;          // ✅ 新增
+    @Autowired private com.team.dao.MemberRepository memberRepository; //會員查詢留言
 
     // ─────────────────────────────────────────────
     //  建立留言
@@ -146,9 +147,20 @@ public class ContactMsgService {
         return contactMsgRepository.findByIsFlaggedTrueOrderByCreatedAtDesc();
     }
 
-    // ✅ 新增：Guest 用 email 查詢自己的留言
+    // ✅ 新增：Guest & Member email 查詢留言
     public List<ContactMsg> getMsgsByGuestEmail(String email) {
-        return contactMsgRepository.findByGuestEmailOrderByCreatedAtDesc(email);
+        return memberRepository.findByEmail(email)
+            .map(member -> {
+                List<ContactMsg> memberMsgs = contactMsgRepository.findByMemberIdOrderByCreatedAtDesc(member.getMemberId());
+                List<ContactMsg> guestMsgs  = contactMsgRepository.findByGuestEmailOrderByCreatedAtDesc(email);
+                List<ContactMsg> all = new ArrayList<>(memberMsgs);
+                all.addAll(guestMsgs);
+                all.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
+                return all;
+            })
+            .orElseGet(() ->
+                contactMsgRepository.findByGuestEmailOrderByCreatedAtDesc(email)
+            );
     }
 
     // ─────────────────────────────────────────────
