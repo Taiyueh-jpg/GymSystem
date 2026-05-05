@@ -51,7 +51,7 @@
 
     .container { max-width:860px; margin:0 auto; padding:3rem 1.5rem 5rem; }
 
-    .tabs { display:flex; flex-wrap:wrap; gap:.5rem; margin-bottom:2rem; }
+    .tabs { display:flex; flex-wrap:wrap; gap:.5rem; margin-bottom:2rem;  justify-content:center;}
     .tab-btn { padding:.45rem 1.2rem; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--muted); font-family:inherit; font-size:.85rem; cursor:pointer; transition:all .2s; }
     .tab-btn:hover { border-color:var(--accent); color:var(--accent); }
     .tab-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
@@ -101,13 +101,17 @@
 <body>
 
 <nav>
-  <a class="nav-logo" href="index.html"><span>🏋️</span> GymSystem</a>
+  <a class="nav-logo" href="/index.html"><span>🏋️</span> GymSystem</a>
   <div class="nav-right">
-    <a href="index.html">首頁</a>
-    <a href="article-list.html">文章</a>
-    <a href="faq.html" class="active">常見問題</a>
-    <a href="contact.html">聯絡我們</a>
-    <a href="login.html" class="btn-login">登入 / 註冊</a>
+    <a href="/index.html">回首頁</a>
+    <!-- 訪客：顯示登入按鈕 -->
+    <a href="/login.html" class="btn-login" id="navLoginBtn">登入 / 註冊</a>
+    <!-- 會員/管理員：顯示歡迎語 + 登出 -->
+    <span id="navWelcome" style="display:none; color:#ff9800; font-size:.9rem; font-weight:700;"></span>
+    <button id="navLogoutBtn" onclick="doLogout()"
+      style="display:none; border:1px solid #f44336; color:#f44336;
+             background:transparent; border-radius:6px;
+             padding:.4rem 1rem; font-size:.85rem; cursor:pointer; font-family:inherit;">登出</button>
   </div>
 </nav>
 
@@ -136,18 +140,46 @@
     <div class="empty-icon">🔍</div>
     <h3>找不到相關問題</h3>
     <p>試試其他關鍵字，或直接聯繫我們。</p>
-    <a href="contact.html" class="btn-primary">前往留言</a>
+    <a href="/contact/contact.html" class="btn-primary">前往留言</a>
   </div>
   <div class="cta-section" id="ctaSection" style="display:none;">
     <h3>還有其他疑問？</h3>
     <p>找不到答案？我們的客服團隊隨時為你服務。</p>
-    <a href="contact.html" class="btn-primary">聯絡我們留言</a>
+    <a href="/contact/contact.html" class="btn-primary">聯絡我們留言</a>
   </div>
 </div>
 
 <footer>© 2026 GymSystem 健身房管理系統. All Rights Reserved.</footer>
 
 <script>
+  // ── Navbar 登入狀態（與 app.js localStorage 機制一致）──
+  (function() {
+    try {
+      const user = JSON.parse(localStorage.getItem('gymUser'));
+      if (user && (user.memberId || user.adminId)) {
+        document.getElementById('navLoginBtn').style.display  = 'none';
+        document.getElementById('navWelcome').style.display   = 'inline';
+        document.getElementById('navWelcome').textContent     = `歡迎回來，${user.name}`;
+        document.getElementById('navLogoutBtn').style.display = 'inline-block';
+      }
+    } catch(e) {}
+  })();
+
+  function doLogout() {
+    try {
+      const user = JSON.parse(localStorage.getItem('gymUser'));
+      const url  = (user && user.adminId) ? '/api/admin/logout' : '/api/member/logout';
+      fetch(url, { method: 'POST' }).finally(() => {
+        localStorage.removeItem('gymUser');
+        window.location.href = '/index.html';
+      });
+    } catch(e) {
+      localStorage.removeItem('gymUser');
+      window.location.href = '/index.html';
+    }
+  }
+
+  // ── FAQ 資料載入 ──
   const API = 'http://localhost:8080/api/faq';
   let allFaqs = [], currentCat = 'all', searchTimer = null;
 

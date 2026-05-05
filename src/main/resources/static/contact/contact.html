@@ -49,6 +49,14 @@
     .nav-links a.active { color: #fff; font-weight: 500; }
     .nav-links .btn-outline { border: 1px solid var(--border); color: var(--text); }
     .nav-links .btn-outline:hover { border-color: var(--blue); color: var(--blue); }
+    .nav-welcome { color: #ff9800; font-size: .92rem; font-weight: 700; padding: 6px 14px; }
+    .nav-logout {
+      border: 1px solid var(--error); color: var(--error);
+      background: transparent; border-radius: 6px;
+      padding: 6px 14px; font-size: .85rem; cursor: pointer;
+      font-family: inherit; transition: background .2s;
+    }
+    .nav-logout:hover { background: rgba(244,67,54,.1); }
 
     /* ── Hero ── */
     .hero {
@@ -168,11 +176,6 @@
     .btn-submit:disabled { opacity: .6; cursor: not-allowed; }
 
     /* ── Inquiry Tab ── */
-    .inquiry-desc {
-      color: var(--muted); font-size: .9rem; margin-bottom: 24px; line-height: 1.7;
-    }
-
-    /* email search box (guest only) */
     .search-card {
       background: var(--card); border: 1px solid var(--border);
       border-radius: 12px; padding: 28px; margin-bottom: 28px;
@@ -194,7 +197,6 @@
     .btn-search:hover { background: var(--blue-hov); }
     .btn-search:disabled { opacity: .6; cursor: not-allowed; }
 
-    /* member auto-load notice */
     .member-auto-notice {
       display: none;
       background: rgba(41,121,255,.08); border: 1px solid rgba(41,121,255,.2);
@@ -202,7 +204,6 @@
       font-size: .9rem; color: #90b4ff;
     }
 
-    /* result header */
     .result-header {
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 14px;
@@ -210,7 +211,6 @@
     .result-header h2 { font-size: 1rem; font-weight: 600; }
     .result-count { color: var(--muted); font-size: .83rem; }
 
-    /* msg cards */
     .msg-card {
       background: var(--card); border: 1px solid var(--border);
       border-radius: 12px; padding: 22px; margin-bottom: 14px;
@@ -228,9 +228,7 @@
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     .msg-badges { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-    .badge {
-      padding: 3px 10px; border-radius: 20px; font-size: .74rem; font-weight: 600;
-    }
+    .badge { padding: 3px 10px; border-radius: 20px; font-size: .74rem; font-weight: 600; }
     .badge-new      { background: rgba(244,67,54,.13); color: var(--error); }
     .badge-replied  { background: rgba(76,175,80,.13);  color: var(--success); }
     .badge-category { background: rgba(41,121,255,.1);  color: var(--blue); }
@@ -258,7 +256,6 @@
     }
     .reply-preview-time { font-size: .73rem; color: var(--muted); margin-top: 4px; }
 
-    /* state box */
     .state-box { text-align: center; padding: 60px 0; color: var(--muted); }
     .state-icon { font-size: 2.8rem; margin-bottom: 14px; }
     .state-text { font-size: .93rem; }
@@ -305,7 +302,6 @@
     }
     .reply-meta { font-size: .78rem; color: var(--muted); margin-top: 8px; }
 
-    /* attachments */
     .attachment-grid { display: flex; gap: 10px; flex-wrap: wrap; }
     .attachment-img {
       width: 88px; height: 88px; object-fit: cover;
@@ -359,13 +355,14 @@
 
 <!-- Navbar -->
 <nav>
-  <a href="../index.html" class="nav-logo">🏋️ GymSystem</a>
+  <a href="/index.html" class="nav-logo">🏋️ GymSystem</a>
   <div class="nav-links">
-    <a href="../index.html">首頁</a>
-    <a href="../article/article-list.html">最新消息</a>
-    <a href="../faq.html">常見問題</a>
-    <a href="contact.html" class="active">聯絡我們</a>
-    <a href="../login.html" class="btn-outline" id="navLoginBtn">登入 / 註冊</a>
+    <a href="/index.html">回首頁</a>
+    <!-- 訪客：顯示登入按鈕 -->
+    <a href="/login.html" class="btn-outline" id="navLoginBtn">登入 / 註冊</a>
+    <!-- 已登入：顯示歡迎語 + 登出 -->
+    <span class="nav-welcome" id="navWelcome" style="display:none;"></span>
+    <button class="nav-logout" id="navLogoutBtn" style="display:none;" onclick="doLogout()">登出</button>
   </div>
 </nav>
 
@@ -386,17 +383,11 @@
     <button class="tab-btn"        id="tabInquiryBtn" onclick="switchTab('inquiry')">🔍 查詢留言紀錄</button>
   </div>
 
-  <!-- ══════════════════════════════════
-       Tab 1：留言表單
-  ══════════════════════════════════ -->
+  <!-- Tab 1：留言表單 -->
   <div class="tab-panel active" id="panelForm">
     <div class="card">
       <div class="card-title">✉️ 留言表單</div>
-
-      <!-- 會員歡迎提示 -->
       <div class="member-greeting" id="memberGreeting"></div>
-
-      <!-- Alert -->
       <div class="alert" id="alert"></div>
 
       <!-- 訪客欄位 -->
@@ -414,7 +405,6 @@
       </div>
 
       <div class="form-grid" style="margin-top:18px;">
-        <!-- 類別 -->
         <div class="form-group">
           <label>類別 <span class="req">*</span></label>
           <select id="category">
@@ -428,21 +418,16 @@
           </select>
           <span class="err-msg" id="categoryErr"></span>
         </div>
-
-        <!-- 主旨 -->
         <div class="form-group">
           <label>主旨 <span class="req">*</span></label>
           <input type="text" id="subject" placeholder="請簡述問題主旨" maxlength="100" />
           <span class="err-msg" id="subjectErr"></span>
         </div>
-
-        <!-- 留言內容 -->
         <div class="form-group full">
           <label>留言內容 <span class="req">*</span></label>
           <textarea id="content" placeholder="請詳細描述您的問題或建議…" maxlength="3000"></textarea>
           <span class="err-msg" id="contentErr"></span>
         </div>
-
         <!-- 圖片上傳（僅會員） -->
         <div class="form-group full" id="uploadSection" style="display:none;">
           <label>附圖（選填，最多 3 張，每張不超過 5MB）</label>
@@ -463,26 +448,17 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════
-       Tab 2：查詢留言紀錄
-  ══════════════════════════════════ -->
+  <!-- Tab 2：查詢留言紀錄 -->
   <div class="tab-panel" id="panelInquiry">
-
-    <!-- 訪客：顯示 Email 輸入框 -->
     <div id="guestSearchBox" class="search-card">
       <label for="emailInput">輸入您留言時填寫的 Email</label>
       <div class="search-row">
-        <input type="email" id="emailInput"
-               placeholder="example@email.com"
+        <input type="email" id="emailInput" placeholder="example@email.com"
                onkeydown="if(event.key==='Enter') searchMsgs()" />
         <button class="btn-search" id="searchBtn" onclick="searchMsgs()">查詢</button>
       </div>
     </div>
-
-    <!-- 會員：自動載入提示 -->
     <div class="member-auto-notice" id="memberAutoNotice"></div>
-
-    <!-- 結果區 -->
     <div id="resultsSection" style="display:none;">
       <div class="result-header">
         <h2>查詢結果</h2>
@@ -490,17 +466,13 @@
       </div>
       <div id="msgList"></div>
     </div>
-
-    <!-- 初始狀態 -->
     <div id="initialState" class="state-box">
       <div class="state-icon">✉️</div>
       <div class="state-text">輸入 Email 查詢您的留言紀錄</div>
     </div>
-
   </div>
 </main>
 
-<!-- Footer -->
 <footer>© 2026 GymSystem 健身房管理系統. All Rights Reserved.</footer>
 
 <!-- 留言詳細 Modal -->
@@ -512,15 +484,11 @@
     <hr class="divider" />
     <div class="section-label">留言內容</div>
     <div class="content-box" id="modalContent"></div>
-
-    <!-- 附件 -->
     <div id="attachmentSection" style="display:none;">
       <hr class="divider" />
       <div class="section-label">附件圖片</div>
       <div class="attachment-grid" id="attachmentGrid"></div>
     </div>
-
-    <!-- 回覆 -->
     <div id="replySection" style="display:none;">
       <hr class="divider" />
       <div class="section-label">客服回覆</div>
@@ -540,8 +508,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const API_CONTACT = 'http://localhost:8080/api/contact/msg';
-  const API_MEMBER  = 'http://localhost:8080/api/member/me';
+  const API_CONTACT     = 'http://localhost:8080/api/contact/msg';
   const API_GUEST_QUERY = 'http://localhost:8080/api/contact/msg/guest';
 
   let MEMBER_ID    = null;
@@ -551,43 +518,66 @@
   let currentMsgs   = [];
 
   // ══════════════════════════════════
-  //  初始化：確認登入狀態
+  //  初始化：從 localStorage 讀取登入狀態（與 app.js 一致）
   // ══════════════════════════════════
-  (async () => {
-    try {
-      const res = await fetch(API_MEMBER, { credentials: 'include' });
-      if (res.ok) {
-        const member = await res.json();
-        MEMBER_ID    = member.memberId;
-        MEMBER_EMAIL = member.email;
-        MEMBER_NAME  = member.name;
-        applyMemberUI();
-      }
-    } catch (e) { /* 網路錯誤維持訪客模式 */ }
-  })();
+  (function() {
+  try {
+    const user = JSON.parse(localStorage.getItem('gymUser'));
+    
+    // Admin 不應使用前台留言，直接導回後台
+    if (user && user.adminId) {
+      window.location.href = '/admin-dashboard.html';
+      return;
+    }
+    
+    // 一般會員
+    if (user && user.memberId) {
+      MEMBER_ID    = user.memberId;
+      MEMBER_EMAIL = user.email;
+      MEMBER_NAME  = user.name;
+      applyMemberUI();
+    }
+  } catch (e) { }
+})();
 
   function applyMemberUI() {
-    // Navbar：登入後可改顯示名稱或隱藏登入按鈕（選用）
-    const navBtn = document.getElementById('navLoginBtn');
-    if (navBtn) navBtn.textContent = MEMBER_NAME || '我的帳號';
+    // Navbar：隱藏登入按鈕，顯示歡迎語和登出
+    document.getElementById('navLoginBtn').style.display  = 'none';
+    document.getElementById('navWelcome').style.display   = 'inline';
+    document.getElementById('navWelcome').textContent     = `歡迎回來，${MEMBER_NAME}`;
+    document.getElementById('navLogoutBtn').style.display = 'inline-block';
 
-    // Tab 1 留言表單：隱藏訪客欄位、顯示上傳區、顯示歡迎語
+    // Tab 1：隱藏訪客欄位、顯示上傳區、顯示歡迎語
     document.getElementById('guestFields').style.display = 'none';
     document.getElementById('uploadSection').style.display = 'block';
     const greeting = document.getElementById('memberGreeting');
     greeting.textContent = `👋 歡迎，${MEMBER_NAME}！您已登入，留言將自動綁定您的帳號。`;
     greeting.style.display = 'block';
 
-    // Tab 2 查詢：隱藏 Email 輸入框，顯示自動載入提示
+    // Tab 2：隱藏 Email 輸入框，顯示自動載入提示
     document.getElementById('guestSearchBox').style.display = 'none';
     const notice = document.getElementById('memberAutoNotice');
     notice.textContent = `🔍 自動查詢 ${MEMBER_NAME} 的留言紀錄（${MEMBER_EMAIL}）`;
     notice.style.display = 'block';
 
-    // 初始狀態文字也更新
     document.getElementById('initialState').innerHTML = `
       <div class="state-icon">⏳</div>
       <div class="state-text">載入中…</div>`;
+  }
+
+  // ── 登出（與 app.js 邏輯一致）──
+  function doLogout() {
+    try {
+      const user = JSON.parse(localStorage.getItem('gymUser'));
+      const url  = (user && user.adminId) ? '/api/admin/logout' : '/api/member/logout';
+      fetch(url, { method: 'POST' }).finally(() => {
+        localStorage.removeItem('gymUser');
+        window.location.href = '/index.html';
+      });
+    } catch(e) {
+      localStorage.removeItem('gymUser');
+      window.location.href = '/index.html';
+    }
   }
 
   // ══════════════════════════════════
@@ -599,20 +589,17 @@
     document.getElementById('panelForm').classList.toggle('active', tab === 'form');
     document.getElementById('panelInquiry').classList.toggle('active', tab === 'inquiry');
 
-    // 切到查詢 Tab 時：會員自動載入、訪客維持等待輸入
-    if (tab === 'inquiry') {
-      if (MEMBER_EMAIL) {
-        autoLoadMemberMsgs();
-      }
+    if (tab === 'inquiry' && MEMBER_EMAIL) {
+      autoLoadMemberMsgs();
     }
   }
 
   // ══════════════════════════════════
-  //  查詢（訪客手動 / 會員自動）
+  //  查詢
   // ══════════════════════════════════
   async function searchMsgs() {
     const email = document.getElementById('emailInput').value.trim();
-    if (!email)              { showToast('請輸入 Email', 'error'); return; }
+    if (!email)               { showToast('請輸入 Email', 'error'); return; }
     if (!isValidEmail(email)) { showToast('Email 格式不正確', 'error'); return; }
 
     const btn = document.getElementById('searchBtn');
@@ -666,7 +653,6 @@
       const hasReply    = !!m.replyContent;
       const unreadReply = hasReply && !m.isReplyRead;
       const cardClass   = 'msg-card' + (hasReply ? ' has-reply' : '');
-
       return `
         <div class="${cardClass}" onclick="openModal(${m.msgId})">
           <div class="msg-card-header">
@@ -683,8 +669,7 @@
             <span>#${m.msgId}</span>
             <span>${escHtml(m.category)}</span>
             <span>${formatDate(m.createdAt)}</span>
-            ${m.attachments && m.attachments.length
-              ? `<span>🖼️ ${m.attachments.length} 張附件</span>` : ''}
+            ${m.attachments && m.attachments.length ? `<span>🖼️ ${m.attachments.length} 張附件</span>` : ''}
           </div>
           <div class="msg-content-preview">${escHtml(m.content)}</div>
           ${hasReply ? `
@@ -710,7 +695,6 @@
   function renderModal(msg) {
     document.getElementById('modalTitle').textContent = `【${msg.category}】${msg.subject}`;
 
-    // 依登入狀態顯示不同的識別欄位
     const whoRow = MEMBER_ID
       ? `<div class="info-item"><label>會員</label><span>${escHtml(MEMBER_NAME)}</span></div>
          <div class="info-item"><label>Email</label><span>${escHtml(MEMBER_EMAIL)}</span></div>`
@@ -731,7 +715,6 @@
 
     document.getElementById('modalContent').textContent = msg.content;
 
-    // 附件（只有會員留言才可能有）
     const attSection = document.getElementById('attachmentSection');
     const attGrid    = document.getElementById('attachmentGrid');
     if (msg.attachments && msg.attachments.length) {
@@ -744,7 +727,6 @@
       attSection.style.display = 'none';
     }
 
-    // 回覆
     const replySection = document.getElementById('replySection');
     if (msg.replyContent) {
       document.getElementById('replyBox').textContent  = msg.replyContent;

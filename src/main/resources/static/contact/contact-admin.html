@@ -402,10 +402,12 @@
 
 <!-- Navbar -->
 <nav>
-  <a href="index.html" class="nav-logo">🏋️ GymSystem <span style="color:var(--muted);font-size:.85rem;font-weight:400;">Admin</span></a>
+  <a href="/admin-dashboard.html" class="nav-logo">🏋️ GymSystem Admin</a>
   <div class="nav-right">
-    管理員：<span>Admin</span>
-  </div>
+  <a href="/admin-dashboard.html" style="color: #ccc; text-decoration: none; margin-right: 15px;">回管理大廳</a>
+  <span style="color: #ff9800; font-size: 14px; font-weight: bold; margin-right: 15px;">管理員：<span id="adminName">Admin</span></span>
+  <button onclick="doLogout()" style="border:1px solid #f44336; color:#f44336; background:transparent; border-radius:6px; padding:4px 12px; font-size:.85rem; cursor:pointer;">登出系統</button>
+</div>
 </nav>
 
 <!-- Main -->
@@ -510,9 +512,28 @@
 <footer>© 2026 GymSystem 健身房管理系統. All Rights Reserved.</footer>
 
 <script>
+//從 localStorage 取管理員名稱與 ID
+try {
+  const user = JSON.parse(localStorage.getItem('gymUser'));
+  if (user && user.name) {
+    document.getElementById('adminName').textContent = user.name;
+  }
+} catch(e) {}
+
+function doLogout() {
+  fetch('/api/admin/logout', { method: 'POST' }).finally(() => {
+    localStorage.removeItem('gymUser');
+    window.location.href = '/index.html';
+  });
+}
   const API = 'http://localhost:8080/api/contact/msg';
   // Admin ID（之後配合 admin 登入模組替換）
-  const ADMIN_ID = 1;
+ const ADMIN_ID = (() => {
+  try {
+    const user = JSON.parse(localStorage.getItem('gymUser'));
+    return user && user.adminId ? user.adminId : 1;
+  } catch(e) { return 1; }
+})();
 
   let allMsgs   = [];
   let currentMsg = null;
@@ -750,7 +771,7 @@
 
   // ── 工具 ──
   function statusLabel(s) {
-    return { new: '未回覆', replied: '已回覆', closed: '已關閉' }[s] || s;
+	  return { new: '未回覆', replied: '已回覆 📧', closed: '已關閉' }[s] || s;
   }
 
   function formatDate(str) {

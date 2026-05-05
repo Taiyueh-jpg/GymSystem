@@ -185,15 +185,12 @@
 <!-- Navbar -->
 <nav>
   <a href="../admin-dashboard.html" class="nav-logo">🏋️ GymSystem Admin</a>
-  <div class="nav-links">
-    <a href="contact-admin.html">客服留言</a>
-    <a href="keyword-filter-admin.html" class="active">關鍵字過濾</a>
-    <a href="../article/article-admin.html">文章管理</a>
-  </div>
-  <div class="nav-right">
-    <a href="../admin-dashboard.html" style="color:#ccc;text-decoration:none;margin-right:15px;">回管理大廳</a>
-    <span style="color:#ff9800;font-size:14px;font-weight:bold;">管理員：Admin</span>
-  </div>
+  
+ <div class="nav-right">
+  <a href="/admin-dashboard.html" style="color:#ccc; text-decoration:none; margin-right:15px;">回管理大廳</a>
+  <span style="color:#ff9800; font-size:14px; font-weight:bold; margin-right:15px;">管理員：<span id="adminName">Admin</span></span>
+  <button onclick="doLogout()" style="border:1px solid #f44336; color:#f44336; background:transparent; border-radius:6px; padding:4px 12px; font-size:.85rem; cursor:pointer;">登出系統</button>
+</div>
 </nav>
 
 <div class="container">
@@ -288,6 +285,17 @@
 <div id="toast"></div>
 
 <script>
+try {
+	  const user = JSON.parse(localStorage.getItem('gymUser'));
+	  if (user && user.name) document.getElementById('adminName').textContent = user.name;
+	} catch(e) {}
+
+	function doLogout() {
+	  fetch('/api/admin/logout', { method: 'POST' }).finally(() => {
+	    localStorage.removeItem('gymUser');
+	    window.location.href = '/index.html';
+	  });
+	}
   const API = 'http://localhost:8080/api/admin/keyword-filter';
   let currentType = 'all';
   let searchTimeout = null;

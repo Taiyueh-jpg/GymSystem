@@ -50,22 +50,23 @@
     .btn-login:hover { background: rgba(255,255,255,0.1); }
 
     /* ── Page Header ────────────────────────────────────── */
-    .page-header {
-      background: #2d2d2d;
-      padding: 40px 32px 32px;
-      border-bottom: 1px solid #3a3a3a;
-    }
-    .page-header h1 {
-      font-size: 28px; font-weight: 700; margin-bottom: 6px;
-    }
-    .page-header p {
-      color: #aaa; font-size: 14px;
-    }
+   /* ── Page Header ── */
+.page-header {
+  position: relative; height: 280px;
+  background: linear-gradient(rgba(0,0,0,.6), rgba(0,0,0,.7)),
+    url('https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1400&q=80') center/cover no-repeat;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; 
+  text-align: center;
+}
+.page-header h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 700; color: #fff; letter-spacing: 2px; }
+.page-header p  { margin-top: 10px; color: rgba(255,255,255,.75); font-size: 1rem; }
 
     /* ── Filter Bar ─────────────────────────────────────── */
     .filter-bar {
       background: #222; border-bottom: 1px solid #333;
       padding: 16px 32px; display: flex; gap: 10px; flex-wrap: wrap;
+      justify-content: center; 
     }
     .filter-btn {
       background: transparent; border: 1px solid #444;
@@ -200,18 +201,16 @@
     🏋️ GymSystem
   </a>
   <div class="navbar-right">
-    <a href="../index.html" class="nav-link">首頁</a>
-    <a href="article-list.html" class="nav-link active">最新消息</a>
-    <a href="../faq.html" class="nav-link">常見問答</a> <a href="../contact/contact.html" class="nav-link">聯絡我們</a>
-    
-    <a href="../login.html" class="btn-login" ng-if="isGuest()">登入 / 註冊</a>
-    <span style="color: #ff9800; font-size: 14px; font-weight: bold;" ng-if="!isGuest()">歡迎回來, {{ currentUser.name }}</span>
-    <button class="btn-login" style="border-color: #f44336; color: #f44336;" ng-if="!isGuest()" ng-click="logout()">登出</button>
-  </div>
+  <a href="/index.html" class="nav-link">回首頁</a>
+
+  <a href="/login.html" class="btn-login" ng-if="isGuest()">登入 / 註冊</a>
+  <span style="color: #ff9800; font-size: 14px; font-weight: bold;" ng-if="!isGuest()">歡迎回來, {{ currentUser.name }}</span>
+  <button class="btn-login" style="border-color: #f44336; color: #f44336;" ng-if="!isGuest()" ng-click="logout()">登出</button>
+</div>
 </nav>
 
 <div class="page-header">
-  <h1>最新消息</h1>
+  <h1>最新公告</h1>
   <p>掌握最新優惠活動與課程公告</p>
 </div>
 
