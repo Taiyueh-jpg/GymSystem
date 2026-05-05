@@ -18,7 +18,7 @@ app.controller('MainCtrl', function($scope, $http, $window) {
         $http.post(logoutUrl).then(function(res) {
             localStorage.removeItem('gymUser');
             alert('已成功登出！');
-            $window.location.href = 'index.html';
+            $window.location.href = '/index.html'; //沒有 / 會（404）
         }, function(err) {
             console.error("登出失敗", err);
         });
