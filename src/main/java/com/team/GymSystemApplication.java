@@ -2,12 +2,14 @@ package com.team;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * 企業級健身房預約與商城系統 (GymSystem)
  * 系統主啟動類別 (Entry Point)
  */
 @SpringBootApplication
+@EnableScheduling //定時寄信服務 (生日優惠...
 public class GymSystemApplication {
 
     public static void main(String[] args) {
