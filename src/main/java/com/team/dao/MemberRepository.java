@@ -63,10 +63,14 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> findByStatus(Integer status);
 
     // 🎂 查詢本月壽星（健身房行銷活動使用）
-    // 如果未來「一般會員」也要發放生日優惠券，只要改成 AND m.status >= 0 就可以了
-    @Query("SELECT m FROM Member m WHERE MONTH(m.birthday) = :month AND m.status = 1")
+    // 行銷生日信寄給未停權會員；會員課程正式會籍仍由 status = 1 判斷，不受此查詢影響。
+    @Query("SELECT m FROM Member m WHERE MONTH(m.birthday) = :month AND m.status >= 0")
     List<Member> findBirthdaysByMonth(@Param("month") int month);
 
     // 📊 統計功能：計算目前有效會員總數
     long countByStatus(Integer status);
+
+    // 📣 行銷通知使用：撈出所有未停權會員（一般會員 + 付費會員），排除停權帳號。
+    @Query("SELECT m FROM Member m WHERE m.status >= 0")
+    List<Member> findAllActiveMembers();
 }

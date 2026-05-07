@@ -1,18 +1,27 @@
 /* css/style.css */
+
+/* ================================
+   全站基礎設定
+================================ */
 body {
-    background-color: #121212; 
-    color: #ffffff;
+    background-color: #f8f9fa;
+    color: #212529;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.navbar {
-    background-color: rgba(18, 18, 18, 0.9) !important;
-    border-bottom: 1px solid #333;
+/* AngularJS 隱藏未載入的變數，防止畫面閃爍 */
+[ng\:cloak],
+[ng-cloak],
+.ng-cloak {
+    display: none !important;
 }
 
-/* 🏋️ 共用健身房背景圖 */
+/* 共用健身房背景圖 */
 .bg-gym-image {
-    background: linear-gradient(rgba(18, 18, 18, 0.85), rgba(18, 18, 18, 0.85)), url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop') no-repeat center center fixed;
+    background:
+        linear-gradient(rgba(18, 18, 18, 0.85), rgba(18, 18, 18, 0.85)),
+        url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop')
+        no-repeat center center fixed;
     background-size: cover;
 }
 
@@ -23,10 +32,948 @@ body {
 }
 
 .service-card:hover {
-    border-color: #0d6efd; 
+    border-color: #0d6efd;
 }
 
-/* AngularJS 隱藏未載入的變數 (防止畫面閃爍) */
-[ng\:cloak], [ng-cloak], .ng-cloak {
-    display: none !important;
+/* ================================
+   Navbar 白底版本
+================================ */
+.navbar.navbar-dark.bg-dark {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #dee2e6;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.navbar.navbar-dark.bg-dark .navbar-brand {
+    color: #0d6efd !important;
+    font-weight: 800;
+    letter-spacing: .02em;
+}
+
+.navbar.navbar-dark.bg-dark .navbar-text {
+    color: #212529 !important;
+    font-weight: 700;
+}
+
+.navbar.navbar-dark.bg-dark .btn-outline-light {
+    color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    background-color: #ffffff !important;
+    font-weight: 700;
+}
+
+.navbar.navbar-dark.bg-dark .btn-outline-light:hover,
+.navbar.navbar-dark.bg-dark .btn-outline-light:focus,
+.navbar.navbar-dark.bg-dark .btn-outline-light:active {
+    color: #ffffff !important;
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+}
+
+.navbar.navbar-dark.bg-dark .btn-outline-info {
+    color: #0dcaf0 !important;
+    border-color: #0dcaf0 !important;
+    background-color: #ffffff !important;
+    font-weight: 700;
+}
+
+.navbar.navbar-dark.bg-dark .btn-outline-info:hover,
+.navbar.navbar-dark.bg-dark .btn-outline-info:focus,
+.navbar.navbar-dark.bg-dark .btn-outline-info:active {
+    color: #000000 !important;
+    background-color: #0dcaf0 !important;
+    border-color: #0dcaf0 !important;
+}
+
+.navbar.navbar-dark.bg-dark .btn-warning {
+    color: #212529 !important;
+    background-color: #ffc107 !important;
+    border-color: #ffc107 !important;
+    font-weight: 800;
+}
+
+.navbar.navbar-dark.bg-dark .btn-warning:hover,
+.navbar.navbar-dark.bg-dark .btn-warning:focus,
+.navbar.navbar-dark.bg-dark .btn-warning:active {
+    color: #212529 !important;
+    background-color: #ffca2c !important;
+    border-color: #ffc720 !important;
+}
+
+/* ================================
+   Bootstrap 按鈕文字可讀性修正
+================================ */
+.btn.btn-primary,
+.btn.btn-primary:visited,
+.btn.btn-primary:hover,
+.btn.btn-primary:focus,
+.btn.btn-primary:active,
+.btn.btn-success,
+.btn.btn-success:visited,
+.btn.btn-success:hover,
+.btn.btn-success:focus,
+.btn.btn-success:active,
+.btn.btn-danger,
+.btn.btn-danger:visited,
+.btn.btn-danger:hover,
+.btn.btn-danger:focus,
+.btn.btn-danger:active,
+.btn.btn-secondary,
+.btn.btn-secondary:visited,
+.btn.btn-secondary:hover,
+.btn.btn-secondary:focus,
+.btn.btn-secondary:active {
+    color: #ffffff !important;
+}
+
+.btn.btn-warning,
+.btn.btn-warning:visited,
+.btn.btn-warning:hover,
+.btn.btn-warning:focus,
+.btn.btn-warning:active {
+    color: #212529 !important;
+}
+
+.btn.btn-outline-primary:hover,
+.btn.btn-outline-success:hover,
+.btn.btn-outline-danger:hover,
+.btn.btn-outline-secondary:hover {
+    color: #ffffff !important;
+}
+
+/* ================================
+   會員課程模組共用視覺
+================================ */
+.member-course-page {
+    background: #f4f6f8;
+    color: #1d232a;
+}
+
+.member-course-home {
+    min-height: 100vh;
+    background: #101214;
+    color: #fff;
+}
+
+.member-course-home .navbar {
+    background: rgba(21, 24, 27, 0.96) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.member-course-page .btn,
+.member-course-home .btn {
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+.card {
+    border-radius: 14px;
+}
+
+.member-course-page .card,
+.member-course-page .summary-box,
+.member-course-page .selected-course-panel,
+.member-course-page .timeline-item,
+.member-course-page .coach-card,
+.member-course-page .course-intro-card {
+    border-radius: 8px;
+    border: 1px solid #d7dde3;
+    box-shadow: 0 10px 26px rgba(17, 24, 39, .07);
+}
+
+.member-course-page .card {
+    background: #fff;
+}
+
+.member-course-page .form-control,
+.member-course-page .form-select {
+    border-radius: 8px;
+    border-color: #cfd6dd;
+}
+
+.member-course-page .form-label {
+    font-weight: 700;
+    color: #303842;
+}
+
+.member-input {
+    max-width: 220px;
+}
+
+/* ================================
+   首頁 Hero
+================================ */
+.member-course-hero {
+    background:
+        linear-gradient(90deg, rgba(18, 18, 18, .94), rgba(18, 18, 18, .76)),
+        url('https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=1600&auto=format&fit=crop')
+        center/cover no-repeat;
+    color: #fff;
+    padding: 56px 0 34px;
+    border-bottom: 1px solid rgba(255, 255, 255, .12);
+}
+
+.member-course-hero h1,
+.member-course-hero h2 {
+    font-size: clamp(34px, 4vw, 54px);
+    font-weight: 900;
+}
+
+.member-course-hero p {
+    color: rgba(255, 255, 255, .78);
+    max-width: 760px;
+    line-height: 1.8;
+}
+
+.member-course-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    color: #111827;
+    background: #ffc107;
+    font-weight: 800;
+    font-size: 13px;
+    margin-bottom: 14px;
+}
+
+.member-course-shell {
+    margin-top: -18px;
+}
+
+.member-course-tool-card {
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid #d7dde3;
+    box-shadow: 0 10px 26px rgba(17, 24, 39, .08);
+}
+
+.member-course-step {
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+.member-course-status-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 8px;
+    padding: 7px 10px;
+    background: #eef2f6;
+    color: #202833;
+    font-weight: 800;
+    font-size: 13px;
+}
+
+.member-course-home-main {
+    background:
+        linear-gradient(90deg, rgba(12, 14, 16, .94), rgba(12, 14, 16, .72)),
+        url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1600&auto=format&fit=crop')
+        center/cover no-repeat;
+    min-height: calc(100vh - 72px);
+    padding: 64px 0 44px;
+}
+
+.member-course-home-card {
+    background: rgba(255, 255, 255, .96);
+    color: #202833;
+    border: 1px solid rgba(255, 255, 255, .45);
+    border-radius: 8px;
+    height: 100%;
+    box-shadow: 0 16px 34px rgba(0, 0, 0, .28);
+}
+
+.member-course-home-card .card-text {
+    color: #5d6875;
+    line-height: 1.7;
+}
+
+.member-course-home-badge {
+    display: inline-flex;
+    margin-bottom: 12px;
+    padding: 5px 9px;
+    border-radius: 8px;
+    background: #eef2f6;
+    color: #4b5563;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+/* ================================
+   Summary
+================================ */
+.summary-box {
+    background: #fff;
+    border-radius: 14px;
+    padding: 18px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    height: 100%;
+}
+
+.summary-number {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.summary-label {
+    color: #6c757d;
+    font-size: 14px;
+}
+
+/* ================================
+   Timeline
+================================ */
+.timeline-list {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.timeline-item {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.06);
+    display: grid;
+    grid-template-columns: 180px 1fr 170px;
+    gap: 20px;
+    align-items: center;
+    border-left: 6px solid #0d6efd;
+}
+
+.timeline-item.reserved-row {
+    border-left-color: #ffc107;
+    background: #fffdf3;
+}
+
+.timeline-date {
+    border-right: 1px solid #dee2e6;
+    padding-right: 16px;
+    min-width: 160px;
+    max-width: 180px;
+}
+
+.date-main {
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 1.3;
+}
+
+.time-main {
+    color: #6c757d;
+    margin-top: 4px;
+    font-size: 15px;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.timeline-action {
+    min-width: 150px;
+}
+
+.course-row-info .info-label {
+    display: block;
+    color: #6c757d;
+    font-size: 13px;
+}
+
+.course-row-info .info-value {
+    display: block;
+    font-weight: 700;
+    font-size: 17px;
+}
+
+/* ================================
+   Calendar
+================================ */
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.calendar-title {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.calendar-weekday {
+    text-align: center;
+    font-weight: 700;
+    color: #6c757d;
+    padding: 8px;
+}
+
+.calendar-day {
+    background: #fff;
+    border-radius: 12px;
+    min-height: 110px;
+    padding: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.calendar-day:hover {
+    border-color: #0d6efd;
+}
+
+.calendar-day-muted {
+    opacity: .45;
+}
+
+.calendar-day-active {
+    border-color: #0d6efd;
+    background: #f3f8ff;
+}
+
+.calendar-day-today {
+    border-color: #ffc107;
+}
+
+.calendar-day-number {
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.course-calendar-day {
+    min-height: 260px;
+    height: auto;
+    overflow: visible;
+}
+
+.calendar-course-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.calendar-course-item {
+    background: #f8f9fa;
+    border-left: 4px solid #0d6efd;
+    border-radius: 8px;
+    padding: 6px 7px;
+    font-size: 12px;
+    line-height: 1.25;
+    cursor: pointer;
+    transition: .15s ease;
+}
+
+.calendar-course-item:hover {
+    background: #eef5ff;
+    transform: translateY(-1px);
+}
+
+.calendar-course-reserved {
+    border-left-color: #ffc107;
+    background: #fff8e1;
+}
+
+.calendar-course-selected {
+    border: 2px solid #0d6efd;
+    background: #eaf3ff;
+}
+
+.calendar-course-full {
+    border-left-color: #dc3545;
+    background: #fff1f1;
+}
+
+.calendar-course-time {
+    font-weight: 700;
+    color: #0d6efd;
+}
+
+.calendar-course-name {
+    font-weight: 700;
+    color: #212529;
+    white-space: normal;
+}
+
+.calendar-course-coach {
+    color: #6c757d;
+    white-space: normal;
+}
+
+.calendar-course-status {
+    margin-top: 2px;
+    font-size: 11px;
+    color: #6c757d;
+}
+
+.selected-course-panel {
+    background: #fff;
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.06);
+    border-left: 6px solid #0d6efd;
+}
+
+/* ================================
+   Coach Card 修正版
+   重點：
+   1. 圖片滿版鋪滿卡片寬度
+   2. 不出現灰色左右空白
+   3. 不出現圖片下方超大空白
+   4. 卡片同列盡量等高
+   5. 按鈕固定在卡片底部
+================================ */
+
+/* 只讓教練卡片列表的 col 撐高，不影響其他頁面全部 row */
+.member-course-page .coach-profile-card {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #d7dde3;
+    box-shadow: 0 10px 26px rgba(17, 24, 39, .07);
+}
+
+/* 若外層 col 是 Bootstrap 欄位，讓卡片可以撐滿 */
+.member-course-page .row > .col-lg-6,
+.member-course-page .row > .col-xl-4 {
+    display: flex;
+}
+
+/* 高亮教練卡片 */
+.coach-card.selected-coach-card,
+.coach-profile-card.selected-coach-card {
+    border-color: #0d6efd;
+    background: #f3f8ff;
+    box-shadow: 0 0 0 4px rgba(13,110,253,.12), 0 8px 20px rgba(0,0,0,.10);
+}
+
+/* 防止 selected-coach-card 誤套到 row / col */
+.row.selected-coach-card,
+.col.selected-coach-card,
+.col-lg-6.selected-coach-card,
+.col-xl-4.selected-coach-card,
+[class*="col-"].selected-coach-card {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+/* 圖片區：滿版大圖 */
+.coach-card-image-block {
+    width: 100%;
+    height: 270px;
+    min-height: 270px;
+    max-height: 270px;
+    flex: 0 0 270px;
+    overflow: hidden;
+    background: #eef2f6;
+}
+
+/* 圖片滿版鋪滿，不留左右灰邊 */
+.coach-profile-image {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    display: block;
+    object-fit: cover;
+    object-position: center center;
+}
+
+/* 內容區 */
+.coach-card-body-block {
+    padding: 22px;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 標題 */
+.coach-profile-title {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 6px;
+    color: #212529;
+}
+
+.coach-profile-subtitle {
+    font-size: 15px;
+    color: #6c757d;
+    line-height: 1.5;
+}
+
+.coach-small-meta {
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.coach-profile-intro {
+    color: #495057;
+    font-size: 15px;
+    line-height: 1.8;
+    margin-top: 16px;
+    margin-bottom: 16px;
+    min-height: 84px;
+}
+
+/* 標籤 */
+.coach-tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    min-height: 92px;
+    align-content: flex-start;
+}
+
+.coach-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 2px solid #b9d3ff;
+    background: #f3f8ff;
+    color: #0d6efd;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+/* 證照 / 適合對象 */
+.coach-info-panel {
+    background: #f8f9fa;
+    border-radius: 16px;
+    padding: 18px 20px;
+    min-height: 170px;
+    margin-top: 18px;
+}
+
+.coach-bullet-list {
+    padding-left: 22px;
+    margin-bottom: 0;
+}
+
+.coach-bullet-list li {
+    margin-bottom: 8px;
+    color: #495057;
+    line-height: 1.6;
+}
+
+/* 第二個 info panel 後面自動把按鈕推到底 */
+.coach-card-body-block .coach-info-panel:last-of-type {
+    margin-bottom: 24px;
+}
+
+/* 查看課表按鈕固定底部 */
+.coach-card-body-block > .btn.btn-primary.w-100 {
+    margin-top: auto !important;
+}
+
+/* 教練課表 header */
+.selected-schedule-header {
+    background: #fff;
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+/* 圖片在大螢幕稍微高一點 */
+@media (min-width: 1200px) {
+    .coach-card-image-block {
+        height: 300px;
+        min-height: 300px;
+        max-height: 300px;
+        flex-basis: 300px;
+    }
+}
+
+/* ================================
+   Course Intro
+================================ */
+.course-intro-page,
+.course-intro-page p,
+.course-intro-page div,
+.course-intro-page span,
+.course-intro-page li {
+    color: #212529;
+}
+
+.course-intro-page .text-muted {
+    color: #6c757d !important;
+}
+
+.course-intro-page .course-detail-card,
+.course-intro-page .course-info-card,
+.course-intro-page .selected-course-panel,
+.course-intro-page .card,
+.course-intro-page .timeline-content {
+    color: #212529;
+}
+
+.course-intro-page .course-detail-title,
+.course-intro-page .course-section-title,
+.course-intro-page .info-label {
+    color: #6c757d;
+}
+
+.course-intro-page .info-value,
+.course-intro-page .course-detail-text,
+.course-intro-page .course-description,
+.course-intro-page .course-benefit-text {
+    color: #212529 !important;
+}
+
+.course-intro-page .alert-info {
+    color: #055160 !important;
+}
+
+.course-intro-page a {
+    color: #0d6efd;
+}
+
+.course-intro-grid {
+    align-items: stretch;
+}
+
+.course-intro-grid > div {
+    display: flex;
+}
+
+.course-intro-card {
+    width: 100%;
+    min-height: 280px;
+    background: #fff;
+    border-radius: 18px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.06);
+    border: 2px solid transparent;
+    display: flex;
+    flex-direction: column;
+    transition: .15s ease;
+}
+
+.course-intro-card:hover {
+    border-color: #0d6efd;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,.10);
+}
+
+.course-intro-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.course-intro-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    line-height: 1.35;
+    color: #212529;
+}
+
+.course-intro-coach {
+    color: #6c757d;
+    margin-bottom: 0;
+    font-size: 15px;
+}
+
+.course-intro-summary {
+    color: #495057;
+    line-height: 1.7;
+    margin-bottom: 18px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.course-intro-meta {
+    margin-bottom: 18px;
+}
+
+.course-intro-card .btn {
+    margin-top: auto;
+}
+
+/* ================================
+   Table
+================================ */
+.member-course-page .table {
+    --bs-table-hover-bg: #eef6ff;
+}
+
+.member-course-page .table thead th {
+    color: #334155;
+    background: #f8fafc;
+    border-bottom-color: #d7dde3;
+    font-weight: 800;
+}
+
+/* ================================
+   Responsive
+================================ */
+@media (max-width: 992px) {
+    .calendar-grid {
+        grid-template-columns: repeat(7, minmax(150px, 1fr));
+        overflow-x: auto;
+    }
+
+    .course-calendar-day {
+        min-height: 240px;
+    }
+
+    .coach-card-image-block {
+        height: 240px;
+        min-height: 240px;
+        max-height: 240px;
+        flex-basis: 240px;
+    }
+}
+
+@media (max-width: 768px) {
+    .timeline-item {
+        grid-template-columns: 1fr;
+    }
+
+    .timeline-date {
+        border-right: none;
+        border-bottom: 1px solid #dee2e6;
+        padding-right: 0;
+        padding-bottom: 12px;
+        max-width: none;
+    }
+
+    .timeline-action {
+        width: 100%;
+    }
+
+    .calendar-title {
+        width: 100%;
+        text-align: center;
+    }
+
+    .calendar-grid {
+        gap: 4px;
+        grid-template-columns: repeat(7, minmax(130px, 1fr));
+        overflow-x: auto;
+    }
+
+    .course-calendar-day {
+        min-height: 220px;
+    }
+
+    .selected-schedule-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .course-intro-card {
+        min-height: auto;
+    }
+
+    .course-intro-card-header {
+        flex-direction: column;
+    }
+
+    .coach-card-image-block {
+        height: 220px;
+        min-height: 220px;
+        max-height: 220px;
+        flex-basis: 220px;
+    }
+}
+/* =========================================================
+   教練列表：圖片滿版且不裁切修正版
+   ---------------------------------------------------------
+   目標：
+   1. 圖片寬度吃滿整張卡片
+   2. 圖片完整顯示，不裁切頭、文字、下方資訊
+   3. 不產生左右灰色留白
+   4. 不固定圖片高度，讓圖片依原比例自然顯示
+========================================================= */
+
+/* 教練卡片維持直向排版 */
+.member-course-page .coach-profile-card {
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+}
+
+/* 圖片區不要固定高度，讓圖片自然撐開 */
+.member-course-page .coach-card-image-block {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    flex: 0 0 auto !important;
+    overflow: visible !important;
+    background: transparent !important;
+}
+
+/* 圖片滿版寬度、完整顯示、不裁切 */
+.member-course-page .coach-profile-image {
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    object-fit: initial !important;
+    object-position: initial !important;
+    display: block !important;
+    background: transparent !important;
+}
+
+/* 內容直接接在圖片下面 */
+.member-course-page .coach-card-body-block {
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 22px !important;
+}
+
+/* 按鈕仍然推到底部，讓卡片整齊 */
+.member-course-page .coach-card-body-block > .btn.btn-primary.w-100 {
+    margin-top: auto !important;
+}
+/* =========================================================
+   團課介紹：修正 badge 藍底黑字問題
+   ---------------------------------------------------------
+   course-intro.html 的課程類型 / 教練小標籤改成底色深、文字白。
+========================================================= */
+
+.course-intro-page .badge.bg-primary,
+.course-intro-page .badge.bg-success,
+.course-intro-page button.badge.bg-success {
+    color: #ffffff !important;
+    font-weight: 700;
+}
+
+.course-intro-page .badge.bg-primary {
+    background-color: #0d6efd !important;
+}
+
+.course-intro-page .badge.bg-success,
+.course-intro-page button.badge.bg-success {
+    background-color: #198754 !important;
 }
