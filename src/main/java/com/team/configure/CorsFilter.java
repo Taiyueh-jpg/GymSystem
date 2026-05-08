@@ -13,11 +13,16 @@ public class CorsFilter {
     @Bean
     public org.springframework.web.filter.CorsFilter corsFilterBean() {
         CorsConfiguration config = new CorsConfiguration();
-
+        
+        /*
         config.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5500",
                 "http://127.0.0.1:5500"
         ));
+        */
+        
+        // 滷蛋新增：廢除寫死的 localhost，改用動態來源匹配，完美支援 Ngrok
+        config.addAllowedOriginPattern("*");
 
         config.setAllowedMethods(Arrays.asList(
                 "GET",

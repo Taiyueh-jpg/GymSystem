@@ -16,7 +16,9 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/articles")
-@CrossOrigin(origins = {"http://localhost:5500", "http://127.0.0.1:5500"}, allowCredentials = "true")
+//@CrossOrigin(origins = {"http://localhost:5500", "http://127.0.0.1:5500"}, allowCredentials = "true")
+//🚀 新的寫法：加入 ngrok 網址，或直接依賴 WebConfig 的全域設定 (拔掉此註解),(滷蛋增加綠界測試帳號)
+@CrossOrigin(origins = {"http://localhost:8080", "http://127.0.0.1:5500", "https://malka-unfeared-oronasally.ngrok-free.dev"}, allowCredentials = "true")
 public class ArticleController {
 
     @Autowired

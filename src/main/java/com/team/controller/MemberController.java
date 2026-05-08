@@ -11,8 +11,15 @@ import com.team.service.MemberService;
 /**
  * 🌐 會員控制層 (Member Controller) - 百萬顧問重構版 (Stateless REST API)
  */
-@RestController // ✅ 關鍵修正：必須是 RestController 才會回傳 JSON
-@RequestMapping("/api/members") // ✅ 統一使用複數路徑
+@RestController 
+@RequestMapping("/api/members") 
+// 🔥 終極殺手鐧：將 Ngrok 網址直接綁定，徹底解決 Invalid CORS request
+@CrossOrigin(origins = {
+    "http://localhost:8080",
+    "http://localhost:5500", 
+    "http://127.0.0.1:5500", 
+    "https://malka-unfeared-oronasally.ngrok-free.dev"
+}, allowCredentials = "true", allowedHeaders = "*")
 public class MemberController {
 
     @Autowired
@@ -20,7 +27,10 @@ public class MemberController {
 
     @PostMapping("/login")
     public ResponseEntity<?> handleLogin(@RequestBody Map<String, String> loginData) { 
-        // ✅ 關鍵修正：改用 @RequestBody 接收前端 AngularJS 傳來的 JSON
+        
+        // 加上這行監控指令
+        System.out.println("🚨 成功穿越攔截器！收到登入請求，信箱：" + loginData.get("email"));
+        
         String email = loginData.get("email");
         String password = loginData.get("password");
 

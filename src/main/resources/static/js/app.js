@@ -1,6 +1,14 @@
 // js/app.js
 var app = angular.module('GymApp', []);
 
+// ==========================================
+// 架構擴充：全域 API 請求設定
+// ==========================================
+app.config(function($httpProvider) {
+    // 強制繞過 Ngrok 免費版的警告畫面攔截
+    $httpProvider.defaults.headers.common['ngrok-skip-browser-warning'] = 'true';
+});
+
 app.controller('MainCtrl', function($scope, $window, $timeout) {
     
     // ==========================================
@@ -93,10 +101,11 @@ app.controller('AuthCtrl', function($scope, $http, $window) {
         $scope.loginType = type;
         $scope.loginData = {}; 
     };
-
+    
     $scope.doLogin = function() {
         var apiUrl = $scope.loginType === 'member' ? '/api/members/login' : '/api/admin/login';
 
+        /*
         $http.post(apiUrl, $scope.loginData)
             .then(function(response) {
                 // 登入成功，將資料存入 localStorage (前端 Session 管理)
@@ -108,7 +117,33 @@ app.controller('AuthCtrl', function($scope, $http, $window) {
             }, function(error) {
                 alert(error.data.message || '帳號或密碼錯誤');
             });
+        */
+
+        //滷蛋配合綠界測試,修改隊長的部分
+        $http.post(apiUrl, $scope.loginData)
+            .then(function(response) {
+                // 登入成功，將資料存入 localStorage (前端 Session 管理)
+                localStorage.setItem('gymUser', JSON.stringify(response.data));
+                alert('✅ 登入成功，歡迎回來！');
+                $window.location.href = '/index.html'; 
+            })
+            .catch(function(error) {
+                console.error("🚨 真實錯誤詳細資訊:", error);
+                
+                // 拔除會導致誤判的 fallback 寫法，改為精準攔截
+                if (error.status === 404) {
+                    alert("💥 架構錯誤 (404)：找不到後端 API！\n請確認您的 Ngrok 是否錯誤代理到了 VS Code 的 5500 Port，而不是 Eclipse 的 8080 Port！");
+                } else if (error.data && error.data.message) {
+                    alert("❌ 登入拒絕：" + error.data.message);
+                } else if (error.status === -1) {
+                    alert("⚠️ 網路連線遭拒：後端 Spring Boot 伺服器未啟動，或是 CORS 阻擋。");
+                } else {
+                    alert("⚠️ 未知錯誤 (HTTP " + error.status + ")，請按 F12 查看 Console。");
+                }
+            });
     };
+    
+
 });
 
 // (滷蛋範圍開始)
