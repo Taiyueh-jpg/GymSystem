@@ -1,9 +1,11 @@
-package com.team.model;
+package com.team.dao;
 
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.team.model.CourseReservation;
 
 public interface CourseReservationRepository extends JpaRepository<CourseReservation, Long> {
 
@@ -13,15 +15,25 @@ public interface CourseReservationRepository extends JpaRepository<CourseReserva
 
     Optional<CourseReservation> findByCourseIdAndMemberId(Long courseId, Long memberId);
 
+    Optional<CourseReservation> findByCourseIdAndMemberIdAndReservationStatus(
+            Long courseId,
+            Long memberId,
+            String reservationStatus
+    );
+
     boolean existsByCourseIdAndMemberId(Long courseId, Long memberId);
+
+    boolean existsByCourseIdAndMemberIdAndReservationStatus(
+            Long courseId,
+            Long memberId,
+            String reservationStatus
+    );
 
     List<CourseReservation> findByCourseIdAndReservationStatus(Long courseId, String reservationStatus);
 
     List<CourseReservation> findByMemberIdAndReservationStatus(Long memberId, String reservationStatus);
 
-    // 新增：依會員 + 狀態查詢
     List<CourseReservation> findByMemberIdAndReservationStatusOrderByReservationIdAsc(Long memberId, String reservationStatus);
 
-    // 新增：依課程 + 狀態查詢
     List<CourseReservation> findByCourseIdAndReservationStatusOrderByReservationIdAsc(Long courseId, String reservationStatus);
 }

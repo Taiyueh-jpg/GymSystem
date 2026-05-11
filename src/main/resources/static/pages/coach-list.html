@@ -9,10 +9,11 @@
 
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
     <script src="../js/app.js"></script>
+    <script src="../js/member-course-auth.js"></script>
     <script src="../js/coach-list.js"></script>
 </head>
 
-<body ng-controller="CoachListController">
+<body class="member-course-page ng-cloak" ng-controller="CoachListController">
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -20,12 +21,13 @@
 
         <div class="d-flex align-items-center gap-2 flex-wrap">
             <span class="navbar-text text-light small">
-                目前測試身分：會員 {{ memberId || 1 }}
+                目前身分：{{ authLabel }}
             </span>
 
             <a class="btn btn-outline-light btn-sm" href="./course-list.html">團體課總覽</a>
             <a class="btn btn-outline-light btn-sm" href="./course-intro.html">團課介紹</a>
-            <a class="btn btn-outline-light btn-sm" href="./reservation-list.html">我的預約</a>
+            <a class="btn btn-outline-light btn-sm" ng-if="roleType !== 'staff'" href="./reservation-list.html">我的預約</a>
+            <a class="btn btn-outline-info btn-sm" ng-if="roleType === 'staff'" href="./admin-reservation.html">代客預約</a>
             <a class="btn btn-warning btn-sm" href="./pt-package.html">購買私教方案</a>
             <a class="btn btn-outline-light btn-sm" href="../member-course-index.html">回首頁</a>
         </div>
@@ -35,45 +37,45 @@
 <div class="container py-4">
 
     <div class="mb-4">
-        <h2 class="fw-bold">教練列表</h2>
+        <h2 class="fw-bold">教練團隊</h2>
         <p class="text-muted mb-1">
-            查看啟用中的教練，並依教練查看團體課與私人教練可預約時段。
+            認識本館專業教練團隊，依訓練專長、課程風格與可預約時段選擇適合的教練。
         </p>
         <p class="text-muted mb-0">
-            從課程介紹或我的預約點教練進來時，會先定位到教練卡片；想看課表再按「查看此教練課表」。
+            正式會員可於教練課表中預約私人教練課或該教練負責的團體課。
         </p>
     </div>
 
     <div class="card shadow-sm mb-4">
         <div class="card-body">
-            <label class="form-label fw-bold">開發測試用會員 ID</label>
+            <div class="d-flex gap-2 align-items-center flex-wrap justify-content-between">
+                <div>
+                    <h5 class="fw-bold mb-1">預約服務</h5>
+                    <div class="text-muted small">
+                        教練介紹與課表開放瀏覽；課程預約與取消功能需登入正式會員後使用。
+                    </div>
+                </div>
 
-            <div class="d-flex gap-2 align-items-center flex-wrap">
-                <input type="number"
-                       class="form-control member-input"
-                       ng-model="memberId">
-
-                <button class="btn btn-outline-primary"
-                        ng-click="refreshPage()">
-                    查詢此會員預約狀態
-                </button>
-
-                <span class="badge bg-info text-dark fs-6" ng-if="!loadingPtSessions">
+                <span class="badge bg-info text-dark fs-6" ng-if="isActiveMember && !loadingPtSessions">
                     剩餘私教堂數：{{ remainingPtSessions }} 堂
                 </span>
 
-                <span class="badge bg-secondary fs-6" ng-if="loadingPtSessions">
+                <span class="badge bg-secondary fs-6" ng-if="isActiveMember && loadingPtSessions">
                     私教堂數查詢中...
+                </span>
+
+                <span class="badge bg-secondary fs-6" ng-if="!isActiveMember">
+                    瀏覽模式
                 </span>
             </div>
 
-            <div class="form-text">
-                正式登入後會由系統自動取得會員身分；目前僅供測試不同會員預約狀態。
-            </div>
-
-            <div class="alert alert-warning mt-3 mb-0" ng-if="remainingPtSessions <= 0 && !loadingPtSessions">
+            <div class="alert alert-warning mt-3 mb-0" ng-if="isActiveMember && remainingPtSessions <= 0 && !loadingPtSessions">
                 此會員目前沒有可用私教堂數。若要預約私人教練課，請先
                 <a href="./pt-package.html" class="alert-link">購買或加值私教方案</a>。
+            </div>
+
+            <div class="alert alert-info mt-3 mb-0" ng-if="!isActiveMember">
+                {{ permissionMessage }}
             </div>
         </div>
     </div>
@@ -93,7 +95,7 @@
 
     <!-- 教練卡片 -->
     <div class="mb-5" ng-if="!loadingCoaches">
-        <h4 class="fw-bold mb-3">啟用中教練</h4>
+        <h4 class="fw-bold mb-3">專業教練</h4>
 
         <div class="alert alert-warning" ng-if="coaches.length === 0">
             目前沒有啟用中的教練。
@@ -215,13 +217,17 @@
                 </button>
             </div>
 
-            <div class="alert alert-info" ng-if="selectedCourseType === 'personal'">
+            <div class="alert alert-info" ng-if="selectedCourseType === 'personal' && isActiveMember">
                 目前會員剩餘私教堂數：
                 <strong>{{ remainingPtSessions }}</strong> 堂。
                 <span ng-if="remainingPtSessions <= 0">
                     私教堂數不足，請先
                     <a href="./pt-package.html" class="alert-link">購買或加值私教方案</a>後再預約。
                 </span>
+            </div>
+
+            <div class="alert alert-info" ng-if="selectedCourseType === 'personal' && !isActiveMember">
+                私教課表可公開瀏覽；預約私人教練課需先登入正式會員並擁有可用私教堂數。
             </div>
 
             <div class="alert alert-info" ng-if="selectedCourseType === 'group'">
@@ -319,19 +325,19 @@
                                 <div class="calendar-course-status">
                                     <span ng-if="course.isReserved">已預約</span>
 
-                                    <span ng-if="!course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && isGroupCourse(course)">
+                                    <span ng-if="canReserveOnCoachPage(course)">
                                         可預約
                                     </span>
 
-                                    <span ng-if="!course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && isPersonalCourse(course) && remainingPtSessions > 0">
-                                        可預約
-                                    </span>
-
-                                    <span ng-if="!course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && isPersonalCourse(course) && remainingPtSessions <= 0">
+                                    <span ng-if="isActiveMember && !course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && isPersonalCourse(course) && remainingPtSessions <= 0">
                                         堂數不足
                                     </span>
 
-                                    <span ng-if="!course.isReserved && course.remainingSeats <= 0">已額滿</span>
+                                    <span ng-if="!isActiveMember && !course.isReserved && course.remainingSeats > 0 && !isPastCourse(course)">
+                                        僅供瀏覽
+                                    </span>
+
+                                    <span ng-if="!course.isReserved && course.remainingSeats <= 0 && !isPastCourse(course)">已額滿</span>
                                     <span ng-if="!course.isReserved && isPastCourse(course)">已過期</span>
                                 </div>
                             </div>
@@ -367,7 +373,7 @@
                                 已預約
                             </span>
 
-                            <span class="badge bg-danger" ng-if="!selectedCoachCourse.isReserved && selectedCoachCourse.remainingSeats <= 0">
+                            <span class="badge bg-danger" ng-if="!selectedCoachCourse.isReserved && selectedCoachCourse.remainingSeats <= 0 && !isPastCourse(selectedCoachCourse)">
                                 已額滿
                             </span>
 
@@ -376,18 +382,18 @@
                             </span>
 
                             <span class="badge bg-primary"
-                                  ng-if="!selectedCoachCourse.isReserved && selectedCoachCourse.remainingSeats > 0 && !isPastCourse(selectedCoachCourse) && isGroupCourse(selectedCoachCourse)">
-                                可預約
-                            </span>
-
-                            <span class="badge bg-primary"
-                                  ng-if="!selectedCoachCourse.isReserved && selectedCoachCourse.remainingSeats > 0 && !isPastCourse(selectedCoachCourse) && isPersonalCourse(selectedCoachCourse) && remainingPtSessions > 0">
+                                  ng-if="canReserveOnCoachPage(selectedCoachCourse)">
                                 可預約
                             </span>
 
                             <span class="badge bg-dark"
-                                  ng-if="!selectedCoachCourse.isReserved && selectedCoachCourse.remainingSeats > 0 && !isPastCourse(selectedCoachCourse) && isPersonalCourse(selectedCoachCourse) && remainingPtSessions <= 0">
+                                  ng-if="isActiveMember && !selectedCoachCourse.isReserved && selectedCoachCourse.remainingSeats > 0 && !isPastCourse(selectedCoachCourse) && isPersonalCourse(selectedCoachCourse) && remainingPtSessions <= 0">
                                 堂數不足
+                            </span>
+
+                            <span class="badge bg-secondary"
+                                  ng-if="!isActiveMember && !selectedCoachCourse.isReserved && selectedCoachCourse.remainingSeats > 0 && !isPastCourse(selectedCoachCourse)">
+                                僅供瀏覽
                             </span>
                         </div>
                     </div>
@@ -417,7 +423,7 @@
                             <span class="info-value">{{ selectedCoachCourse.reservationId }}</span>
                         </div>
 
-                        <div class="col-md-3 col-6 mb-2" ng-if="isPersonalCourse(selectedCoachCourse)">
+                        <div class="col-md-3 col-6 mb-2" ng-if="isActiveMember && isPersonalCourse(selectedCoachCourse)">
                             <span class="info-label">會員剩餘私教</span>
                             <span class="info-value" ng-class="remainingPtSessions > 0 ? 'text-success' : 'text-danger'">
                                 {{ remainingPtSessions }} 堂
@@ -426,7 +432,7 @@
                     </div>
 
                     <div class="alert alert-warning mt-3 mb-0"
-                         ng-if="isPersonalCourse(selectedCoachCourse) && !selectedCoachCourse.isReserved && selectedCoachCourse.remainingSeats > 0 && !isPastCourse(selectedCoachCourse) && remainingPtSessions <= 0">
+                         ng-if="isActiveMember && isPersonalCourse(selectedCoachCourse) && !selectedCoachCourse.isReserved && selectedCoachCourse.remainingSeats > 0 && !isPastCourse(selectedCoachCourse) && remainingPtSessions <= 0">
                         私教堂數不足，請先購買或加值私教方案後再預約。
                     </div>
 
@@ -453,7 +459,7 @@
                         </button>
 
                         <button class="btn btn-secondary"
-                                ng-if="!selectedCoachCourse.isReserved && selectedCoachCourse.remainingSeats <= 0"
+                                ng-if="!selectedCoachCourse.isReserved && selectedCoachCourse.remainingSeats <= 0 && !isPastCourse(selectedCoachCourse)"
                                 disabled>
                             已額滿
                         </button>
@@ -465,7 +471,7 @@
                         </button>
 
                         <button class="btn btn-secondary"
-                                ng-if="isPersonalCourse(selectedCoachCourse) && !selectedCoachCourse.isReserved && selectedCoachCourse.remainingSeats > 0 && !isPastCourse(selectedCoachCourse) && remainingPtSessions <= 0"
+                                ng-if="isActiveMember && isPersonalCourse(selectedCoachCourse) && !selectedCoachCourse.isReserved && selectedCoachCourse.remainingSeats > 0 && !isPastCourse(selectedCoachCourse) && remainingPtSessions <= 0"
                                 disabled>
                             堂數不足
                         </button>
@@ -515,19 +521,19 @@
                                             已預約
                                         </span>
 
-                                        <span class="badge bg-primary" ng-if="!course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && isGroupCourse(course)">
+                                        <span class="badge bg-primary" ng-if="canReserveOnCoachPage(course)">
                                             可預約
                                         </span>
 
-                                        <span class="badge bg-primary" ng-if="!course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && isPersonalCourse(course) && remainingPtSessions > 0">
-                                            可預約
-                                        </span>
-
-                                        <span class="badge bg-dark" ng-if="!course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && isPersonalCourse(course) && remainingPtSessions <= 0">
+                                        <span class="badge bg-dark" ng-if="isActiveMember && !course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && isPersonalCourse(course) && remainingPtSessions <= 0">
                                             堂數不足
                                         </span>
 
-                                        <span class="badge bg-danger" ng-if="!course.isReserved && course.remainingSeats <= 0">
+                                        <span class="badge bg-secondary" ng-if="!isActiveMember && !course.isReserved && course.remainingSeats > 0 && !isPastCourse(course)">
+                                            僅供瀏覽
+                                        </span>
+
+                                        <span class="badge bg-danger" ng-if="!course.isReserved && course.remainingSeats <= 0 && !isPastCourse(course)">
                                             已額滿
                                         </span>
 
@@ -560,7 +566,7 @@
                                         <span class="info-value">{{ course.reservationId }}</span>
                                     </div>
 
-                                    <div class="col-md-3 col-6 mb-2" ng-if="isPersonalCourse(course)">
+                                    <div class="col-md-3 col-6 mb-2" ng-if="isActiveMember && isPersonalCourse(course)">
                                         <span class="info-label">會員剩餘私教</span>
                                         <span class="info-value" ng-class="remainingPtSessions > 0 ? 'text-success' : 'text-danger'">
                                             {{ remainingPtSessions }} 堂
@@ -569,7 +575,7 @@
                                 </div>
 
                                 <div class="alert alert-warning mt-3 mb-0"
-                                     ng-if="isPersonalCourse(course) && !course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && remainingPtSessions <= 0">
+                                     ng-if="isActiveMember && isPersonalCourse(course) && !course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && remainingPtSessions <= 0">
                                     私教堂數不足，請先購買或加值私教方案後再預約。
                                 </div>
                             </div>
@@ -601,7 +607,7 @@
                                 </button>
 
                                 <button class="btn btn-secondary w-100"
-                                        ng-if="!course.isReserved && course.remainingSeats <= 0"
+                                        ng-if="!course.isReserved && course.remainingSeats <= 0 && !isPastCourse(course)"
                                         disabled>
                                     已額滿
                                 </button>
@@ -613,7 +619,7 @@
                                 </button>
 
                                 <button class="btn btn-secondary w-100"
-                                        ng-if="isPersonalCourse(course) && !course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && remainingPtSessions <= 0"
+                                        ng-if="isActiveMember && isPersonalCourse(course) && !course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && remainingPtSessions <= 0"
                                         disabled>
                                     堂數不足
                                 </button>
@@ -658,21 +664,21 @@
                                         已預約
                                     </span>
 
-                                    <span class="badge bg-primary" ng-if="!course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && isGroupCourse(course)">
-                                        可預約
-                                    </span>
+                                        <span class="badge bg-primary" ng-if="canReserveOnCoachPage(course)">
+                                            可預約
+                                        </span>
 
-                                    <span class="badge bg-primary" ng-if="!course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && isPersonalCourse(course) && remainingPtSessions > 0">
-                                        可預約
-                                    </span>
+                                        <span class="badge bg-dark" ng-if="isActiveMember && !course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && isPersonalCourse(course) && remainingPtSessions <= 0">
+                                            堂數不足
+                                        </span>
 
-                                    <span class="badge bg-dark" ng-if="!course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && isPersonalCourse(course) && remainingPtSessions <= 0">
-                                        堂數不足
-                                    </span>
+                                        <span class="badge bg-secondary" ng-if="!isActiveMember && !course.isReserved && course.remainingSeats > 0 && !isPastCourse(course)">
+                                            僅供瀏覽
+                                        </span>
 
-                                    <span class="badge bg-danger" ng-if="!course.isReserved && course.remainingSeats <= 0">
-                                        已額滿
-                                    </span>
+                                        <span class="badge bg-danger" ng-if="!course.isReserved && course.remainingSeats <= 0 && !isPastCourse(course)">
+                                            已額滿
+                                        </span>
 
                                     <span class="badge bg-secondary" ng-if="!course.isReserved && isPastCourse(course)">
                                         已過期
@@ -703,7 +709,7 @@
                                     <span class="info-value">{{ course.reservationId }}</span>
                                 </div>
 
-                                <div class="col-md-3 col-6 mb-2" ng-if="isPersonalCourse(course)">
+                                <div class="col-md-3 col-6 mb-2" ng-if="isActiveMember && isPersonalCourse(course)">
                                     <span class="info-label">會員剩餘私教</span>
                                     <span class="info-value" ng-class="remainingPtSessions > 0 ? 'text-success' : 'text-danger'">
                                         {{ remainingPtSessions }} 堂
@@ -712,7 +718,7 @@
                             </div>
 
                             <div class="alert alert-warning mt-3 mb-0"
-                                 ng-if="isPersonalCourse(course) && !course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && remainingPtSessions <= 0">
+                                 ng-if="isActiveMember && isPersonalCourse(course) && !course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && remainingPtSessions <= 0">
                                 私教堂數不足，請先購買或加值私教方案後再預約。
                             </div>
                         </div>
@@ -744,7 +750,7 @@
                             </button>
 
                             <button class="btn btn-secondary w-100"
-                                    ng-if="!course.isReserved && course.remainingSeats <= 0"
+                                    ng-if="!course.isReserved && course.remainingSeats <= 0 && !isPastCourse(course)"
                                     disabled>
                                 已額滿
                             </button>
@@ -756,7 +762,7 @@
                             </button>
 
                             <button class="btn btn-secondary w-100"
-                                    ng-if="isPersonalCourse(course) && !course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && remainingPtSessions <= 0"
+                                    ng-if="isActiveMember && isPersonalCourse(course) && !course.isReserved && course.remainingSeats > 0 && !isPastCourse(course) && remainingPtSessions <= 0"
                                     disabled>
                                 堂數不足
                             </button>

@@ -559,3 +559,292 @@ body {
 .course-intro-page a {
     color: #0d6efd;
 }
+
+/* ================================
+   Member Course Module 商業化視覺
+   只套用會員課程模組，不覆蓋全站登入、商城、後台等組員頁面。
+================================ */
+.member-course-page {
+    background: #f4f6f8;
+    color: #1d232a;
+}
+
+.member-course-page .navbar,
+.member-course-home .navbar {
+    background: rgba(21, 24, 27, 0.96) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.member-course-page .navbar-brand,
+.member-course-home .navbar-brand {
+    font-weight: 800;
+    letter-spacing: .02em;
+}
+
+.member-course-page .btn,
+.member-course-home .btn {
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+.member-course-page .card,
+.member-course-page .summary-box,
+.member-course-page .selected-course-panel,
+.member-course-page .timeline-item,
+.member-course-page .coach-card,
+.member-course-page .course-intro-card {
+    border-radius: 8px;
+    border: 1px solid #d7dde3;
+    box-shadow: 0 10px 26px rgba(17, 24, 39, .07);
+}
+
+.member-course-page .card {
+    background: #fff;
+}
+
+.member-course-page .form-control,
+.member-course-page .form-select {
+    border-radius: 8px;
+    border-color: #cfd6dd;
+}
+
+.member-course-page .form-label {
+    font-weight: 700;
+    color: #303842;
+}
+
+.member-course-hero {
+    background:
+        linear-gradient(90deg, rgba(18, 18, 18, .94), rgba(18, 18, 18, .76)),
+        url('https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat;
+    color: #fff;
+    padding: 56px 0 34px;
+    border-bottom: 1px solid rgba(255, 255, 255, .12);
+}
+
+.member-course-hero h1,
+.member-course-hero h2 {
+    font-size: clamp(34px, 4vw, 54px);
+    font-weight: 900;
+    letter-spacing: 0;
+}
+
+.member-course-hero p {
+    color: rgba(255, 255, 255, .78);
+    max-width: 760px;
+    line-height: 1.8;
+}
+
+.member-course-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    color: #111827;
+    background: #ffc107;
+    font-weight: 800;
+    font-size: 13px;
+    margin-bottom: 14px;
+}
+
+.member-course-shell {
+    margin-top: -18px;
+}
+
+.member-course-tool-card {
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid #d7dde3;
+    box-shadow: 0 10px 26px rgba(17, 24, 39, .08);
+}
+
+.member-course-step {
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+.member-course-status-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 8px;
+    padding: 7px 10px;
+    background: #eef2f6;
+    color: #202833;
+    font-weight: 800;
+    font-size: 13px;
+}
+
+.member-course-home {
+    min-height: 100vh;
+    background: #101214;
+    color: #fff;
+}
+
+.member-course-home-main {
+    background:
+        linear-gradient(90deg, rgba(12, 14, 16, .94), rgba(12, 14, 16, .72)),
+        url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat;
+    min-height: calc(100vh - 72px);
+    padding: 64px 0 44px;
+}
+
+.member-course-home-card {
+    background: rgba(255, 255, 255, .96);
+    color: #202833;
+    border: 1px solid rgba(255, 255, 255, .45);
+    border-radius: 8px;
+    height: 100%;
+    box-shadow: 0 16px 34px rgba(0, 0, 0, .28);
+}
+
+.member-course-home-card .card-text {
+    color: #5d6875;
+    line-height: 1.7;
+}
+
+.member-course-home-badge {
+    display: inline-flex;
+    margin-bottom: 12px;
+    padding: 5px 9px;
+    border-radius: 8px;
+    background: #eef2f6;
+    color: #4b5563;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.member-course-page .table {
+    --bs-table-hover-bg: #eef6ff;
+}
+
+.member-course-page .table thead th {
+    color: #334155;
+    background: #f8fafc;
+    border-bottom-color: #d7dde3;
+    font-weight: 800;
+}
+/* =========================================================
+   會員課程模組：修正 Bootstrap 按鈕文字反白 / 文字不可讀問題
+   ---------------------------------------------------------
+   適用頁面：
+   - course-intro.html
+   - course-list.html
+   - coach-list.html
+   - pt-package.html
+   - reservation-list.html
+
+   說明：
+   部分全域樣式可能覆蓋 Bootstrap btn 的 color，
+   導致 btn-primary / btn-warning 文字顏色與背景太接近。
+   這裡只針對按鈕文字可讀性補強，不改組員登入或其他功能。
+========================================================= */
+
+.btn.btn-primary,
+.btn.btn-primary:visited,
+.btn.btn-primary:hover,
+.btn.btn-primary:focus,
+.btn.btn-primary:active {
+    color: #ffffff !important;
+}
+
+.btn.btn-success,
+.btn.btn-success:visited,
+.btn.btn-success:hover,
+.btn.btn-success:focus,
+.btn.btn-success:active {
+    color: #ffffff !important;
+}
+
+.btn.btn-danger,
+.btn.btn-danger:visited,
+.btn.btn-danger:hover,
+.btn.btn-danger:focus,
+.btn.btn-danger:active {
+    color: #ffffff !important;
+}
+
+.btn.btn-secondary,
+.btn.btn-secondary:visited,
+.btn.btn-secondary:hover,
+.btn.btn-secondary:focus,
+.btn.btn-secondary:active {
+    color: #ffffff !important;
+}
+
+.btn.btn-warning,
+.btn.btn-warning:visited,
+.btn.btn-warning:hover,
+.btn.btn-warning:focus,
+.btn.btn-warning:active {
+    color: #212529 !important;
+}
+
+.btn.btn-outline-primary:hover,
+.btn.btn-outline-success:hover,
+.btn.btn-outline-danger:hover,
+.btn.btn-outline-secondary:hover {
+    color: #ffffff !important;
+}
+/* =========================================================
+   會員課程模組：Navbar 白底版本
+   ---------------------------------------------------------
+   修正原本深色 navbar 與按鈕文字可讀性問題。
+   不改 HTML、不影響後端，只調整前端樣式。
+========================================================= */
+
+/* navbar 主體改白底 */
+.navbar.navbar-dark.bg-dark {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #dee2e6;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* 左側品牌名稱 */
+.navbar.navbar-dark.bg-dark .navbar-brand {
+    color: #0d6efd !important;
+    font-weight: 800;
+}
+
+/* navbar 文字 */
+.navbar.navbar-dark.bg-dark .navbar-text {
+    color: #212529 !important;
+    font-weight: 600;
+}
+
+/* navbar 裡的 outline-light 按鈕，白底時改成藍框 */
+.navbar.navbar-dark.bg-dark .btn-outline-light {
+    color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    background-color: #ffffff !important;
+    font-weight: 600;
+}
+
+/* hover 後變藍底白字 */
+.navbar.navbar-dark.bg-dark .btn-outline-light:hover,
+.navbar.navbar-dark.bg-dark .btn-outline-light:focus,
+.navbar.navbar-dark.bg-dark .btn-outline-light:active {
+    color: #ffffff !important;
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+}
+
+/* navbar 裡黃色重點按鈕維持黃底深色字 */
+.navbar.navbar-dark.bg-dark .btn-warning {
+    color: #212529 !important;
+    background-color: #ffc107 !important;
+    border-color: #ffc107 !important;
+    font-weight: 700;
+}
+
+/* 黃色按鈕 hover */
+.navbar.navbar-dark.bg-dark .btn-warning:hover,
+.navbar.navbar-dark.bg-dark .btn-warning:focus,
+.navbar.navbar-dark.bg-dark .btn-warning:active {
+    color: #212529 !important;
+    background-color: #ffca2c !important;
+    border-color: #ffc720 !important;
+}

@@ -11,7 +11,7 @@ import com.team.service.PtOrderService;
 import com.team.service.ReservationService;
 
 @RestController
-@RequestMapping("/pt-orders")
+@RequestMapping({"/pt-orders", "/api/pt-orders"})
 @CrossOrigin
 public class PtOrderController {
 
@@ -21,6 +21,7 @@ public class PtOrderController {
     @Autowired
     private PtOrderService ptOrderService;
 
+    // 查會員剩餘私教堂數
     @GetMapping("/member/{memberId}/remaining-sessions")
     public ResponseEntity<?> getMemberRemainingSessions(@PathVariable Long memberId) {
         Map<String, Object> result = reservationService.getMemberRemainingPtSessions(memberId);
@@ -32,6 +33,23 @@ public class PtOrderController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
+    // 查會員私教購買紀錄
+    @GetMapping("/member/{memberId}")
+    public ResponseEntity<?> getMemberPtOrders(@PathVariable Long memberId) {
+        if (memberId == null) {
+            return new ResponseEntity<>("memberId 不可為空", HttpStatus.BAD_REQUEST);
+        }
+
+        Object result = ptOrderService.findOrdersByMemberId(memberId);
+
+        if (result instanceof String) {
+            return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
+        }
+
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    // 購買私教方案
     @PostMapping("/purchase")
     public ResponseEntity<?> purchasePackage(@RequestBody Map<String, Object> request) {
         if (request == null) {

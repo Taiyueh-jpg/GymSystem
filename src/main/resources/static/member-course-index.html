@@ -1,83 +1,153 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" ng-app="GymApp">
 <head>
     <meta charset="UTF-8">
-    <title>健身房管理系統</title>
+    <title>會員課程中心｜健身房管理系統</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="./css/style.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="./js/app.js"></script>
+    <script src="./js/member-course-auth.js"></script>
+    <script>
+        app.controller("MemberCourseIndexController", function($scope) {
+            var Auth = window.MemberCourseAuth;
+            $scope.authLabel = Auth ? Auth.getAuthLabel() : "訪客 / 未登入";
+            $scope.isStaff = Auth ? Auth.isStaff() : false;
+        });
+    </script>
 </head>
 
-<body>
+<body class="member-course-home ng-cloak" ng-controller="MemberCourseIndexController">
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container">
+    <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
         <a class="navbar-brand" href="./index.html">健身房管理系統</a>
+
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="navbar-text text-light small">目前身分：{{ authLabel }}</span>
+            <a class="btn btn-outline-light btn-sm" href="./pages/course-list.html">團體課總覽</a>
+            <a class="btn btn-outline-light btn-sm" href="./pages/course-intro.html">課程介紹</a>
+            <a class="btn btn-outline-light btn-sm" href="./pages/coach-list.html">教練列表</a>
+            <a class="btn btn-outline-light btn-sm" ng-if="!isStaff" href="./pages/reservation-list.html">我的預約</a>
+            <a class="btn btn-outline-info btn-sm" ng-if="isStaff" href="./pages/admin-reservation.html">代客預約</a>
+            <a class="btn btn-warning btn-sm" ng-if="!isStaff" href="./pages/pt-package.html">購買私教方案</a>
+            <a class="btn btn-outline-light btn-sm" href="./index.html">回首頁</a>
+        </div>
     </div>
 </nav>
 
-<div class="container py-5">
+<main class="member-course-home-main">
+    <div class="container">
+        <div class="row align-items-end g-4 mb-5">
+            <div class="col-lg-8">
+                <div class="member-course-kicker">COURSE OPERATIONS</div>
+                <h1 class="display-4 fw-bold mb-3">會員課程與私教預約中心</h1>
+                <p class="lead mb-0">
+                    會員端專注自主預約與私教方案；教練 / 管理者端聚焦代客預約、取消與課程營運協助。
+                </p>
+            </div>
+            <div class="col-lg-4" ng-if="!isStaff">
+                <div class="p-4 member-course-home-card">
+                    <div class="member-course-home-badge">DEMO 主流程</div>
+                    <h5 class="fw-bold mb-2">正式會員完整流程</h5>
+                    <p class="mb-0">
+                        瀏覽課程、預約團課、購買私教方案、預約私教、取消後回補堂數，並能查看個人預約紀錄。
+                    </p>
+                </div>
+            </div>
+            <div class="col-lg-4" ng-if="isStaff">
+                <div class="p-4 member-course-home-card">
+                    <div class="member-course-home-badge">STAFF 主流程</div>
+                    <h5 class="fw-bold mb-2">代客預約與課程協助</h5>
+                    <p class="mb-0">
+                        搜尋會員與課程，協助完成預約或取消，並由系統檢查會籍、名額、私教堂數與時段衝突。
+                    </p>
+                </div>
+            </div>
+        </div>
 
-    <div class="text-center mb-5">
-        <h1 class="fw-bold">健身房管理系統</h1>
-        <p class="text-muted">課程 / 教練 / 預約 / 私教方案模組展示首頁</p>
+        <div class="row g-3">
+            <div class="col-md-6 col-xl-4">
+                <div class="card member-course-home-card">
+                    <div class="card-body d-flex flex-column">
+                        <span class="member-course-home-badge">會員 / 訪客</span>
+                        <h4 class="fw-bold">團體課總覽</h4>
+                        <p class="card-text flex-grow-1">
+                            以行事曆或列表查看開放中的團體課。正式會員可直接預約、取消，其他身分僅能瀏覽。
+                        </p>
+                        <a href="./pages/course-list.html" class="btn btn-primary w-100">查看團體課</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-4">
+                <div class="card member-course-home-card">
+                    <div class="card-body d-flex flex-column">
+                        <span class="member-course-home-badge">公開資訊</span>
+                        <h4 class="fw-bold">課程介紹</h4>
+                        <p class="card-text flex-grow-1">
+                            快速瀏覽課程內容、訓練目的、適合族群與教練資訊，支援會員在預約前理解課程差異。
+                        </p>
+                        <a href="./pages/course-intro.html" class="btn btn-primary w-100">查看課程介紹</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-4">
+                <div class="card member-course-home-card">
+                    <div class="card-body d-flex flex-column">
+                        <span class="member-course-home-badge">會員 / 訪客</span>
+                        <h4 class="fw-bold">教練列表</h4>
+                        <p class="card-text flex-grow-1">
+                            查看教練專長、簡介與可預約時段。正式會員可依剩餘堂數預約私教課。
+                        </p>
+                        <a href="./pages/coach-list.html" class="btn btn-primary w-100">查看教練</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-4" ng-if="!isStaff">
+                <div class="card member-course-home-card">
+                    <div class="card-body d-flex flex-column">
+                        <span class="member-course-home-badge">正式會員</span>
+                        <h4 class="fw-bold">我的預約</h4>
+                        <p class="card-text flex-grow-1">
+                            查看自己的團課與私教預約，包含即將開始、歷史紀錄與取消狀態。
+                        </p>
+                        <a href="./pages/reservation-list.html" class="btn btn-primary w-100">進入預約中心</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-4" ng-if="isStaff">
+                <div class="card member-course-home-card">
+                    <div class="card-body d-flex flex-column">
+                        <span class="member-course-home-badge">教練 / 管理者</span>
+                        <h4 class="fw-bold">代客預約管理</h4>
+                        <p class="card-text flex-grow-1">
+                            員工可搜尋會員、指定日期與課程，協助完成預約或取消，並檢查會籍、名額、堂數與時段衝突。
+                        </p>
+                        <a href="./pages/admin-reservation.html" class="btn btn-info w-100">進入代客預約</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-xl-4" ng-if="!isStaff">
+                <div class="card member-course-home-card">
+                    <div class="card-body d-flex flex-column">
+                        <span class="member-course-home-badge">正式會員</span>
+                        <h4 class="fw-bold">購買私教方案</h4>
+                        <p class="card-text flex-grow-1">
+                            正式會員可購買私教堂數，系統會依購買、預約、取消與完成狀態計算剩餘堂數。
+                        </p>
+                        <a href="./pages/pt-package.html" class="btn btn-warning w-100">購買私教方案</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div class="row justify-content-center">
-
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body text-center d-flex flex-column">
-                    <h4 class="card-title">團體課程總覽</h4>
-                    <p class="card-text text-muted flex-grow-1">查看公開團體課表，依時間排序，並測試預約 / 取消功能。</p>
-                    <a href="./pages/course-list.html" class="btn btn-primary w-100">進入團體課總覽</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body text-center d-flex flex-column">
-                    <h4 class="card-title">團體課介紹</h4>
-                    <p class="card-text text-muted flex-grow-1">查看每一堂團體課的內容、教練設計理念與適合族群。</p>
-                    <a href="./pages/course-intro.html" class="btn btn-primary w-100">進入團體課介紹</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body text-center d-flex flex-column">
-                    <h4 class="card-title">教練列表</h4>
-                    <p class="card-text text-muted flex-grow-1">查看啟用中的教練，並依教練查看團體課與私人教練可預約時段。</p>
-                    <a href="./pages/coach-list.html" class="btn btn-primary w-100">進入教練列表</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body text-center d-flex flex-column">
-                    <h4 class="card-title">我的預約</h4>
-                    <p class="card-text text-muted flex-grow-1">使用行事曆、時間列表與歷史紀錄查看預約狀態，並可取消或重新預約。</p>
-                    <a href="./pages/reservation-list.html" class="btn btn-primary w-100">進入我的預約</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body text-center d-flex flex-column">
-                    <h4 class="card-title">購買私教方案</h4>
-                    <p class="card-text text-muted flex-grow-1">查看可購買的私教方案，購買後增加會員私教剩餘堂數。</p>
-                    <a href="./pages/pt-package.html" class="btn btn-warning w-100">進入購買私教方案</a>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-</div>
+</main>
 
 </body>
 </html>

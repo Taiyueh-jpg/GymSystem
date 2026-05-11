@@ -6,8 +6,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.team.dao.CourseRepository;
 import com.team.model.Course;
-import com.team.model.CourseRepository;
 
 @Service
 public class CourseService {

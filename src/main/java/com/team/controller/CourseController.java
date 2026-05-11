@@ -14,14 +14,18 @@ import org.springframework.web.bind.annotation.*;
 
 import com.team.model.Course;
 import com.team.service.CourseService;
+import com.team.service.ReservationService;
 
 @RestController
-@RequestMapping("/courses")
+@RequestMapping({"/courses", "/api/courses"})
 @CrossOrigin
 public class CourseController {
 
     @Autowired
     private CourseService courseService;
+
+    @Autowired
+    private ReservationService reservationService;
 
     // 查全部課程
     @GetMapping
@@ -135,6 +139,57 @@ public class CourseController {
         return new ResponseEntity<>("修改課程成功", HttpStatus.OK);
     }
 
+    // 後台課程管理：集中處理停課、代課教練與備註，避免前端分多支 API 造成狀態不同步。
+    @PutMapping("/{courseId}/admin-manage")
+    public ResponseEntity<?> manageCourseFromAdmin(@PathVariable Long courseId,
+                                                   @RequestBody Map<String, Object> request) {
+        Course existingCourse = courseService.findCourseById(courseId);
+        if (existingCourse == null) {
+            return new ResponseEntity<>("找不到要修改的課程", HttpStatus.NOT_FOUND);
+        }
+
+        Integer newStatus = parseInteger(request.get("status"), existingCourse.getStatus());
+        Long newCoachId = parseLong(request.get("coachId"), existingCourse.getCoachId());
+        String newDescription = request.get("description") != null
+                ? request.get("description").toString()
+                : existingCourse.getDescription();
+
+        Map<String, Object> cancelResult = new LinkedHashMap<>();
+
+        if (newStatus != null && newStatus == 0) {
+            cancelResult = reservationService.cancelActiveReservationsForCourseByAdmin(courseId);
+
+            if (!Boolean.TRUE.equals(cancelResult.get("success"))) {
+                return new ResponseEntity<>(cancelResult, HttpStatus.BAD_REQUEST);
+            }
+
+            // 停課後會員端不應再看到有效名額，後端取消流程會負責私教退堂數。
+            existingCourse.setEnrolledCount(0);
+        }
+
+        existingCourse.setStatus(newStatus);
+        existingCourse.setCoachId(newCoachId);
+        existingCourse.setDescription(newDescription);
+        existingCourse.setUpdatedAt(new Date());
+
+        String validateMessage = validateCourse(existingCourse);
+        if (validateMessage != null) {
+            return new ResponseEntity<>(validateMessage, HttpStatus.BAD_REQUEST);
+        }
+
+        courseService.updateCourse(existingCourse);
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("success", true);
+        result.put("message", "後台課程管理更新成功");
+        result.put("courseId", courseId);
+        result.put("status", existingCourse.getStatus());
+        result.put("coachId", existingCourse.getCoachId());
+        result.put("cancelResult", cancelResult);
+
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
     // 驗證課程資料
     private String validateCourse(Course course) {
         if (course.getCourseType() == null ||
@@ -160,6 +215,22 @@ public class CourseController {
         }
 
         return null;
+    }
+
+    private Integer parseInteger(Object value, Integer defaultValue) {
+        if (value == null || value.toString().trim().isEmpty()) {
+            return defaultValue;
+        }
+
+        return Integer.valueOf(value.toString());
+    }
+
+    private Long parseLong(Object value, Long defaultValue) {
+        if (value == null || value.toString().trim().isEmpty()) {
+            return defaultValue;
+        }
+
+        return Long.valueOf(value.toString());
     }
 
     // 把 Course entity 轉成精簡格式

@@ -1,10 +1,16 @@
 app.controller("CoachListController", function($scope, $http, $q, $timeout) {
 
     var API_BASE_URL = "http://localhost:8080";
+    var Auth = window.MemberCourseAuth;
 
     $scope.apiBaseUrl = API_BASE_URL;
 
-    $scope.memberId = 1;
+    $scope.currentUser = null;
+    $scope.memberId = null;
+    $scope.authLabel = "訪客";
+    $scope.roleType = "guest";
+    $scope.isActiveMember = false;
+    $scope.permissionMessage = "";
 
     $scope.coaches = [];
     $scope.selectedCoach = null;
@@ -48,6 +54,25 @@ app.controller("CoachListController", function($scope, $http, $q, $timeout) {
 
     $scope.autoSelectCoachId = $scope.getQueryParam("coachId");
     $scope.autoTarget = $scope.getQueryParam("target") || "card";
+
+    $scope.syncAuthState = function() {
+        $scope.currentUser = Auth ? Auth.getCurrentUser() : null;
+        $scope.roleType = Auth ? Auth.getRoleType() : "guest";
+        $scope.isActiveMember = Auth ? Auth.isActiveMember() : false;
+        $scope.memberId = $scope.isActiveMember && $scope.currentUser ? $scope.currentUser.memberId : null;
+        $scope.permissionMessage = Auth ?
+            Auth.getPermissionMessage("預約或取消課程") :
+            "請先登入正式會員，才能預約或取消課程。";
+
+        $scope.authLabel = Auth ? Auth.getAuthLabel() : "訪客 / 未登入";
+
+        if (!$scope.isActiveMember) {
+            $scope.remainingPtSessions = 0;
+            $scope.reservationMap = {};
+        }
+    };
+
+    $scope.syncAuthState();
 
     $scope.coachProfileMap = {
         1: {
@@ -257,6 +282,10 @@ app.controller("CoachListController", function($scope, $http, $q, $timeout) {
     };
 
     $scope.canReserveOnCoachPage = function(course) {
+        if (!$scope.isActiveMember || !$scope.memberId) {
+            return false;
+        }
+
         if (!course || course.isReserved || course.remainingSeats <= 0 || $scope.isPastCourse(course)) {
             return false;
         }
@@ -273,7 +302,9 @@ app.controller("CoachListController", function($scope, $http, $q, $timeout) {
     };
 
     $scope.canCancelOnCoachPage = function(course) {
-        return course &&
+        return $scope.isActiveMember &&
+               $scope.memberId &&
+               course &&
                course.isReserved &&
                course.reservationId &&
                !$scope.isPastCourse(course) &&
@@ -302,8 +333,11 @@ app.controller("CoachListController", function($scope, $http, $q, $timeout) {
     };
 
     $scope.loadRemainingPtSessions = function() {
-        if (!$scope.memberId) {
+        $scope.syncAuthState();
+
+        if (!$scope.isActiveMember || !$scope.memberId) {
             $scope.remainingPtSessions = 0;
+            $scope.loadingPtSessions = false;
             return $q.when(0);
         }
 
@@ -329,6 +363,7 @@ app.controller("CoachListController", function($scope, $http, $q, $timeout) {
     $scope.refreshPage = function() {
         $scope.message = "";
         $scope.errorMessage = "";
+        $scope.syncAuthState();
 
         $scope.loadRemainingPtSessions().finally(function() {
             if ($scope.selectedCoach) {
@@ -494,14 +529,22 @@ app.controller("CoachListController", function($scope, $http, $q, $timeout) {
 
         var personalUrl = API_BASE_URL + "/coaches/" + $scope.selectedCoachId + "/courses/open/type/personal";
         var groupUrl = API_BASE_URL + "/coaches/" + $scope.selectedCoachId + "/courses/open/type/group";
-        var activeUrl = API_BASE_URL + "/reservations/member/" + $scope.memberId + "/active";
-        var ptSessionsUrl = API_BASE_URL + "/pt-orders/member/" + $scope.memberId + "/remaining-sessions";
+
+        $scope.syncAuthState();
+
+        var activeRequest = $scope.isActiveMember && $scope.memberId ?
+            $http.get(API_BASE_URL + "/reservations/member/" + $scope.memberId + "/active") :
+            $q.when({ data: [] });
+
+        var ptSessionsRequest = $scope.isActiveMember && $scope.memberId ?
+            $http.get(API_BASE_URL + "/pt-orders/member/" + $scope.memberId + "/remaining-sessions") :
+            $q.when({ data: { remainingSessions: 0 } });
 
         return $q.all({
             personal: $http.get(personalUrl),
             group: $http.get(groupUrl),
-            active: $http.get(activeUrl),
-            ptSessions: $http.get(ptSessionsUrl)
+            active: activeRequest,
+            ptSessions: ptSessionsRequest
         })
         .then(function(result) {
             $scope.personalCourses = result.personal.data || [];
@@ -722,6 +765,12 @@ app.controller("CoachListController", function($scope, $http, $q, $timeout) {
     $scope.reserveCoachCourse = function(course) {
         $scope.message = "";
         $scope.errorMessage = "";
+        $scope.syncAuthState();
+
+        if (!$scope.isActiveMember || !$scope.memberId) {
+            $scope.errorMessage = $scope.permissionMessage;
+            return;
+        }
 
         if (!course) {
             $scope.errorMessage = "找不到課程資料，無法預約。";
@@ -791,6 +840,12 @@ app.controller("CoachListController", function($scope, $http, $q, $timeout) {
     $scope.cancelReservation = function(course) {
         $scope.message = "";
         $scope.errorMessage = "";
+        $scope.syncAuthState();
+
+        if (!$scope.isActiveMember || !$scope.memberId) {
+            $scope.errorMessage = $scope.permissionMessage;
+            return;
+        }
 
         if (!course) {
             $scope.errorMessage = "找不到課程資料，無法取消。";

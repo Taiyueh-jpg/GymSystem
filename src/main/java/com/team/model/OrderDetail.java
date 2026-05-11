@@ -1,9 +1,10 @@
 package com.team.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 
-@Entity
+@Entity	
 @Table(name = "orderdetail") // 對應 SQL 裡的 orderdetail 表
 public class OrderDetail {
 
@@ -12,6 +13,7 @@ public class OrderDetail {
     @Column(name = "detail_id")
     private Long detailId; // 明細編號 (PK)
 
+    // 🌟 第一個映射 (主要)：負責實際寫入、更新資料庫的欄位
     @Column(name = "order_id", nullable = false)
     private Long orderId; // 屬於哪張訂單？(FK)
 
@@ -23,6 +25,14 @@ public class OrderDetail {
 
     @Column(name = "unit_price", nullable = false, precision = 38, scale = 2)
     private BigDecimal unitPrice; // 購買當下的單價 (配合資料庫 DECIMAL 格式)
+    
+    // 🚀 企業級防禦：
+    // 1. @JsonIgnore：斬斷 "訂單找明細，明細又找回訂單" 的 JSON 轉換無窮迴圈
+    // 2. insertable=false, updatable=false：告訴 JPA 此關聯僅供查詢，避免與上方的 Long orderId 衝突
+    @ManyToOne(fetch = FetchType.LAZY) // 優化效能：設定為延遲載入
+    @JoinColumn(name = "order_id", insertable = false, updatable = false)
+    @JsonIgnore 
+    private Porder porder;
 
     // =====================================
     // Getters and Setters
@@ -41,4 +51,8 @@ public class OrderDetail {
 
     public BigDecimal getUnitPrice() { return unitPrice; }
     public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice; }
+    
+    // 記得補上 Porder 的 Getter 與 Setter
+    public Porder getPorder() { return porder; }
+    public void setPorder(Porder porder) { this.porder = porder; }
 }

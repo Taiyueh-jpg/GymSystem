@@ -1,8 +1,15 @@
 app.controller("ReservationListController", function($scope, $http, $q, $timeout) {
 
     var API_BASE_URL = "http://localhost:8080";
+    var Auth = window.MemberCourseAuth;
+
     $scope.apiBaseUrl = API_BASE_URL;
-    $scope.memberId = 1;
+    $scope.currentUser = null;
+    $scope.memberId = null;
+    $scope.authLabel = "訪客";
+    $scope.roleType = "guest";
+    $scope.isActiveMember = false;
+    $scope.permissionMessage = "";
 
     $scope.loading = false;
     $scope.processing = false;
@@ -53,6 +60,47 @@ app.controller("ReservationListController", function($scope, $http, $q, $timeout
         7: "Lucas 趙",
         8: "Ava 吳"
     };
+
+    $scope.syncAuthState = function() {
+        $scope.currentUser = Auth ? Auth.getCurrentUser() : null;
+        $scope.roleType = Auth ? Auth.getRoleType() : "guest";
+        $scope.isActiveMember = Auth ? Auth.isActiveMember() : false;
+        $scope.memberId = $scope.isActiveMember && $scope.currentUser ? $scope.currentUser.memberId : null;
+        $scope.permissionMessage = Auth ?
+            Auth.getPermissionMessage("查看預約中心") :
+            "請先登入正式會員，才能查看自己的預約紀錄。";
+
+        $scope.authLabel = Auth ? Auth.getAuthLabel() : "訪客 / 未登入";
+
+        if ($scope.roleType === "inactiveMember") {
+            $scope.permissionMessage = "尚未開通會籍，不能使用預約中心。你仍可瀏覽課表、課程介紹與教練介紹。";
+        } else if ($scope.roleType === "staff") {
+            $scope.permissionMessage = "此頁為會員預約中心；後台查看或代約功能會另做管理端頁面。";
+        } else if ($scope.roleType === "guest") {
+            $scope.permissionMessage = "請先登入正式會員，才能查看自己的預約紀錄。";
+        }
+    };
+
+    $scope.resetReservationData = function() {
+        $scope.remainingPtSessions = 0;
+        $scope.reservationViews = [];
+        $scope.activeReservations = [];
+        $scope.historyReservations = [];
+        $scope.selectedReservation = null;
+        $scope.selectedDateKey = null;
+        $scope.selectedDateItems = [];
+        $scope.calendarDays = [];
+        $scope.summary = {
+            total: 0,
+            reserved: 0,
+            cancelled: 0,
+            completed: 0,
+            noShow: 0,
+            rebookable: 0
+        };
+    };
+
+    $scope.syncAuthState();
 
     $scope.getCoachName = function(id) {
         return $scope.coachNameMap[id] || ("教練 ID " + id);
@@ -243,6 +291,7 @@ app.controller("ReservationListController", function($scope, $http, $q, $timeout
 
     $scope.checkCanCancel = function(item) {
         return !!(
+            $scope.isActiveMember &&
             item &&
             item.status === "reserved" &&
             $scope.isFutureCourse(item)
@@ -250,6 +299,10 @@ app.controller("ReservationListController", function($scope, $http, $q, $timeout
     };
 
     $scope.checkCanRebook = function(item) {
+        if (!$scope.isActiveMember) {
+            return false;
+        }
+
         if (!item ||
             item.status !== "cancelled" ||
             item.courseStatus !== 1 ||
@@ -267,8 +320,11 @@ app.controller("ReservationListController", function($scope, $http, $q, $timeout
     };
 
     $scope.loadRemainingPtSessions = function() {
-        if (!$scope.memberId) {
+        $scope.syncAuthState();
+
+        if (!$scope.isActiveMember || !$scope.memberId) {
             $scope.remainingPtSessions = 0;
+            $scope.loadingPtSessions = false;
             return $q.when(0);
         }
 
@@ -310,11 +366,21 @@ app.controller("ReservationListController", function($scope, $http, $q, $timeout
     };
 
     $scope.refreshReservations = function() {
+        $scope.syncAuthState();
         $scope.loadReservations(false);
     };
 
     $scope.loadReservations = function(keepSelection, options) {
         options = options || {};
+        $scope.syncAuthState();
+
+        if (!$scope.isActiveMember || !$scope.memberId) {
+            $scope.loading = false;
+            $scope.processing = false;
+            $scope.clearMessages();
+            $scope.resetReservationData();
+            return $q.when([]);
+        }
 
         $scope.loading = true;
 
@@ -738,6 +804,12 @@ app.controller("ReservationListController", function($scope, $http, $q, $timeout
     $scope.cancelReservation = function(item) {
         $scope.errorMessage = "";
         $scope.message = "";
+        $scope.syncAuthState();
+
+        if (!$scope.isActiveMember || !$scope.memberId) {
+            $scope.errorMessage = $scope.permissionMessage;
+            return;
+        }
 
         if (!item || !item.reservationId) {
             $scope.errorMessage = "找不到預約編號，無法取消。";
@@ -789,6 +861,12 @@ app.controller("ReservationListController", function($scope, $http, $q, $timeout
     $scope.rebookReservation = function(item) {
         $scope.errorMessage = "";
         $scope.message = "";
+        $scope.syncAuthState();
+
+        if (!$scope.isActiveMember || !$scope.memberId) {
+            $scope.errorMessage = $scope.permissionMessage;
+            return;
+        }
 
         if (!item) {
             $scope.errorMessage = "找不到預約資料，無法重新預約。";
@@ -845,5 +923,9 @@ app.controller("ReservationListController", function($scope, $http, $q, $timeout
         });
     };
 
-    $scope.loadReservations(false);
+    if ($scope.isActiveMember) {
+        $scope.loadReservations(false);
+    } else {
+        $scope.resetReservationData();
+    }
 });

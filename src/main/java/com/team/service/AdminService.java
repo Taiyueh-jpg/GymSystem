@@ -3,12 +3,14 @@ package com.team.service;
 import com.team.dao.AdminRepository;
 import com.team.model.Admin;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-//封裝了後台管理員工的核心邏輯
+// 封裝了後台管理員工的核心邏輯
 @Service
 public class AdminService {
 
@@ -55,5 +57,17 @@ public class AdminService {
             a.setStatus(newStatus);
             adminRepo.save(a);
         });
+    }
+
+    /**
+     * 🚀 新增：搜尋員工/教練清單 (支援分頁與模糊搜尋)
+     * 白話文：判斷前端有沒有傳關鍵字過來。如果有，就去資料庫做模糊搜尋；如果沒有，就撈出整張表的資料並進行分頁。
+     */
+    public Page<Admin> searchStaff(String keyword, Pageable pageable) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return adminRepo.findAll(pageable); // 空字串就回傳全部員工
+        }
+        // 呼叫我們剛剛在 AdminRepository 新增的方法
+        return adminRepo.findByNameContainingOrEmailContaining(keyword, keyword, pageable);
     }
 }

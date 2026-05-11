@@ -3,8 +3,54 @@ app.controller("CourseListController", function($scope, $http, $q, $timeout) {
     var API_BASE_URL = "http://localhost:8080";
     $scope.apiBaseUrl = API_BASE_URL;
 
-    // 開發測試用會員 ID，正式登入後應改由登入狀態取得
-    $scope.memberId = 1;
+    /**
+     * 會員課程模組權限狀態
+     * ------------------------------------------------------------
+     * 協作專案注意：
+     * 1. 不修改組員的 js/app.js。
+     * 2. 不修改組員的登入流程。
+     * 3. 只讀取組員登入後已存入 localStorage 的 gymUser。
+     *
+     * 本頁規則：
+     * - 正式會員 / 有會籍 / status = 1：可以預約與取消團課
+     * - 無會籍會員 / 訪客 / 管理者或教練：只能瀏覽課表，不能預約或取消
+     *
+     * 管理者 / 教練代學生預約團課與私教，是未來後台或教練端代約功能。
+     * 目前不混入會員端 course-list，避免身份與操作紀錄混亂。
+     */
+    $scope.currentUser = window.MemberCourseAuth ? window.MemberCourseAuth.getCurrentUser() : null;
+    $scope.authRoleType = window.MemberCourseAuth ? window.MemberCourseAuth.getRoleType() : "unknown";
+    $scope.isStaff = window.MemberCourseAuth ? window.MemberCourseAuth.isStaff() : false;
+    $scope.permissionMessage = window.MemberCourseAuth
+        ? window.MemberCourseAuth.getPermissionMessage("預約團體課")
+        : "目前無法確認登入狀態，請重新整理頁面。";
+
+    /**
+     * 只有正式會員才帶入 memberId。
+     * ------------------------------------------------------------
+     * 原本開發測試階段固定 memberId = 1。
+     * 現在接上角色分流後，不能讓訪客、無會籍會員、管理者或教練看到會員 1 的預約狀態。
+     */
+    $scope.memberId = (
+        window.MemberCourseAuth &&
+        window.MemberCourseAuth.isActiveMember() &&
+        $scope.currentUser &&
+        $scope.currentUser.memberId
+    ) ? $scope.currentUser.memberId : null;
+
+    $scope.authLabel = window.MemberCourseAuth ? window.MemberCourseAuth.getAuthLabel() : "訪客 / 未登入";
+
+    if (window.MemberCourseAuth) {
+        $scope.authLabel = window.MemberCourseAuth.getAuthLabel();
+    }
+
+    /**
+     * 給 HTML 使用。
+     * 目前只有正式會員 / 有會籍 / status = 1 可以使用會員端團課預約功能。
+     */
+    $scope.canUseGroupReservationFeature = function() {
+        return window.MemberCourseAuth && window.MemberCourseAuth.isActiveMember();
+    };
 
     $scope.loading = false;
     $scope.processing = false;
@@ -248,14 +294,16 @@ app.controller("CourseListController", function($scope, $http, $q, $timeout) {
     };
 
     $scope.canReserveCourse = function(course) {
-        return !!course &&
+        return $scope.canUseGroupReservationFeature() &&
+               !!course &&
                !course.isReserved &&
                course.remainingSeats > 0 &&
                !$scope.isPastCourse(course);
     };
 
     $scope.canCancelCourse = function(course) {
-        return !!course &&
+        return $scope.canUseGroupReservationFeature() &&
+               !!course &&
                course.isReserved &&
                !!course.reservationId &&
                !$scope.isPastCourse(course);
@@ -302,11 +350,21 @@ app.controller("CourseListController", function($scope, $http, $q, $timeout) {
         }
 
         var coursesUrl = API_BASE_URL + "/courses/open";
-        var activeUrl = API_BASE_URL + "/reservations/member/" + $scope.memberId + "/active";
+        var coursesRequest = $http.get(coursesUrl);
+
+        /**
+         * 只有正式會員才查自己的 active reservations。
+         * ------------------------------------------------------------
+         * 非正式會員只瀏覽課表，不查 /reservations/member/1/active，
+         * 避免顯示測試會員 1 的預約狀態。
+         */
+        var reservationsRequest = $scope.canUseGroupReservationFeature()
+            ? $http.get(API_BASE_URL + "/reservations/member/" + $scope.memberId + "/active")
+            : $q.when({ data: [] });
 
         $q.all({
-            courses: $http.get(coursesUrl),
-            reservations: $http.get(activeUrl)
+            courses: coursesRequest,
+            reservations: reservationsRequest
         })
         .then(function(res) {
             var reservations = res.reservations.data || [];
@@ -566,6 +624,16 @@ app.controller("CourseListController", function($scope, $http, $q, $timeout) {
         $scope.actionMessage = "";
         $scope.actionErrorMessage = "";
 
+        if (!$scope.canUseGroupReservationFeature()) {
+            $scope.actionErrorMessage = $scope.permissionMessage;
+            return;
+        }
+
+        if (!$scope.memberId) {
+            $scope.actionErrorMessage = "找不到正式會員 ID，請重新登入後再試。";
+            return;
+        }
+
         if (!course || !course.courseId) {
             $scope.actionErrorMessage = "找不到課程資料。";
             return;
@@ -617,6 +685,16 @@ app.controller("CourseListController", function($scope, $http, $q, $timeout) {
     $scope.cancelReservation = function(course) {
         $scope.actionMessage = "";
         $scope.actionErrorMessage = "";
+
+        if (!$scope.canUseGroupReservationFeature()) {
+            $scope.actionErrorMessage = $scope.permissionMessage;
+            return;
+        }
+
+        if (!$scope.memberId) {
+            $scope.actionErrorMessage = "找不到正式會員 ID，請重新登入後再試。";
+            return;
+        }
 
         if (!course || !course.reservationId) {
             $scope.actionErrorMessage = "找不到預約編號，無法取消。";

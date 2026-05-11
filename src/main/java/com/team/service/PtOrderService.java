@@ -1,8 +1,10 @@
 package com.team.service;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -11,10 +13,10 @@ import org.springframework.stereotype.Service;
 
 import com.team.model.Member;
 import com.team.dao.MemberRepository;
+import com.team.dao.PtOrderRepository;
+import com.team.dao.PtPackageRepository;
 import com.team.model.PtOrder;
-import com.team.model.PtOrderRepository;
 import com.team.model.PtPackage;
-import com.team.model.PtPackageRepository;
 
 @Service
 public class PtOrderService {
@@ -27,6 +29,51 @@ public class PtOrderService {
 
     @Autowired
     private MemberRepository memberRepository;
+
+    public Object findOrdersByMemberId(Long memberId) {
+        if (memberId == null) {
+            return "memberId 不可為空";
+        }
+
+        Optional<Member> memberOpt = memberRepository.findById(memberId);
+        if (memberOpt.isEmpty()) {
+            return "找不到會員資料";
+        }
+
+        List<PtOrder> orders = ptOrderRepository.findByMemberId(memberId);
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        for (PtOrder order : orders) {
+            Map<String, Object> item = new LinkedHashMap<>();
+
+            item.put("ptOrderId", order.getPtOrderId());
+            item.put("memberId", order.getMemberId());
+            item.put("packageId", order.getPackageId());
+
+            String packageName = null;
+            if (order.getPackageId() != null) {
+                Optional<PtPackage> packageOpt = ptPackageRepository.findById(order.getPackageId());
+                if (packageOpt.isPresent()) {
+                    packageName = packageOpt.get().getPackageName();
+                }
+            }
+
+            item.put("packageName", packageName);
+            item.put("totalSessions", order.getTotalSessions());
+            item.put("usedSessions", order.getUsedSessions());
+            item.put("remainingSessions", order.getRemainingSessions());
+            item.put("totalAmount", order.getTotalAmount());
+            item.put("orderStatus", order.getOrderStatus());
+            item.put("purchasedAt", order.getPurchasedAt());
+            item.put("expiredAt", order.getExpiredAt());
+            item.put("createdAt", order.getCreatedAt());
+            item.put("updatedAt", order.getUpdatedAt());
+
+            result.add(item);
+        }
+
+        return result;
+    }
 
     public Object purchasePackage(Long memberId, Long packageId) {
         Date now = new Date();

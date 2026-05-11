@@ -1,6 +1,8 @@
-app.controller("CourseIntroController", function($scope, $http) {
+app.controller("CourseIntroController", function($scope, $http, $timeout) {
 
     var API_BASE_URL = "http://localhost:8080";
+    $scope.authLabel = window.MemberCourseAuth ? window.MemberCourseAuth.getAuthLabel() : "訪客 / 未登入";
+    $scope.isStaff = window.MemberCourseAuth ? window.MemberCourseAuth.isStaff() : false;
     $scope.keyword = "";
     $scope.selectedIntro = null;
     $scope.notFoundFromUrl = false;

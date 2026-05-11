@@ -1,4 +1,4 @@
-package com.team.model;
+	package com.team.model;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
@@ -26,6 +26,13 @@ public class Product {
     @Lob
     @Column(name = "image_base64", columnDefinition = "LONGTEXT")
     private String imageBase64;
+    
+    // 目前 db/gymsystem.sql 的 product 表尚未建立 stock 欄位。
+    // 先作為前端展示用欄位，避免 JPA 查詢不存在欄位導致 /api/products 500。
+    @Transient
+    private Integer stock = 0; // 商品庫存數量
+    
+ 
 
     // =====================================
     // Getters and Setters
@@ -41,4 +48,20 @@ public class Product {
 
     public String getImageBase64() { return imageBase64; }
     public void setImageBase64(String imageBase64) { this.imageBase64 = imageBase64; }
+    
+    // 目前 db/gymsystem.sql 的 product 表尚未建立 category 欄位。
+    // 商城前端會依商品名稱推導分類，等資料表補欄位後可改回 @Column。
+    @Transient
+    private String category;
+    
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+	public Integer getStock() {
+		return stock;
+	}
+	public void setStock(Integer stock) {
+		this.stock = stock;
+	}	
+
+	
 }

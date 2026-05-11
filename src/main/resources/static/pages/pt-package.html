@@ -9,10 +9,24 @@
 
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
     <script src="../js/app.js"></script>
+
+    <!--
+        會員課程模組專用權限工具
+        ------------------------------------------------------------
+        注意：
+        1. 這支檔案只讀取組員登入後存入 localStorage 的 gymUser。
+        2. 不修改組員的 js/app.js。
+        3. 不修改組員的登入流程。
+        4. 本頁用它判斷：
+           - 正式會員 / 有會籍 / status = 1：可以購買私教方案
+           - 無會籍會員 / 訪客 / 管理者或教練：只能瀏覽方案，不能購買
+    -->
+    <script src="../js/member-course-auth.js"></script>
+
     <script src="../js/pt-package.js"></script>
 </head>
 
-<body ng-controller="PtPackageController">
+<body class="member-course-page ng-cloak" ng-controller="PtPackageController">
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -20,12 +34,13 @@
 
         <div class="d-flex align-items-center gap-2 flex-wrap">
             <span class="navbar-text text-light small">
-                目前測試身分：會員 {{ memberId || 1 }}
+                目前身分：{{ authLabel }}
             </span>
             <a class="btn btn-outline-light btn-sm" href="./course-list.html">團體課總覽</a>
             <a class="btn btn-outline-light btn-sm" href="./course-intro.html">團課介紹</a>
             <a class="btn btn-outline-light btn-sm" href="./coach-list.html">教練列表</a>
-            <a class="btn btn-outline-light btn-sm" href="./reservation-list.html">我的預約</a>
+            <a class="btn btn-outline-light btn-sm" ng-if="!isStaff" href="./reservation-list.html">我的預約</a>
+            <a class="btn btn-outline-info btn-sm" ng-if="isStaff" href="./admin-reservation.html">代客預約</a>
             <a class="btn btn-warning btn-sm" href="./pt-package.html">購買私教方案</a>
             <a class="btn btn-outline-light btn-sm" href="../member-course-index.html">回首頁</a>
         </div>
@@ -35,41 +50,55 @@
 <div class="container py-4">
 
     <div class="mb-4">
-        <h2 class="fw-bold">購買私教方案</h2>
+        <h2 class="fw-bold">私人教練方案</h2>
         <p class="text-muted mb-1">
-            選擇會員與私教方案，購買成功後會新增私教訂單，並增加會員剩餘私教堂數。
+            選擇適合的私人教練堂數方案，購買後即可用於預約一對一教練課程。
         </p>
         <p class="text-muted mb-0">
-            Demo 版本會直接建立 paid 訂單；正式版本可再串接付款流程。
+            可在本頁查看剩餘堂數、購買紀錄與私教堂數異動紀錄。
         </p>
+    </div>
+
+    <!--
+        權限提示區
+        ------------------------------------------------------------
+        目前採用方案 A：
+        只有正式會員 / 有會籍 / status = 1 可以購買私教方案。
+        無會籍會員、訪客、管理者與教練可以瀏覽方案，但不能購買。
+    -->
+    <div class="alert alert-warning" ng-if="!canPurchasePtPackage()">
+        {{ permissionMessage }}
     </div>
 
     <div class="card shadow-sm mb-4">
         <div class="card-body">
-            <label class="form-label fw-bold">開發測試用會員 ID</label>
-
-            <div class="d-flex gap-2 align-items-center flex-wrap">
-                <input type="number"
-                       class="form-control member-input"
-                       ng-model="memberId">
-
+            <div class="d-flex gap-2 align-items-center justify-content-between flex-wrap">
+                <div>
+                    <h5 class="fw-bold mb-1">私教堂數</h5>
+                    <div class="text-muted small" ng-if="canPurchasePtPackage()">
+                        目前可用堂數會自動依登入會員更新。
+                    </div>
+                    <div class="text-muted small" ng-if="!canPurchasePtPackage()">
+                        私教方案可公開瀏覽；購買與個人紀錄需登入正式會員後使用。
+                    </div>
+                </div>
                 <button class="btn btn-outline-primary"
                         ng-click="refreshMemberInfo()"
-                        ng-disabled="loading || processing">
-                    查詢會員堂數
+                        ng-disabled="loading || processing || loadingHistory || !canPurchasePtPackage()">
+                    更新堂數與紀錄
                 </button>
 
-                <span class="badge bg-info text-dark fs-6" ng-if="!loadingPtSessions">
-                    目前剩餘私教堂數：{{ remainingPtSessions }} 堂
+                <span class="badge bg-info text-dark fs-6" ng-if="canPurchasePtPackage() && !loadingPtSessions">
+                    剩餘私教堂數：{{ remainingPtSessions }} 堂
                 </span>
 
-                <span class="badge bg-secondary fs-6" ng-if="loadingPtSessions">
+                <span class="badge bg-secondary fs-6" ng-if="canPurchasePtPackage() && loadingPtSessions">
                     私教堂數查詢中...
                 </span>
-            </div>
 
-            <div class="form-text">
-                正式登入後會由系統自動取得會員身分；目前僅供測試不同會員購買私教方案。
+                <span class="badge bg-secondary fs-6" ng-if="!canPurchasePtPackage()">
+                    僅供瀏覽
+                </span>
             </div>
         </div>
     </div>
@@ -80,6 +109,10 @@
 
     <div class="alert alert-danger" ng-if="errorMessage">
         {{ errorMessage }}
+    </div>
+
+    <div class="alert alert-warning" ng-if="historyWarning">
+        {{ historyWarning }}
     </div>
 
     <div class="text-center my-5" ng-if="loading">
@@ -169,8 +202,14 @@
 
                         <button class="btn w-100 mt-auto"
                                 ng-class="selectedPackage && selectedPackage.packageId === pkg.packageId ? 'btn-primary' : 'btn-outline-primary'"
-                                ng-click="selectPackage(pkg)">
-                            {{ selectedPackage && selectedPackage.packageId === pkg.packageId ? '已選擇' : '選擇方案' }}
+                                ng-click="selectPackage(pkg)"
+                                ng-disabled="!canPurchasePtPackage()">
+                            <span ng-if="canPurchasePtPackage()">
+                                {{ selectedPackage && selectedPackage.packageId === pkg.packageId ? '已選擇' : '選擇方案' }}
+                            </span>
+                            <span ng-if="!canPurchasePtPackage()">
+                                限正式會員購買
+                            </span>
                         </button>
                     </div>
                 </div>
@@ -182,11 +221,6 @@
                 <h4 class="fw-bold mb-3">購買確認</h4>
 
                 <div class="row course-row-info">
-                    <div class="col-md-3 col-6 mb-2">
-                        <span class="info-label">會員 ID</span>
-                        <span class="info-value">{{ memberId }}</span>
-                    </div>
-
                     <div class="col-md-3 col-6 mb-2">
                         <span class="info-label">目前剩餘堂數</span>
                         <span class="info-value">{{ remainingPtSessions }} 堂</span>
@@ -232,13 +266,13 @@
                 </div>
 
                 <div class="alert alert-info mt-3 mb-3">
-                    購買成功後，系統會建立一筆 paid 私教訂單，效期預設為 6 個月。
+                    方案購買完成後，堂數將立即加入您的私人教練餘額，並可於購買紀錄中查詢。
                 </div>
 
                 <div class="d-flex gap-2 flex-wrap">
                     <button class="btn btn-primary"
                             ng-click="purchaseSelectedPackage()"
-                            ng-disabled="processing">
+                            ng-disabled="processing || !canPurchasePtPackage()">
                         {{ processing ? '購買處理中...' : '確認購買' }}
                     </button>
 
@@ -252,7 +286,7 @@
                         回教練列表預約私教
                     </a>
 
-                    <a class="btn btn-outline-secondary" href="./reservation-list.html">
+                    <a class="btn btn-outline-secondary" ng-if="!isStaff" href="./reservation-list.html">
                         查看我的預約
                     </a>
                 </div>
@@ -266,23 +300,173 @@
                 <div class="row course-row-info">
                     <div class="col-md-3 col-6 mb-2">
                         <span class="info-label">訂單編號</span>
-                        <span class="info-value">PT Order #{{ lastOrder.ptOrderId }}</span>
+                        <span class="info-value">PT Order #{{ lastOrder.ptOrderId || lastOrder.orderId }}</span>
                     </div>
 
                     <div class="col-md-3 col-6 mb-2">
                         <span class="info-label">方案</span>
-                        <span class="info-value">{{ lastOrder.packageName }}</span>
+                        <span class="info-value">{{ lastOrder.packageName || selectedPackage.packageName }}</span>
                     </div>
 
                     <div class="col-md-3 col-6 mb-2">
                         <span class="info-label">新增堂數</span>
-                        <span class="info-value text-success">{{ lastOrder.remainingSessions }} 堂</span>
+                        <span class="info-value text-success">
+                            +{{ selectedPackage.sessionCount }} 堂
+                        </span>
                     </div>
 
                     <div class="col-md-3 col-6 mb-2">
                         <span class="info-label">訂單狀態</span>
-                        <span class="info-value">{{ lastOrder.orderStatus }}</span>
+                        <span class="info-value">{{ getOrderStatusText(lastOrder.orderStatus) }}</span>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 私教購買紀錄：正式會員才顯示，避免未授權身分讀取個人資料 -->
+        <div class="card shadow-sm mt-4" ng-if="canPurchasePtPackage()">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <h4 class="fw-bold mb-1">私教購買紀錄</h4>
+                        <p class="text-muted mb-0">
+                            依現有 pt_order 資料顯示，不新增資料表。
+                        </p>
+                    </div>
+
+                    <button class="btn btn-outline-secondary btn-sm"
+                            ng-click="loadPurchaseHistory()"
+                            ng-disabled="loadingPurchaseHistory || processing">
+                        {{ loadingPurchaseHistory ? '重新整理中...' : '重新整理購買紀錄' }}
+                    </button>
+                </div>
+
+                <div class="text-center py-4" ng-if="loadingPurchaseHistory">
+                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                    <span class="ms-2">購買紀錄載入中...</span>
+                </div>
+
+                <div class="alert alert-light border" ng-if="!loadingPurchaseHistory && purchaseHistory.length === 0">
+                    目前查無此會員的私教購買紀錄。
+                </div>
+
+                <div class="table-responsive" ng-if="!loadingPurchaseHistory && purchaseHistory.length > 0">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>購買時間</th>
+                                <th>方案名稱</th>
+                                <th class="text-end">購買堂數</th>
+                                <th class="text-end">已使用</th>
+                                <th class="text-end">剩餘</th>
+                                <th>狀態</th>
+                                <th>到期日</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="order in purchaseHistory track by $index">
+                                <td>{{ formatDateTime(order.purchasedAt || order.createdAt) }}</td>
+                                <td>
+                                    <div class="fw-bold">
+                                        {{ getOrderPackageName(order) }}
+                                    </div>
+                                    <div class="small text-muted">
+                                        PT Order #{{ order.ptOrderId || order.orderId || '-' }}
+                                    </div>
+                                </td>
+                                <td class="text-end text-success fw-bold">
+                                    +{{ order.totalSessions || order.sessionCount || 0 }}
+                                </td>
+                                <td class="text-end">
+                                    {{ order.usedSessions || 0 }}
+                                </td>
+                                <td class="text-end fw-bold">
+                                    {{ order.remainingSessions || 0 }}
+                                </td>
+                                <td>
+                                    <span class="badge" ng-class="getOrderStatusClass(order.orderStatus)">
+                                        {{ getOrderStatusText(order.orderStatus) }}
+                                    </span>
+                                </td>
+                                <td>{{ formatDate(order.expiredAt) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 私教堂數使用紀錄：正式會員才顯示，避免未授權身分讀取個人資料 -->
+        <div class="card shadow-sm mt-4" ng-if="canPurchasePtPackage()">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <h4 class="fw-bold mb-1">私教堂數使用紀錄</h4>
+                        <p class="text-muted mb-0">
+                            依現有 course_reservation 資料推導：預約扣堂、取消回補、曠課不回補。
+                        </p>
+                    </div>
+
+                    <button class="btn btn-outline-secondary btn-sm"
+                            ng-click="loadSessionUsageHistory()"
+                            ng-disabled="loadingUsageHistory || processing">
+                        {{ loadingUsageHistory ? '重新整理中...' : '重新整理使用紀錄' }}
+                    </button>
+                </div>
+
+                <div class="text-center py-4" ng-if="loadingUsageHistory">
+                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                    <span class="ms-2">堂數使用紀錄載入中...</span>
+                </div>
+
+                <div class="alert alert-light border" ng-if="!loadingUsageHistory && sessionUsageHistory.length === 0">
+                    目前查無此會員的私教預約 / 扣堂紀錄。
+                </div>
+
+                <div class="table-responsive" ng-if="!loadingUsageHistory && sessionUsageHistory.length > 0">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>課程時間</th>
+                                <th>課程名稱</th>
+                                <th>教練</th>
+                                <th>狀態</th>
+                                <th class="text-end">堂數影響</th>
+                                <th>說明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="item in sessionUsageHistory track by $index">
+                                <td>
+                                    <div>{{ formatDate(item.courseDate) }}</div>
+                                    <div class="small text-muted">
+                                        {{ formatTime(item.startTime) }} - {{ formatTime(item.endTime) }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">{{ item.courseName || '私教課程' }}</div>
+                                    <div class="small text-muted" ng-if="item.reservationId">
+                                        Reservation #{{ item.reservationId }}
+                                    </div>
+                                </td>
+                                <td>{{ item.coachName || '未提供' }}</td>
+                                <td>
+                                    <span class="badge" ng-class="getReservationStatusClass(item.status)">
+                                        {{ getReservationStatusText(item.status) }}
+                                    </span>
+                                </td>
+                                <td class="text-end fw-bold"
+                                    ng-class="item.sessionChange > 0 ? 'text-success' : (item.sessionChange < 0 ? 'text-danger' : 'text-muted')">
+                                    {{ item.sessionChange > 0 ? '+' + item.sessionChange : item.sessionChange }}
+                                </td>
+                                <td>{{ item.sessionDescription }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="alert alert-info mt-3 mb-0">
+                    說明：目前系統是「預約私教當下扣 1 堂」；曠課與完成課程不會再重複扣堂，因此紀錄顯示為 0，代表堂數維持已扣狀態。
                 </div>
             </div>
         </div>

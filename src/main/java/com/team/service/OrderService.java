@@ -1,15 +1,17 @@
 package com.team.service;
 
-import com.team.dao.OrderDetailDao;
-import com.team.dao.PorderDao;
-import com.team.model.OrderDetail;
-import com.team.model.Porder;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import com.team.dao.OrderDetailDao;
+import com.team.dao.PorderDao;
+import com.team.model.OrderDetail;
+import com.team.model.Porder;
 
 @Service
 public class OrderService {
@@ -61,8 +63,6 @@ public class OrderService {
      * 查詢特定會員的所有訂單 (供會員中心使用)
      */
     public List<Porder> getMemberOrderHistory(Long memberId) {
-        // 這部分可以之後在 PorderDao 增加查詢方法
-        //return porderDao.findAll(); 
         return porderDao.findByMemberIdOrderByOrderDateDesc(memberId);
     }
 
@@ -94,5 +94,52 @@ public class OrderService {
     public List<Porder> getAllOrders() {
         return porderDao.findAllByOrderByOrderDateDesc();
     }
+    
+    
+    /**
+     * 編輯訂單明細數量 (後端重構版)
+     * 包含：刪除舊明細、寫入新明細、重新計算總金額
+     */
+    @Transactional
+    public void updateOrderDetails(Long orderId, List<OrderDetail> updatedDetails) {
+        // 1. 抓出主訂單
+        Porder porder = porderDao.findById(orderId)
+            .orElseThrow(() -> new RuntimeException("找不到訂單編號：" + orderId));
 
+        // 2. 抓出舊明細並全數刪除
+        List<OrderDetail> oldDetails = orderDetailDao.findByOrderId(orderId);
+        orderDetailDao.deleteAll(oldDetails);
+
+        // 初始化新總金額
+        BigDecimal newTotal = BigDecimal.ZERO;
+
+        // 3. 重新寫入前端傳來的新明細，並累加金額
+        for (OrderDetail detail : updatedDetails) {
+            detail.setOrderId(orderId); 
+            detail.setDetailId(null); // 讓資料庫重新生成 PK
+            orderDetailDao.save(detail);
+
+            // 計算這項商品的小計：單價 x 數量
+            BigDecimal subtotal = detail.getUnitPrice().multiply(new BigDecimal(detail.getQuantity()));
+            // 累加到總金額
+            newTotal = newTotal.add(subtotal);
+        }
+
+        // 4. 更新主檔的總金額並儲存！
+        porder.setTotalAmount(newTotal);
+        porderDao.save(porder);
+    }
+
+    /**
+     * 🗑️ 刪除訂單 (包含主檔與明細) - 後台管理員專用
+     */
+    @Transactional
+    public void deleteOrder(Long orderId) {
+        // 1. 必須先刪除該訂單底下的所有明細 (避免 Foreign Key 外鍵約束報錯)
+        List<OrderDetail> details = orderDetailDao.findByOrderId(orderId);
+        orderDetailDao.deleteAll(details);
+        
+        // 2. 確認明細清空後，再刪除訂單主檔
+        porderDao.deleteById(orderId);
+    }
 }

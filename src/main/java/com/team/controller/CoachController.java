@@ -13,7 +13,7 @@ import com.team.service.CoachService;
 import com.team.service.CourseService;
 
 @RestController
-@RequestMapping("/coaches")
+@RequestMapping({"/coaches", "/api/coaches"})
 @CrossOrigin
 public class CoachController {
 

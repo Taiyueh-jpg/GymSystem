@@ -9,20 +9,23 @@
 
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
     <script src="../js/app.js"></script>
+    <script src="../js/member-course-auth.js"></script>
     <script src="../js/course-intro.js"></script>
 </head>
 
-<body ng-controller="CourseIntroController">
+<body class="member-course-page course-intro-page ng-cloak" ng-controller="CourseIntroController">
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
         <a class="navbar-brand" href="../member-course-index.html">健身房管理系統</a>
 
         <div class="d-flex align-items-center gap-2 flex-wrap">
-            <span class="navbar-text text-light small">目前測試身分：會員 1</span>
+            <span class="navbar-text text-light small">目前身分：{{ authLabel }}</span>
             <a class="btn btn-outline-light btn-sm" href="./course-list.html">團體課總覽</a>
             <a class="btn btn-outline-light btn-sm" href="./coach-list.html">教練列表</a>
-            <a class="btn btn-outline-light btn-sm" href="./reservation-list.html">我的預約</a>
+            <a class="btn btn-outline-light btn-sm" ng-if="!isStaff" href="./reservation-list.html">我的預約</a>
+            <a class="btn btn-outline-info btn-sm" ng-if="isStaff" href="./admin-reservation.html">代客預約</a>
+            <a class="btn btn-warning btn-sm" href="./pt-package.html">購買私教方案</a>
             <a class="btn btn-outline-light btn-sm" href="../member-course-index.html">回首頁</a>
         </div>
     </div>
@@ -33,10 +36,10 @@
     <div class="mb-4">
         <h2 class="fw-bold">團體課介紹</h2>
         <p class="text-muted mb-1">
-            查看每一堂團體課的課程內容、教練設計理念與適合族群。
+            了解各類團體課的訓練重點、課程強度與適合族群。
         </p>
         <p class="text-muted mb-0">
-            可用課程標籤快速切換分類，也可以搜尋課名、教練或課程類型。
+            可依課程分類或關鍵字查找內容，並前往課表確認可預約時段。
         </p>
     </div>
 
@@ -50,7 +53,7 @@
                    placeholder="輸入課名、教練、類型，例如：飛輪、Ryan、BodyPump">
 
             <div class="form-text mb-3">
-                也可以從團體課表點「了解課程」直接進入指定課程介紹。
+                也可以從團體課表直接進入指定課程介紹。
             </div>
 
             <h5 class="fw-bold mb-3">課程標籤</h5>
@@ -172,8 +175,21 @@
             </button>
 
             <a class="btn btn-outline-primary"
+               ng-if="!isStaff"
                href="./reservation-list.html">
                 回我的預約
+            </a>
+
+            <a class="btn btn-outline-warning"
+               ng-if="!isStaff"
+               href="./pt-package.html">
+                購買私教方案
+            </a>
+
+            <a class="btn btn-outline-info"
+               ng-if="isStaff"
+               href="./admin-reservation.html">
+                前往代客預約
             </a>
 
             <a class="btn btn-outline-secondary"

@@ -36,7 +36,19 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a href="mall.html" class="nav-link text-light">周邊商城</a>
+                        <a href="pages/course-list.html" class="nav-link text-light">課表</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="pages/course-intro.html" class="nav-link text-light">課程介紹</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="pages/coach-list.html" class="nav-link text-light">教練介紹</a>
+                    </li>
+                    <li class="nav-item" ng-if="isAdmin()">
+                        <a href="pages/admin-reservation.html" class="nav-link text-info fw-bold">代客預約</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="product/mall.html" class="nav-link text-light">周邊商城</a>
                     </li>
                     <li class="nav-item">
                         <a href="article/article-list.html" class="nav-link text-light">最新公告</a>
@@ -72,13 +84,13 @@
             <div>
                 <a href="login.html" class="btn btn-secondary btn-lg px-5 me-3 fw-bold shadow" ng-if="isGuest()">請先登入以預約</a>
                 
-                <a href="course.html" class="btn btn-success btn-lg px-5 me-3 fw-bold shadow" ng-if="isMember() && currentUser.status === 0">預約體驗課程</a>
+                <a href="pages/course-list.html" class="btn btn-success btn-lg px-5 me-3 fw-bold shadow" ng-if="isMember() && currentUser.status === 0">查看課表</a>
                 
-                <a href="course.html" class="btn btn-primary btn-lg px-5 me-3 fw-bold shadow" ng-if="isMember() && currentUser.status === 1">立即預約團課/私教</a>
+                <a href="pages/course-list.html" class="btn btn-primary btn-lg px-5 me-3 fw-bold shadow" ng-if="isMember() && currentUser.status === 1">立即預約團課/私教</a>
 
                 <a href="admin-dashboard.html" class="btn btn-info btn-lg px-5 me-3 fw-bold shadow" ng-if="isAdmin()">進入管理後台</a>
 
-                <a href="mall.html" class="btn btn-outline-light btn-lg px-5 fw-bold">逛逛商城</a>
+                <a href="product/mall.html" class="btn btn-outline-light btn-lg px-5 fw-bold">逛逛商城</a>
             </div>
         </div>
     </header>
@@ -103,7 +115,7 @@
                 </div>
                 <div class="col-md-4">
                     <div class="p-4 rounded shadow" style="background-color: #252525; cursor: pointer;" 
-                         ng-click="isGuest() ? null : (window.location.href='profile.html')"
+                         ng-click="isGuest() ? null : goToHistory()"
                          ng-class="{'opacity-50': isGuest()}">
                         <h1 class="mb-3">📊</h1>
                         <h4 class="fw-bold">會員專屬中心</h4>

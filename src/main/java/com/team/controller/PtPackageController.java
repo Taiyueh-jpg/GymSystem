@@ -9,7 +9,7 @@ import com.team.model.PtPackage;
 import com.team.service.PtPackageService;
 
 @RestController
-@RequestMapping("/pt-packages")
+@RequestMapping({"/pt-packages", "/api/pt-packages"})
 @CrossOrigin
 public class PtPackageController {
 

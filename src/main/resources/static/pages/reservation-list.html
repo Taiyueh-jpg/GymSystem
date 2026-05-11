@@ -9,10 +9,11 @@
 
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
     <script src="../js/app.js"></script>
+    <script src="../js/member-course-auth.js"></script>
     <script src="../js/reservation-list.js"></script>
 </head>
 
-<body ng-controller="ReservationListController">
+<body class="member-course-page ng-cloak" ng-controller="ReservationListController">
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -20,12 +21,13 @@
 
         <div class="d-flex align-items-center gap-2 flex-wrap">
             <span class="navbar-text text-light small">
-                目前測試身分：會員 {{ memberId || 1 }}
+                目前身分：{{ authLabel }}
             </span>
             <a class="btn btn-outline-light btn-sm" href="./course-list.html">團體課總覽</a>
             <a class="btn btn-outline-light btn-sm" href="./course-intro.html">團課介紹</a>
             <a class="btn btn-outline-light btn-sm" href="./coach-list.html">教練列表</a>
-            <a class="btn btn-outline-light btn-sm" href="./reservation-list.html">我的預約</a>
+            <a class="btn btn-outline-light btn-sm" ng-if="roleType !== 'staff'" href="./reservation-list.html">我的預約</a>
+            <a class="btn btn-outline-info btn-sm" ng-if="roleType === 'staff'" href="./admin-reservation.html">代客預約</a>
             <a class="btn btn-warning btn-sm" href="./pt-package.html">購買私教方案</a>
             <a class="btn btn-outline-light btn-sm" href="../member-course-index.html">回首頁</a>
         </div>
@@ -34,34 +36,43 @@
 
 <div class="container py-4">
 
-    <div class="mb-4">
+    <div class="mb-4" ng-if="roleType !== 'staff'">
         <h2 class="fw-bold">我的預約中心</h2>
         <p class="text-muted mb-1">
-            可用行事曆、時間列表與歷史紀錄三種方式查看會員預約狀態。
+            查看即將到來的課程、歷史紀錄與取消狀態，掌握自己的訓練安排。
         </p>
         <p class="text-muted mb-0">
-            行事曆會顯示課程名稱、教練名稱、時間與狀態；點選單堂課後，可在下方操作區取消、重新預約或查看介紹。
+            可依行事曆或時間列表瀏覽預約，並針對尚未開始的課程進行取消或重新預約。
         </p>
     </div>
 
-    <div class="card shadow-sm mb-4">
+    <div class="mb-4" ng-if="roleType === 'staff'">
+        <h2 class="fw-bold">代客預約作業</h2>
+        <p class="text-muted mb-1">
+            教練與管理者不使用會員個人預約中心，請改至代客預約管理查找會員並協助預約或取消。
+        </p>
+        <a class="btn btn-info mt-2" href="./admin-reservation.html">前往代客預約管理</a>
+    </div>
+
+    <div class="card shadow-sm mb-4" ng-if="roleType !== 'staff'">
         <div class="card-body">
-            <label class="form-label fw-bold">開發測試用會員 ID</label>
-
-            <div class="d-flex gap-2 align-items-center flex-wrap">
-                <input type="number"
-                       class="form-control member-input"
-                       ng-model="memberId">
-
+            <div class="d-flex gap-2 align-items-center justify-content-between flex-wrap">
+                <div>
+                    <h5 class="fw-bold mb-1">預約紀錄</h5>
+                    <div class="text-muted small">
+                        系統會自動載入目前登入會員的課程預約與異動紀錄。
+                    </div>
+                </div>
                 <button class="btn btn-outline-primary"
+                        ng-if="isActiveMember"
                         ng-click="refreshReservations()"
                         ng-disabled="loading">
-                    查詢我的預約
+                    更新預約紀錄
                 </button>
             </div>
 
-            <div class="form-text">
-                正式登入後會由系統自動取得會員身分；目前僅供測試不同會員預約狀態。
+            <div class="alert alert-info mt-3 mb-0" ng-if="!isActiveMember">
+                {{ permissionMessage }}
             </div>
         </div>
     </div>
@@ -79,7 +90,7 @@
         <p class="mt-2">預約資料載入中...</p>
     </div>
 
-    <div ng-if="!loading">
+    <div ng-if="!loading && isActiveMember">
 
         <!-- summary -->
         <div class="row mb-4">

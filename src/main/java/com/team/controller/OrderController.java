@@ -1,21 +1,28 @@
 package com.team.controller;
 
-import com.team.dto.CheckoutRequest;
-import com.team.model.Member;
-import com.team.model.OrderDetail;
-import com.team.model.Porder;
-import com.team.service.OrderService;
-
-import jakarta.servlet.http.HttpSession;
-
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.team.dto.CheckoutRequest;
+import com.team.model.OrderDetail;
+import com.team.model.Porder;
+import com.team.service.OrderService;
 
 @RestController
 @RequestMapping("/api/orders")
+// 允許跨域請求
 @CrossOrigin(origins = {"http://localhost:5500", "http://127.0.0.1:5500"}, allowCredentials = "true")
 public class OrderController {
 
@@ -23,29 +30,26 @@ public class OrderController {
     private OrderService orderService;
 
     /**
-     * POST 請求：處理結帳
+     * POST 請求：處理結帳 (無狀態架構完美版)
      * 網址為：http://localhost:8080/api/orders/checkout
      */
     @PostMapping("/checkout")
-    public Porder checkout(@RequestBody CheckoutRequest request, HttpSession session) {
+    public Porder checkout(@RequestBody CheckoutRequest request) {
         
-        // 1. 從 Session 中拿出剛剛登入的會員資料 (芳羽存進去的)
-        Member currentMember = (Member) session.getAttribute("loggedInMember");
+        // 【無狀態架構修正】直接從前端傳來的 JSON (request) 中獲取 MemberId
+        Long memberId = request.getPorder().getMemberId();
 
-        // 2. 防呆機制：如果有人沒登入就想硬偷結帳，直接擋下來！
-        if (currentMember == null) {
-            throw new RuntimeException("請先登入會員才能結帳喔！");
+        // 防呆機制
+        if (memberId == null) {
+            throw new RuntimeException("結帳失敗：無法識別會員身分 (前端未提供 Member ID)");
         }
 
-        // 3. 核心魔法：把這筆訂單的 Member ID，強制設定為「現在登入的這個人」
-        request.getPorder().setMemberId(currentMember.getMemberId());
+        // 確保訂單主檔綁定正確的會員 ID
+        request.getPorder().setMemberId(memberId);
 
-        // 4. 呼叫 Service 執行包含 Transaction 的結帳邏輯 (原本您寫好的那段)
+        // 執行結帳邏輯
         return orderService.processCheckout(request.getPorder(), request.getDetails());
     }
-    
-
-
         
     /**
      * GET 請求：查詢特定會員的歷史訂單
@@ -84,9 +88,35 @@ public class OrderController {
      */
     @GetMapping("/all")
     public List<Porder> getAllOrders() {
-        // TODO: 未來這裡可以加上「權限檢查」，確認當前登入的人是不是 Admin
         return orderService.getAllOrders();
+    }
+    
+    /**
+     * PUT 請求：編輯訂單明細 (單一數量修改)
+     * 網址範例：http://localhost:8080/api/orders/16/details
+     */
+    @PutMapping("/{orderId}/details")
+    public ResponseEntity<?> updateDetails(@PathVariable Long orderId, @RequestBody List<OrderDetail> updatedDetails) {
+        try {
+            orderService.updateOrderDetails(orderId, updatedDetails);
+            return ResponseEntity.ok().body(Map.of("message", "訂單明細更新成功"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * DELETE 請求：刪除訂單 (後台管理員專用)
+     * 網址範例：http://localhost:8080/api/orders/14
+     */
+    @DeleteMapping("/{orderId}")
+    public ResponseEntity<?> deleteOrder(@PathVariable Long orderId) {
+        try {
+            orderService.deleteOrder(orderId);
+            return ResponseEntity.ok().body(Map.of("message", "刪除成功"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
 }
-
